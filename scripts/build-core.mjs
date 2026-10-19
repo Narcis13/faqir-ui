@@ -9,6 +9,16 @@
  *                                        `src/core-src/dev-diagnostics.js` injected
  * See `applyDevMarkers` below for the three markers.
  *
+ * …and the same pair again as the strict-CSP build (forecraft #50), for pages
+ * whose Content-Security-Policy has no `'unsafe-eval'`:
+ *   - `registry/core/faqir-core.csp.js`      production
+ *   - `registry/core/faqir-core.csp.dev.js`  development
+ * where the region between `// @faqir:evaluator-start` and
+ * `// @faqir:evaluator-end` in the engine (the two `new Function` compilers) is
+ * replaced by `src/core-src/csp-evaluator.js`, an interpreter. The default
+ * builds drop the two marker lines and keep the region, so they are
+ * byte-identical to what they were before the seam existed.
+ *
  * Inputs:
  *   - `src/core-src/engine.js`               — directives, reactivity, plugin API
  *                                              (no controllers). Carries a lone
@@ -64,6 +74,15 @@ const MENU_NAV_SRC = join(ROOT, "registry", "core", "menu-navigation.js");
 const DEV_DIAGNOSTICS_SRC = join(ROOT, "src", "core-src", "dev-diagnostics.js");
 const OUT = join(ROOT, "registry", "core", "faqir-core.js");
 const DEV_OUT = join(ROOT, "registry", "core", "faqir-core.dev.js");
+const CSP_EVALUATOR_SRC = join(ROOT, "src", "core-src", "csp-evaluator.js");
+const CSP_OUT = join(ROOT, "registry", "core", "faqir-core.csp.js");
+const CSP_DEV_OUT = join(ROOT, "registry", "core", "faqir-core.csp.dev.js");
+
+// The evaluator seam (forecraft #50). Matched by prefix, so the start marker
+// can say what it is for on the same line — both lines are dropped from every
+// build, which is what keeps the default builds' bytes unchanged.
+export const EVALUATOR_START = "// @faqir:evaluator-start";
+export const EVALUATOR_END = "// @faqir:evaluator-end";
 
 // The injection point in the engine source: a lone comment line, matched by its
 // trimmed text so the engine's surrounding indentation is irrelevant.
@@ -263,19 +282,20 @@ function renderCoreHelper(source, label, title) {
     .join("\n")}`;
 }
 
-function renderHeader(controllers, engineRel, dev) {
+function renderHeader(controllers, engineRel, dev, csp = false) {
   const names = controllers.map((c) => c.name);
   const rule = "// " + "=".repeat(76);
   return (
     [
       rule,
-      `// registry/core/faqir-core${dev ? ".dev" : ""}.js`,
+      `// registry/core/faqir-core${csp ? ".csp" : ""}${dev ? ".dev" : ""}.js`,
       "//",
       "// GENERATED FILE — DO NOT EDIT BY HAND.",
       "// Assembled by scripts/build-core.mjs (task 0.3-03) from:",
       `//   engine:      ${engineRel}`,
       "//   core helper: registry/core/menu-navigation.js",
       ...(dev ? ["//   dev build:   src/core-src/dev-diagnostics.js (task 0.7-12)"] : []),
+      ...(csp ? ["//   evaluator:   src/core-src/csp-evaluator.js (forecraft #50)"] : []),
       `//   controllers: ${controllers.length} recipe ${controllers.length === 1 ? "factory" : "factories"}` +
         ` → ${names.length ? names.join(", ") : "(none)"}`,
       "//",
@@ -285,6 +305,14 @@ function renderHeader(controllers, engineRel, dev) {
       dev
         ? "// point <script src> at faqir-core.js for production."
         : "// Load faqir-core.dev.js instead while developing for full warnings.",
+      ...(csp
+        ? [
+            "//",
+            "// STRICT-CSP BUILD — l-* expressions are interpreted, never compiled, so a",
+            "// page needs no 'unsafe-eval'. The expression language is a JavaScript subset;",
+            "// see the header of src/core-src/csp-evaluator.js and docs/security.md.",
+          ]
+        : []),
       "// Regenerate with: bun run build:core",
       `// Package version: ${pkgVersion()}`,
       rule,
@@ -308,10 +336,16 @@ function renderHeader(controllers, engineRel, dev) {
  *                                     dev-marked lines and inject the
  *                                     diagnostics module. Default false
  *                                     (production — everything marked is dropped).
+ * @param {boolean} [opts.csp]         Assemble the strict-CSP build: the engine's
+ *                                     evaluator region is replaced by the
+ *                                     interpreter in `opts.cspEvaluatorPath`
+ *                                     (forecraft #50). Default false.
+ * @param {string} [opts.cspEvaluatorPath] The interpreter module.
  * @param {string} [opts.outPath]      Where to write (default registry/core/faqir-core.js,
- *                                     or faqir-core.dev.js when `dev`).
+ *                                     faqir-core.dev.js when `dev`, and the
+ *                                     `.csp` / `.csp.dev` twins when `csp`).
  * @param {boolean} [opts.write]       Set false to assemble without writing.
- * @returns {{ code: string, controllers: {name,factory,label}[], outPath: string, dev: boolean }}
+ * @returns {{ code: string, controllers: {name,factory,label}[], outPath: string, dev: boolean, csp: boolean }}
  */
 export function buildCore(opts = {}) {
   const enginePath = opts.enginePath || ENGINE_SRC;
@@ -319,7 +353,8 @@ export function buildCore(opts = {}) {
   const menuNavigationPath = opts.menuNavigationPath || MENU_NAV_SRC;
   const devDiagnosticsPath = opts.devDiagnosticsPath || DEV_DIAGNOSTICS_SRC;
   const dev = opts.dev === true;
-  const outPath = opts.outPath || (dev ? DEV_OUT : OUT);
+  const csp = opts.csp === true;
+  const outPath = opts.outPath || (csp ? (dev ? CSP_DEV_OUT : CSP_OUT) : dev ? DEV_OUT : OUT);
   const write = opts.write !== false;
 
   const engine = injectVersion(readFileSync(enginePath, "utf8"), relative(ROOT, enginePath));
@@ -399,8 +434,9 @@ export function buildCore(opts = {}) {
     : "  // (no recipe controllers discovered)";
 
   lines[markerIdx] = block;
+  applyEvaluatorSeam(lines, relative(ROOT, enginePath), csp, opts.cspEvaluatorPath || CSP_EVALUATOR_SRC);
   const code =
-    renderHeader(found, relative(ROOT, enginePath), dev) +
+    renderHeader(found, relative(ROOT, enginePath), dev, csp) +
     applyDevMarkers(lines.join("\n"), dev);
 
   if (write) {
@@ -413,7 +449,38 @@ export function buildCore(opts = {}) {
     controllers: found.map((c) => ({ name: c.name, factory: c.factory, label: c.label })),
     outPath,
     dev,
+    csp,
   };
+}
+
+/**
+ * Resolve the evaluator seam in place (forecraft #50).
+ *
+ * Default builds drop the two marker lines and keep the `new Function`
+ * compilers between them. The strict-CSP build replaces the whole region with
+ * the interpreter module — and refuses to build without the markers, because a
+ * silently skipped swap would ship `new Function` under a CSP name. Runs after
+ * every index-based substitution above, since it changes the line count.
+ */
+function applyEvaluatorSeam(lines, engineRel, csp, cspEvaluatorPath) {
+  const start = lines.findIndex((l) => l.trim().startsWith(EVALUATOR_START));
+  const end = lines.findIndex((l) => l.trim() === EVALUATOR_END);
+  if (start === -1 || end === -1 || end < start) {
+    if (!csp && start === -1 && end === -1) return;
+    throw new Error(
+      `engine source ${engineRel} needs the "${EVALUATOR_START}" … "${EVALUATOR_END}" region around its expression compilers`,
+    );
+  }
+  if (csp) {
+    lines.splice(
+      start,
+      end - start + 1,
+      renderCoreHelper(readFileSync(cspEvaluatorPath, "utf8"), labelFor(cspEvaluatorPath), "strict-CSP evaluator"),
+    );
+  } else {
+    lines.splice(end, 1);
+    lines.splice(start, 1);
+  }
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
@@ -421,6 +488,8 @@ const invokedDirectly = import.meta.url === pathToFileURL(process.argv[1] || "")
 if (invokedDirectly) {
   const res = buildCore();
   const devRes = buildCore({ dev: true });
+  const cspRes = buildCore({ csp: true });
+  const cspDevRes = buildCore({ csp: true, dev: true });
   const names = res.controllers.map((c) => c.name);
   console.log(`✓ Assembled ${relative(ROOT, res.outPath)}`);
   console.log(`  engine       ${relative(ROOT, ENGINE_SRC)}`);
@@ -433,5 +502,10 @@ if (invokedDirectly) {
   console.log(
     `  size         ${kb(Buffer.byteLength(devRes.code))} raw` +
       ` · production ${kb(Buffer.byteLength(res.code))} raw`,
+  );
+  console.log(`✓ Assembled ${relative(ROOT, cspRes.outPath)} + ${relative(ROOT, cspDevRes.outPath)} (strict-CSP builds)`);
+  console.log(`  evaluator    ${relative(ROOT, CSP_EVALUATOR_SRC)}`);
+  console.log(
+    `  size         ${kb(Buffer.byteLength(cspRes.code))} raw · dev ${kb(Buffer.byteLength(cspDevRes.code))} raw`,
   );
 }
