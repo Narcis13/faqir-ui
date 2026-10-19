@@ -8,8 +8,11 @@
   /* ── Page Geometry ──
      Used by the `document` pattern and @page CSS rules.
      --page-format and --page-orientation are consumed as literal values
-     in @page { size: var(--page-format) var(--page-orientation) }.
-     Margins are used in both @page and the document pattern's padding. */
+     in @page faqir-document { size: var(--page-format) var(--page-orientation) },
+     the named page every document prints on unless it pins its paper with
+     data-format + data-orientation. Page boxes inherit from the root only, so
+     these are read at :root: they set the paper of every unpinned document.
+     Margins are used in every faqir-document* page and the pattern's padding. */
   --page-format:            A4;
   --page-orientation:       portrait;
   --page-margin:            15mm;
@@ -24,6 +27,43 @@
   --doc-running-footer-height: 8mm;
   --doc-running-gap:        var(--space-2);
 
+  /* Running strings for the page-margin boxes. A page box is not an element:
+     it inherits from the root alone, so these are read where the root declares
+     them — set them on `:root` (or `<html style>`) for the file being printed.
+     `none` draws nothing. `\A` breaks a line. */
+  --doc-running-header:     none;
+  --doc-running-footer:     none;
+
+  /* The page counter, `Page 3 / 7`, as label + counter + separator + total +
+     suffix — in English unless a document's `lang` is one of the languages
+     restated at the foot of this file; restate them on `:root` for any
+     other. */
+  --doc-page-label:         "Page ";
+  --doc-page-separator:     " / ";
+  --doc-page-suffix:        "";
+
+  /* ── Business letter (DIN 5008) ──
+     Read by the document pattern's `letter` variant, which prints on A4
+     portrait. Form B is the default; `data-form="a"` restates the three that
+     differ (window 27mm, folds 87mm / 192mm). The marks are drawn in the
+     left page margin, measured from the top edge of the sheet; the punch mark
+     sits midway between the top and bottom page margins, which is 148.5mm
+     because the letter page keeps both at --page-margin-top. */
+  --doc-letter-margin-left:  25mm;
+  --doc-letter-margin-right: 20mm;
+  --doc-fold-mark-1:        105mm;
+  --doc-fold-mark-2:        210mm;
+  --doc-mark-inset:         4mm;                       /* from the sheet's left edge */
+  --doc-mark-length:        5mm;
+  --doc-punch-mark-length:  8mm;
+  --doc-mark-width:         0.25mm;
+  --doc-mark-color:         var(--doc-print-border-color);
+  --doc-window-top:         45mm;                      /* the address field, from the top edge */
+  --doc-window-left:        20mm;                      /* …and from the left edge */
+  --doc-window-width:       85mm;
+  --doc-window-height:      45mm;
+  --doc-window-padding:     5mm;                       /* the address text's indent inside it */
+
   /* ── Document Typography ──
      Separate from the base typography tokens because documents have
      different optimal sizes than screen UIs. 14px body + 12px legal
@@ -33,6 +73,9 @@
   --doc-line-height:        var(--leading-normal);     /* 1.5 */
   --doc-heading-font:       var(--font-heading);
   --doc-heading-weight:     var(--weight-bold);
+  /* The face the `report` variant sets in — the project's serif role, so an
+     installed serif reaches a report too. */
+  --doc-serif:              var(--font-serif);
   --doc-heading-size:       var(--text-xl);            /* 20px for doc titles */
   --doc-subheading-size:    var(--text-lg);            /* 18px for section titles */
   --doc-legal-size:         var(--text-xs);            /* 12px for fine print / legal text */
@@ -77,6 +120,10 @@
      --doc-max-width limits the content width on screen to simulate A4 proportions.
      --doc-bg/--doc-fg force B&W for reliable printing regardless of theme. */
   --doc-max-width:          210mm;                     /* A4 width for screen preview */
+  /* The one accent a print theme draws in. Every print theme states it and
+     points --color-primary at it, so `:root { --doc-accent: #0b5 }` re-inks a
+     document without generating a theme. Elsewhere it is simply the primary. */
+  --doc-accent:             var(--color-primary);
   --doc-bg:                 white;                     /* always white for print */
   --doc-fg:                 oklch(0.10 0 0);           /* near-black for print */
   --doc-print-border-color: oklch(0.60 0 0);           /* medium gray borders in print */
@@ -90,4 +137,56 @@
 [data-theme],
 [data-skin] {
   --doc-legal-color:        var(--color-fg-muted);
+}
+
+/* ── Restated from a document's attributes ──
+   A page box inherits from the root and nothing else, so what a document
+   says about its pages — its language, a letter's DIN form — has to reach
+   the root. :has() carries it there; :where() keeps each rule at :root's
+   weight, so it outranks the defaults above only by coming after them, and
+   a theme or a project's own `:root { … }`, loaded later, still overrides.
+   Print-only: nothing on screen reads these. */
+@media print {
+  /* The page counter in the document's language. */
+  :root:where(:has([data-ui="document"]:lang(de))) {
+    --doc-page-label:     "Seite ";
+    --doc-page-separator: " von ";
+  }
+
+  :root:where(:has([data-ui="document"]:lang(es))) {
+    --doc-page-label:     "Página ";
+    --doc-page-separator: " de ";
+  }
+
+  :root:where(:has([data-ui="document"]:lang(fr))) {
+    --doc-page-label:     "Page ";
+    --doc-page-separator: " sur ";
+  }
+
+  :root:where(:has([data-ui="document"]:lang(it))) {
+    --doc-page-label:     "Pagina ";
+    --doc-page-separator: " di ";
+  }
+
+  :root:where(:has([data-ui="document"]:lang(nl))) {
+    --doc-page-label:     "Pagina ";
+    --doc-page-separator: " van ";
+  }
+
+  :root:where(:has([data-ui="document"]:lang(pt))) {
+    --doc-page-label:     "Página ";
+    --doc-page-separator: " de ";
+  }
+
+  :root:where(:has([data-ui="document"]:lang(ro))) {
+    --doc-page-label:     "Pagina ";
+    --doc-page-separator: " din ";
+  }
+
+  /* DIN 5008 Form A: the address window at 27mm, the folds at 87 / 192mm. */
+  :root:where(:has([data-ui="document"][data-variant="letter"][data-form="a"])) {
+    --doc-window-top:     27mm;
+    --doc-fold-mark-1:    87mm;
+    --doc-fold-mark-2:    192mm;
+  }
 }

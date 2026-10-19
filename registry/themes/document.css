@@ -19,7 +19,9 @@
   --color-fg-subtle:        oklch(0.55 0 0);           /* light gray for tertiary text */
 
   /* ── Interactive: Primary (dark blue — professional, prints well) ── */
-  --color-primary:          oklch(0.35 0.10 250);      /* dark business blue */
+  /* The one print accent (--doc-accent): restate it on :root to re-ink. */
+  --doc-accent:             oklch(0.35 0.10 250);      /* dark business blue */
+  --color-primary:          var(--doc-accent);
   --color-primary-hover:    oklch(0.30 0.12 250);
   --color-primary-active:   oklch(0.25 0.12 250);
   --color-primary-fg:       white;
@@ -72,10 +74,12 @@
   --badge-radius:           var(--space-1);            /* slight rounding for badges only */
 
   /* ── Document token overrides: professional defaults ── */
-  --doc-font:               'Arial', 'Helvetica Neue', var(--font-sans);
+  /* The project's role families: an installed face reaches the paper, and
+     the system faces below (--font-sans) are only their fallbacks. */
+  --doc-font:               var(--font-body);
   --doc-font-size:          10pt;                      /* pt for print precision */
   --doc-line-height:        1.4;                       /* tighter than screen */
-  --doc-heading-font:       'Arial', 'Helvetica Neue', var(--font-sans);
+  --doc-heading-font:       var(--font-heading);
   --doc-heading-weight:     var(--weight-bold);
   --doc-heading-size:       14pt;
   --doc-subheading-size:    12pt;
@@ -142,7 +146,7 @@
     --color-border-strong:  oklch(0.30 0 0);
     --color-bg-subtle:      oklch(0.95 0 0);
     --color-bg-muted:       oklch(0.92 0 0);
-    --color-primary:        oklch(0.20 0.06 250);     /* darker for ink legibility */
+    --doc-accent:           oklch(0.20 0.06 250);     /* darker for ink legibility */
     --color-destructive:    oklch(0.30 0.15 25);      /* darker red for print */
   }
 }
