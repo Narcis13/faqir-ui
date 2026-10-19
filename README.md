@@ -736,8 +736,12 @@ your own `font-family`. A static family with a single weight (Instrument Serif)
 holding the heading role gets `font-synthesis-weight: none`, so headings are drawn
 at its one weight instead of a browser-faked bold, and `add` warns when the active
 theme's heading voice asks for a heavier one. `--italic` also installs a family's
-true-italic faces, hash-pinned like the upright ones, for the families whose italic
-pins the catalog carries (`fonts list` shows them); the catalog has none yet.
+true-italic faces, hash-pinned like the upright ones and written as
+`font-style: italic` faces beside them, so `<em>` is drawn rather than slanted by
+the browser (`faqir fonts add source-serif-4 --role body --italic`). Thirteen
+families carry them, at the same version, subsets and weights as their upright
+files; Manrope, Space Grotesk and Bricolage Grotesque ship upright only upstream,
+and `--italic` refuses them by name.
 
 **From an agent.** The MCP server exposes the same surface: `faqir_theme_list`
 returns every theme with its axes, `faqir_theme_info` one theme's manifest, and
@@ -1084,7 +1088,7 @@ faqir inspect <component> [--json]
 faqir theme set|list|create|generate|bundle <name>
 faqir theme generate <name> --accent <color> [--<axis> <value>...] [--seed <file>] [--out <dir>] [--document] [--legacy-blocks] [--allow-similar] [--json]
 faqir theme bundle <name> --scope[=<selector>] [--out <dir>] [--json]
-faqir fonts list|add|remove <family> [--role heading|body|ui|mono]
+faqir fonts list|add|remove <family> [--role heading|body|ui|mono|none] [--italic]
 faqir variant add|remove <component> <group>=<value>
 faqir scaffold landing-page|admin-dashboard|internal-tool|invoice|report [--output <path>] [--theme <name>] [--no-add]
 faqir bundle [--minify] [--watch] [--js] [--output <path>] [--dry-run]

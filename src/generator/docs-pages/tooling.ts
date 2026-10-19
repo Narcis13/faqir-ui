@@ -299,6 +299,7 @@ const COMMAND_DOCS: Record<string, CommandDoc> = {
     ],
     flags: [
       ["--role <role>", "Point the family at a role token (repeatable; default: its first catalogued role)"],
+      ["--italic", "Also install the family's hash-pinned true-italic faces, where upstream ships them"],
       ["--json", "Machine-readable output"],
     ],
     notes: [

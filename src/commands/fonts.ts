@@ -83,6 +83,7 @@ function printHelp(): void {
   console.log("  faqir fonts add fraunces --role heading");
   console.log("  faqir fonts add inter --role body --role ui");
   console.log("  faqir fonts add instrument-serif --role none");
+  console.log("  faqir fonts add source-serif-4 --role body --italic");
   console.log("  faqir fonts remove fraunces");
   log.blank();
   log.dim(
@@ -90,9 +91,14 @@ function printHelp(): void {
       "first catalogued role is used. A role has exactly one family, so assigning " +
       "one takes it off whoever held it.",
   );
+  const uprightOnly = FONT_CATALOG.filter((entry) => italicFiles(entry).length === 0);
   log.dim(
-    "--italic also installs the family's true-italic faces, where the catalog pins them " +
-      "(`fonts list` shows which do); without it, emphasis is a browser-slanted upright.",
+    "--italic also installs the family's true-italic faces, hash-pinned like the upright " +
+      "ones, so <em> is drawn rather than slanted by the browser" +
+      (uprightOnly.length > 0
+        ? `; ${uprightOnly.map((entry) => entry.family).join(", ")} ship upright only ` +
+          "(`fonts list` marks the families that have italics)."
+        : "."),
   );
   log.dim("No Google Fonts link: the WOFF2 files are downloaded once and served by your project.");
 }
@@ -356,8 +362,9 @@ async function fontsAdd(args: string[]): Promise<void> {
   // be verified, and installing it unverified is the one thing `fonts` never does.
   if (parsed.italic && italicFiles(entry).length === 0) {
     throw new Error(
-      `${entry.family} has no italic faces pinned in this catalog yet — ` +
-        `'faqir fonts list' shows the families that do. Install it without --italic.`,
+      `${entry.family} has no italic faces pinned in this catalog — its upstream ` +
+        `package ships upright only, and 'faqir fonts list' shows the families that ` +
+        `have italics. Install it without --italic.`,
     );
   }
 
