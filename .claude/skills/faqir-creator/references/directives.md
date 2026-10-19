@@ -107,7 +107,7 @@ Available on every scope without declaring them. They are non-enumerable, so `l-
 | `$store` | every expression | Every store registered with `Faqir.store()`. |
 | `$state` | every expression | `data-state` of the `[data-ui]` closest to the scope root. Writable — assigning sets the attribute — and reads re-run when a controller changes it. |
 | `$variant` | every expression | `data-variant` of the same `[data-ui]`, writable and observed the same way. |
-| `$ui` | every expression | The controller API of that same `[data-ui]` — `$ui.open()`. Also callable, to reach ANOTHER component's controller by CSS selector: `$ui('#detail-drawer').open()`, which returns `null` when nothing matches or the match has no controller. |
+| `$ui` | every expression | The controller API of that same `[data-ui]` — `$ui.open()`. Also callable, to reach ANOTHER component's controller by CSS selector: `$ui('#detail-drawer').open()`, which returns `null` when nothing matches or the match has no controller. `Faqir.ui(selectorOrElement)` is the same lookup from plain JavaScript. |
 | `$dispatch` | every expression | `$dispatch('name', detail)` fires a bubbling, composed `CustomEvent` from the scope root. |
 | `$nextTick` | every expression | `$nextTick(fn)` queues `fn` as a microtask, so it runs after the effects a mutation queued have flushed and the DOM is updated. |
 | `$watch` | every expression | `$watch('key', function (value, old) { … })` — returns a disposer. |

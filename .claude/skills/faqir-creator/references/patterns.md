@@ -84,26 +84,28 @@ Authentication form with login, register, and social auth options
       <h2 data-part="title">{title}</h2>
       <p data-part="description">{description}</p>
     </div>
-    <div data-part="error" role="alert" hidden>{error_message}</div>
-    <form data-part="form" aria-label="{form_label}">
-      <div data-part="name-field">
-        <label data-ui="label" for="{id}-name">Full name</label>
-        <input data-ui="input" type="text" id="{id}-name" autocomplete="name">
+    <div data-part="body">
+      <div data-part="error" role="alert" hidden>{error_message}</div>
+      <form data-part="form" aria-label="{form_label}">
+        <div data-part="name-field">
+          <label data-ui="label" for="{id}-name">Full name</label>
+          <input data-ui="input" type="text" id="{id}-name" autocomplete="name">
+        </div>
+        <div data-part="email-field">
+          <label data-ui="label" for="{id}-email">Email</label>
+          <input data-ui="input" type="email" id="{id}-email" autocomplete="email">
+        </div>
+        <div data-part="password-field">
+          <label data-ui="label" for="{id}-password">Password</label>
+          <input data-ui="input" type="password" id="{id}-password" autocomplete="current-password">
+        </div>
+        <button data-ui="button" data-variant="primary" data-part="submit" type="submit">{submit_text}</button>
+      </form>
+      <div data-part="separator">
+        <div data-ui="separator" role="separator"><span data-part="label">OR</span></div>
       </div>
-      <div data-part="email-field">
-        <label data-ui="label" for="{id}-email">Email</label>
-        <input data-ui="input" type="email" id="{id}-email" autocomplete="email">
-      </div>
-      <div data-part="password-field">
-        <label data-ui="label" for="{id}-password">Password</label>
-        <input data-ui="input" type="password" id="{id}-password" autocomplete="current-password">
-      </div>
-      <button data-ui="button" data-variant="primary" data-part="submit" type="submit">{submit_text}</button>
-    </form>
-    <div data-part="separator">
-      <div data-ui="separator" role="separator"><span data-part="label">OR</span></div>
+      <div data-part="social">{social_buttons}</div>
     </div>
-    <div data-part="social">{social_buttons}</div>
     <div data-part="footer">{footer_content}</div>
   </div>
 </div>
@@ -189,12 +191,44 @@ Data table with create, read, update, delete operations, search, and pagination
 
 ```html
 <div data-ui="crud-table" data-state="default" data-variant="default">
-  <div data-part="toolbar">...</div>
+  <div data-part="toolbar">
+    <div data-part="search">
+      <input data-ui="input" type="search" placeholder="Search {records}..." aria-label="Search {records}">
+    </div>
+    <div data-part="actions">
+      <button data-ui="button" data-variant="primary" data-part="create-button">{create_label}</button>
+    </div>
+  </div>
   <div data-part="table-wrapper">
-    <div data-ui="table">...</div>
+    <div data-ui="table" data-part="table" data-size="md">
+      <table data-part="table">
+        <thead data-part="thead">
+          <tr data-part="tr">
+            <th data-part="th" scope="col" data-sortable aria-sort="none">{col1}</th>
+            <th data-part="th" scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody data-part="tbody">
+          <tr data-part="tr">
+            <td data-part="td">{val1}</td>
+            <td data-part="td">
+              <div data-part="row-actions">
+                <button data-ui="button" data-variant="ghost" data-size="sm" aria-label="Edit {row_label}">Edit</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
   <div data-part="pagination">
-    <div data-ui="pagination">...</div>
+    <div data-ui="pagination" data-size="md">
+      <nav data-part="nav" role="navigation" aria-label="Pagination">
+        <button data-part="prev" aria-label="Previous page" disabled>&laquo; Prev</button>
+        <button data-part="page" data-page="1" data-state="active" aria-current="page">1</button>
+        <button data-part="next" aria-label="Next page">Next &raquo;</button>
+      </nav>
+    </div>
   </div>
 </div>
 ```
@@ -285,15 +319,18 @@ _kind: pattern · category: composite_
 Application dashboard layout with sidebar navigation, header, and content area
 
 ```html
-<div data-ui="dashboard-shell">
-  <aside data-part="sidebar" data-state="expanded">
+<div data-ui="dashboard-shell" l-data="{ drawer: false }" @keydown.escape="drawer = false">
+  <aside data-part="sidebar" id="{id}-sidebar" :data-state="drawer ? 'expanded' : null">
     <div data-part="logo">{logo}</div>
-    <nav data-part="nav" aria-label="Main navigation">
-      <a data-part="nav-item" aria-current="page">{item}</a>
+    <nav data-part="nav" role="navigation" aria-label="Main navigation">
+      <a data-part="nav-item" href="{href}" aria-current="page">{item}</a>
     </nav>
   </aside>
-  <header data-part="header">{header}</header>
-  <main data-part="content">{content}</main>
+  <header data-part="header" role="banner">
+    <button data-ui="button" data-variant="ghost" data-part="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-controls="{id}-sidebar" aria-expanded="false" :aria-expanded="drawer ? 'true' : 'false'" @click="drawer = !drawer">{menu_icon}</button>
+    {header}
+  </header>
+  <main data-part="content" role="main">{content}</main>
   <footer data-part="footer">{footer}</footer>
 </div>
 ```
@@ -311,7 +348,7 @@ Application dashboard layout with sidebar navigation, header, and content area
 ├─ [data-part='user-menu']  <div>  optional  — User dropdown menu area in the header
 ├─ [data-part='content']  <main>  required  — Main content area for dashboard pages
 ├─ [data-part='footer']  <footer>  optional  — Optional footer at the bottom of the content area
-├─ [data-part='sidebar-toggle']  <button>  optional  — Button collapsing the sidebar on narrow viewports
+├─ [data-part='sidebar-toggle']  <button>  optional  — Button that opens and closes the off-canvas sidebar below the md floor; hidden from md up, where the sidebar is docked and there is no drawer to open. Wire it with directives, no controller: a drawer flag in the root's l-data, @click="drawer = !drawer" and :aria-expanded on the toggle (aria-controls names the sidebar's id), :data-state="drawer ? 'expanded' : null" on the sidebar
 ├─ [data-part='nav-icon']  <span>  optional  — Leading glyph of a nav-item
 ├─ [data-part='nav-label']  <span>  optional  — Text of a nav-item, hidden when the sidebar is collapsed
 ├─ [data-part='sidebar-user']  <div>  optional  — Account block pinned to the foot of the sidebar
@@ -499,16 +536,19 @@ Responsive feature list for a marketing page: a section heading plus a real <ul>
 
 _kind: pattern · category: composite_
 
-The canonical schema-rendered form page — the pinned reference output shape for @faqir-ui/forms. A single form with a heading, description, and a field-group per property (text, email, enum radio, textarea, checkbox), driven by faqir-core (l-data) and validated by faqir-validate (l-validate). This markup is emitted verbatim by @faqir-ui/forms for its reference schema; the forms package drift-tests that the generator output still matches this page byte-for-byte.
+The canonical schema-rendered form page — the pinned reference output shape for @faqir-ui/forms. A single form with a heading, description, a field-group per property (text, email, enum radio, textarea, checkbox) and a footer holding its submit button, driven by faqir-core (l-data) and validated by faqir-validate (l-validate). This markup is emitted verbatim by @faqir-ui/forms for its reference schema; the forms package drift-tests that the generator output still matches this page byte-for-byte.
 
 ```html
-<form id="{id}-form" l-data l-validate aria-label="{title}" aria-describedby="{id}-form-description">
+<form id="{id}-form" l-data l-validate aria-label="{title}" aria-describedby="{id}-form-description" data-gap="4">
   <h1>{title}</h1>
   <p id="{id}-form-description">{description}</p>
   <div data-ui="field-group">
     <label data-part="label" for="{id}-field-name">{field_label} <span data-part="required">*</span></label>
     <div data-part="input"><input data-ui="input" id="{id}-field-name" name="{field_name}" required aria-required="true" aria-describedby="{id}-field-name-error" type="text"></div>
     <p data-part="error" id="{id}-field-name-error" aria-live="polite"></p>
+  </div>
+  <div>
+    <button type="submit" data-ui="button" data-variant="primary">{submit_label}</button>
   </div>
 </form>
 ```
@@ -519,7 +559,8 @@ The canonical schema-rendered form page — the pinned reference output shape fo
 form[l-data]:not([data-ui])  ·  <form> · content: slots
 ├─ > h1  <h1>  required  — Form title, from the schema's `title`
 ├─ > p  <p>  optional  — Form description, from the schema's `description`; wired to the form via aria-describedby
-└─ [data-ui='field-group']  <div>  required  — One field-group per schema property, carrying label, control, optional hint, and error slot
+├─ [data-ui='field-group']  <div>  required  — One field-group per schema property, carrying label, control, optional hint, and error slot
+└─ > div:not([data-ui])  <div>  optional  — The last child: a primary submit button labelled from `i18n.submitLabel` (`opts.submit: false` leaves it out)
 ```
 
 **Variants**
@@ -581,8 +622,8 @@ _kind: pattern · category: composite_
 List-detail split view (messages, tickets, conversations) driven entirely by declarative directives: one l-data holds the selected id, ':hidden' bindings swap the detail pane, ':data-state' marks which pane is active, and the list is l-for-shaped so it can be bound to an l-source collection without changing the markup. Below the small breakpoint it collapses to the active pane with back navigation. Zero custom JavaScript — it needs faqir-core.js, nothing else.
 
 ```html
-<div data-ui="inbox" data-state="detail" l-data="{ selected: '{first_id}' }" :data-state="selected === null ? 'list' : 'detail'">
-  <section data-part="list-pane" aria-labelledby="{id}-list-heading">
+<div data-ui="inbox" l-data="{ selected: '{first_id}' }">
+  <section data-part="list-pane" data-state="inactive" :data-state="selected === null ? 'active' : 'inactive'" aria-labelledby="{id}-list-heading">
     <div data-part="list-header">
       <h2 data-part="list-heading" id="{id}-list-heading">{mailbox}</h2>
       <span data-ui="badge" data-variant="primary">{unread}</span>
@@ -599,7 +640,7 @@ List-detail split view (messages, tickets, conversations) driven entirely by dec
       </li>
     </ul>
   </section>
-  <div data-part="detail-pane">
+  <div data-part="detail-pane" data-state="active" :data-state="selected === null ? 'inactive' : 'active'">
     <button type="button" data-ui="button" data-part="back" @click="selected = null">{back_label}</button>
     <article data-part="detail" aria-labelledby="{first_id}-subject" :hidden="selected !== '{first_id}'">
       <h3 data-part="detail-subject" id="{first_id}-subject">{subject}</h3>
@@ -851,7 +892,14 @@ Search interface with input, filtered results list, and pagination
     </article>
   </div>
   <div data-part="pagination">
-    <div data-ui="pagination"></div>
+    <div data-ui="pagination">
+      <nav data-part="nav" role="navigation" aria-label="Pagination">
+        <button data-part="prev" aria-label="Previous page" disabled>&laquo; Prev</button>
+        <button data-part="page" data-page="1" data-state="active" aria-current="page">1</button>
+        <button data-part="page" data-page="2">2</button>
+        <button data-part="next" aria-label="Next page">Next &raquo;</button>
+      </nav>
+    </div>
   </div>
 </div>
 ```
@@ -898,7 +946,29 @@ Settings page with tabbed sections, form fields, and save/discard actions
     <h1 data-part="title" id="{id}-title">{title}</h1>
     <p data-part="description">{description}</p>
   </div>
-  <div data-ui="tabs">{tabs}</div>
+  <div data-ui="tabs" data-variant="underline">
+    <div data-part="list" role="tablist">
+      <button data-part="trigger" role="tab" id="{id}-tab-1" aria-controls="{id}-panel-1" aria-selected="true">{tab1}</button>
+      <button data-part="trigger" role="tab" id="{id}-tab-2" aria-controls="{id}-panel-2" aria-selected="false" tabindex="-1">{tab2}</button>
+    </div>
+    <div data-part="panel" role="tabpanel" id="{id}-panel-1" aria-labelledby="{id}-tab-1">
+      <div data-part="section">
+        <div data-ui="card">
+          <div data-part="header">
+            <h2 data-part="section-title">{section_title}</h2>
+            <p data-part="section-description">{section_description}</p>
+          </div>
+          <div data-part="body">
+            <div data-part="field-group">
+              <label data-ui="label" for="{id}-field">{field_label}</label>
+              <input data-ui="input" type="text" id="{id}-field">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div data-part="panel" role="tabpanel" id="{id}-panel-2" aria-labelledby="{id}-tab-2" hidden>{panel2}</div>
+  </div>
   <div data-part="actions">
     <button data-ui="button" data-part="discard-button" data-variant="outline">{discard}</button>
     <button data-ui="button" data-part="save-button" data-variant="primary">{save}</button>
@@ -1001,10 +1071,11 @@ Marketing site footer: brand block with social links, titled link columns built 
 
 _kind: pattern · category: navigation_
 
-Website header: a brand link, the nav primitive centred beside it, an actions cluster of buttons and links, and a native <details> phone menu that holds a vertical copy of the same nav. Composition only: zero JavaScript, no controller, no reactive directives — the plain/floating/glass styles, the sticky pin and the scroll-condense are pure CSS, the condense a scroll timeline that degrades to the plain sticky bar.
+Website header: a skip link, a brand link, the nav primitive centred beside it, an actions cluster of buttons and links, and a native <details> phone menu that holds a vertical copy of the same nav. Composition only: zero JavaScript, no controller, no reactive directives — the plain/floating/glass styles, the sticky pin and the scroll-condense are pure CSS, the condense a scroll timeline that degrades to the plain sticky bar.
 
 ```html
 <header data-ui="site-header" data-variant="{style}" data-sticky>
+  <a data-ui="skip-link" href="#{main_id}">Skip to content</a>
   <a data-part="brand" href="{home_href}">{brand}</a>
   <div data-part="nav">
     <nav data-ui="nav" aria-label="Main">
@@ -1051,7 +1122,7 @@ Website header: a brand link, the nav primitive centred beside it, an actions cl
 - **Safe transforms:** `change-style-variant`, `toggle-sticky`, `toggle-condense`, `add-nav-link-to-both-navs`, `remove-nav-link-from-both-navs`, `change-action-buttons`, `change-brand-text`, `set-custom-property-knobs`
 - **Unsafe (never do):** `replace-header-element-with-div`, `remove-accessible-name-from-a-nav`, `give-both-navs-the-same-accessible-name`, `remove-the-summary-from-the-menu`, `edit-one-nav-without-the-other`, `add-data-part-to-action-buttons`, `promote-brand-to-a-heading`, `add-custom-script`
 - **A11y:** keys: Tab, Enter / Space
-- **Required ARIA:** `the root is a <header> element at the top of the page (banner landmark)`; `every nested nav has an accessible name via aria-label, and the inline nav and the menu nav use different names`; `the menu is a <details> whose <summary> carries visible text — that text is the toggle's accessible name`; `descriptive link text on the brand and on every action (never 'click here')`
+- **Required ARIA:** `the root is a <header> element at the top of the page (banner landmark)`; `a skip link as the root's first child (or just before the header), pointing at the id of the page's <main>`; `every nested nav has an accessible name via aria-label, and the inline nav and the menu nav use different names`; `the menu is a <details> whose <summary> carries visible text — that text is the toggle's accessible name`; `descriptive link text on the brand and on every action (never 'click here')`
 
 ## stats-dashboard
 
@@ -1190,7 +1261,7 @@ Multi-step form wizard composing stepper + card panels + field-group + buttons. 
   <div data-ui="stepper" data-part="steps" role="navigation" aria-label="Progress">
     <div data-part="step" :data-state="step > {i} ? 'completed' : (step === {i} ? 'active' : null)"><span data-part="indicator">1</span><span data-part="label">{step_label}</span></div>
   </div>
-  <section data-ui="card" data-variant="outlined" data-part="panel" :hidden="step !== {i}">{fields}</section>
+  <section data-ui="card" data-variant="outlined" data-part="panel" :hidden="step !== {i}"><div data-part="body">{fields}</div></section>
   <div data-part="actions">
     <button type="button" data-ui="button" data-variant="outline" data-part="back" :disabled="step === 0" @click="step = step - 1">Back</button>
     <button type="submit" data-ui="button" data-variant="primary" data-part="next" :hidden="step === {last}">Next</button>

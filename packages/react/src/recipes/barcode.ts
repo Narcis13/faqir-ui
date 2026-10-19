@@ -11,21 +11,23 @@ import { createBarcode } from "../controllers/barcode.js";
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on root). */
 export type LBarcodeSize = "sm" | "md" | "lg";
 
-export interface LBarcodeProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "value" | "size"> {
+export interface LBarcodeProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "value" | "size" | "onError"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
   /** Template text/attr substitution (default: ""). */
   value?: string;
   /** `data-size` on root; omitted when unset (manifest default: "md"). */
   size?: LBarcodeSize;
+  /** `faqir:error` → `(detail, event)`. */
+  onError?: FaqirEventHandler;
 }
 
-/** `barcode` — Print-safe Code 128-B barcode generator for printable ASCII identifiers Exposes via ref: `render()`, `update()`. */
+/** `barcode` — Print-safe Code 128-B barcode generator for printable ASCII identifiers Emits: `onError` (payload: `(detail, event)`). Exposes via ref: `render()`, `update()`. */
 export const LBarcode = createFaqirRecipe<LBarcodeProps>({
   name: "barcode",
   create: createBarcode,
   methods: ["render", "update"],
-  events: [],
+  events: ["error"],
   slots: [],
   stringProps: [{ prop: "value", default: "" }],
   boolProps: [],

@@ -92,6 +92,8 @@ export { LSignature } from "./components/signature.js";
 export type { LSignatureProps, LSignatureSize, LSignatureAlign } from "./components/signature.js";
 export { LSkeleton } from "./components/skeleton.js";
 export type { LSkeletonProps, LSkeletonVariant } from "./components/skeleton.js";
+export { LSkipLink } from "./components/skip-link.js";
+export type { LSkipLinkProps } from "./components/skip-link.js";
 export { LSpinner } from "./components/spinner.js";
 export type { LSpinnerProps, LSpinnerSize } from "./components/spinner.js";
 export { LSpotlight } from "./components/spotlight.js";

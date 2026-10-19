@@ -432,7 +432,7 @@ export const components = {
    "defaultSlot": false,
    "slots": {
     "trigger": {
-     "required": true
+     "required": false
     },
     "overlay": {
      "required": false
@@ -7539,7 +7539,11 @@ export const components = {
     }
    },
    "states": {},
-   "props": {},
+   "props": {
+    "value": {
+     "default": "0"
+    }
+   },
    "bools": [],
    "tree": {
     "tag": "div",
@@ -7548,6 +7552,14 @@ export const components = {
       "data-ui",
       [
        "progress"
+      ]
+     ],
+     [
+      "data-value",
+      [
+       {
+        "p": "value"
+       }
       ]
      ],
      [
@@ -7560,6 +7572,14 @@ export const components = {
       "aria-label",
       [
        "Progress"
+      ]
+     ],
+     [
+      "aria-valuenow",
+      [
+       {
+        "p": "value"
+       }
       ]
      ],
      [
@@ -7595,12 +7615,6 @@ export const components = {
           [
            "fill"
           ]
-         ],
-         [
-          "style",
-          [
-           "width: %"
-          ]
          ]
         ],
         "children": [],
@@ -7620,6 +7634,9 @@ export const components = {
        ]
       ],
       "children": [
+       {
+        "p": "value"
+       },
        "%"
       ],
       "slot": "label"
@@ -7661,7 +7678,23 @@ export const components = {
      "default": "md"
     }
    },
-   "states": {},
+   "states": {
+    "empty": {
+     "attr": "data-state",
+     "value": "empty",
+     "kind": "value"
+    },
+    "ready": {
+     "attr": "data-state",
+     "value": "ready",
+     "kind": "value"
+    },
+    "error": {
+     "attr": "data-state",
+     "value": "error",
+     "kind": "value"
+    }
+   },
    "props": {
     "value": {
      "default": ""
@@ -9227,6 +9260,40 @@ export const components = {
       "variant",
       "data-variant"
      ]
+    ]
+   }
+  },
+  "skip-link": {
+   "defaultSlot": true,
+   "slots": {},
+   "variants": {},
+   "states": {},
+   "props": {
+    "text": {
+     "default": "Skip to content"
+    }
+   },
+   "bools": [],
+   "tree": {
+    "tag": "a",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "skip-link"
+      ]
+     ],
+     [
+      "href",
+      [
+       "#"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "p": "text"
+     }
     ]
    }
   },

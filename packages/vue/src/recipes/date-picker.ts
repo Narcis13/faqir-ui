@@ -15,11 +15,11 @@ export interface LDatePickerProps {
   size?: LDatePickerSize;
 }
 
-/** `date-picker` — Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe Emits: `@calendar-change`, `@date-change` (payload: `(detail, event)`). Exposes: `open()`, `close()`, `getValue()`, `setValue()`, `navigate()`, `selectDate()`. */
+/** `date-picker` — Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe Emits: `@calendar-change`, `@date-change` (payload: `(detail, event)`). Exposes: `open()`, `close()`, `getValue()`, `setValue()`, `clear()`, `navigate()`, `selectDate()`. */
 export const LDatePicker = defineFaqirRecipe<LDatePickerProps>({
   name: "date-picker",
   create: createDatePicker,
-  methods: ["open", "close", "getValue", "setValue", "navigate", "selectDate"],
+  methods: ["open", "close", "getValue", "setValue", "clear", "navigate", "selectDate"],
   events: ["calendar-change", "date-change"],
   stringProps: [],
   boolProps: [],

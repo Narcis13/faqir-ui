@@ -17,12 +17,12 @@ export interface LBarcodeProps {
   size?: LBarcodeSize;
 }
 
-/** `barcode` — Print-safe Code 128-B barcode generator for printable ASCII identifiers Exposes: `render()`, `update()`. */
+/** `barcode` — Print-safe Code 128-B barcode generator for printable ASCII identifiers Emits: `@error` (payload: `(detail, event)`). Exposes: `render()`, `update()`. */
 export const LBarcode = defineFaqirRecipe<LBarcodeProps>({
   name: "barcode",
   create: createBarcode,
   methods: ["render", "update"],
-  events: [],
+  events: ["error"],
   stringProps: [{ prop: "value", default: "" }],
   boolProps: [],
   variantProps: [

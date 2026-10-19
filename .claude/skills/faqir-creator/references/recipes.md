@@ -93,7 +93,7 @@ Interruptive confirmation dialog (role=alertdialog) for destructive or irreversi
 
 ```text
 [data-ui='alert-dialog']  ·  <div> · content: slots
-├─ [data-part='trigger']  <button>  required  — Button that opens the alert dialog. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
+├─ [data-part='trigger']  <button>  optional  — Button that opens the alert dialog. Optional since 1.1.0: an alert dialog is often opened by the application (a row's delete button, a failed save, a timeout), so leave the trigger out, place the root outside <main>, and open it with open() or a [data-open="{id}"] button elsewhere on the page; focus returns to whatever was focused when it opened. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay — visual only; clicking it does NOT close an alertdialog
 ├─ [data-part='panel']  <div>  required  — The alert box; carries role=alertdialog and aria-modal. Its header, body and footer are its children, or children of a <form> that is (a form dialog).
 ├─ [data-part='header']  <div>  optional
@@ -143,7 +143,7 @@ Print-safe Code 128-B barcode generator for printable ASCII identifiers
 
 ```text
 [data-ui='barcode']  ·  <div> · content: slots
-├─ [data-part='svg']  <svg>  optional  — Generated Code 128 SVG created by the controller
+├─ [data-part='svg']  <svg>  optional  — Generated Code 128 SVG created by the controller. Drawn flush (the viewBox is the symbol, one unit per module, 50 tall); the quiet zone is its inline padding
 └─ [data-part='caption']  <span>  optional  — Optional human-readable value below the bars
 ```
 
@@ -376,7 +376,7 @@ Cmd+K style modal command interface with search and keyboard navigation
 ├─ [data-part='search']  <input>  required  — Search input with role=combobox for filtering commands. Sits in the search-wrapper, or directly in the panel when there is none
 ├─ [data-part='list']  <div>  required  — Scrollable list container with role=listbox
 ├─ [data-part='group']  <div>  optional  — Group container with label and items
-├─ [data-part='item']  <div>  required  — Individual command item with role=option. A child of a group, or of the list when there are no groups
+├─ [data-part='item']  <div>  required  — Individual command item with role=option. A child of a group, or of the list when there are no groups. Carry data-value to name the command (it arrives as detail.value in command-select); make it an <a href> to have the palette follow the link when the item is chosen
 ├─ [data-part='empty']  <div>  optional  — Empty state shown when no commands match. Inside the list, or directly in the panel
 ├─ [data-part='kbd']  <kbd>  optional  — Keyboard shortcut hint displayed in items
 ├─ [data-part='search-wrapper']  <div>  optional  — Row holding the search input and its leading icon
@@ -487,8 +487,9 @@ Date input with calendar dropdown for date selection — the month grid is the n
 
 ```text
 [data-ui='date-picker']  ·  <div> · content: slots
+├─ [data-part='value']  <input>  optional  — Inside a form: an <input type="hidden"> directly inside the root, carrying the field's name. The controller keeps the ISO date (YYYY-MM-DD) in it and fires input/change on it whenever the value changes, so it is what FormData, a native submit, l-model and the rules read. The visible input then carries no name.
 ├─ [data-part='trigger']  <div>  required  — Clickable area containing input and icon
-├─ [data-part='input']  <input>  required  — Text input displaying the selected date
+├─ [data-part='input']  <input>  required  — Text input displaying the selected date as a person reads it ("October 15, 2026"). Inside a form it carries the label's id, required and the description wiring but no name — the value part is what submits
 ├─ [data-part='icon']  <span>  optional  — Decorative calendar glyph inside the trigger (aria-hidden)
 └─ [data-part='calendar']  <div>  required  — Calendar dropdown container. Canonically nests a [data-ui='calendar'] recipe that owns the header, month navigation and day grid; legacy markup with those parts placed directly inside this container keeps working
 ```
@@ -509,6 +510,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 | `close()` | — |
 | `getValue()` | — |
 | `setValue(dateStr)` | — |
+| `clear()` | — |
 | `navigate(month, year)` | — |
 | `selectDate(date)` | — |
 | `destroy()` | — |
@@ -962,7 +964,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 
 _kind: recipe · category: data-display · controller: createQrCode()_
 
-SVG QR code generator from text input with configurable size and error correction
+SVG QR code generator (byte mode, versions 1–40) from text input with configurable size and error correction
 
 ```html
 <div data-ui="qr-code" data-value="{url}" data-size="{size}" data-ecl="{ecl}" role="img" aria-label="QR code: {url}"></div>
@@ -972,7 +974,7 @@ SVG QR code generator from text input with configurable size and error correctio
 
 ```text
 [data-ui='qr-code']  ·  <div> · content: slots
-├─ [data-part='svg']  <svg>  optional  — Generated SVG QR code (created by controller)
+├─ [data-part='svg']  <svg>  optional  — Generated SVG QR code (created by controller). Drawn flush (the viewBox is the symbol, one unit per module); the quiet zone is its padding, and it carries the module count as the --qr-modules custom property
 └─ [data-part='caption']  <span>  optional  — Optional text label below the QR code
 ```
 
