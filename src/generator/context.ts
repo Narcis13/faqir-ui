@@ -27,7 +27,7 @@ import { axisSummary, themeKind } from "../theme/describe";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
-import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-layer";
+import { BASE_LAYER_BLURB, baseLayerUiValues, baseLayerValueBlurb, loadBaseLayer } from "../base-layer";
 import { SCAFFOLDS, SCAFFOLD_NAMES } from "../scaffolds/registry";
 
 /**
@@ -1176,7 +1176,7 @@ function partitionComponents(data: ContextData): {
  */
 function baseLayerEntries(): { value: string; file: string; blurb: string }[] {
   return loadBaseLayer(getRegistryPath()).flatMap((file) =>
-    file.defines.map((value) => ({ value, file: file.file, blurb: file.blurb })),
+    file.defines.map((value) => ({ value, file: file.file, blurb: baseLayerValueBlurb(file, value) })),
   );
 }
 
@@ -1671,7 +1671,9 @@ export function formatContextLlmsFull(data: ContextData): string {
     lines.push("");
     lines.push(
       "`prose` sets its own measure (`max-inline-size: var(--measure-prose)`); wrap it in " +
-        "`container` when the page needs a different one.",
+        "`container` when the page needs a different one. A table wider than the column " +
+        'scrolls inside its own wrapper: `<div role="region" tabindex="0" aria-label="…">` ' +
+        "(or a `<figure>` with a `<figcaption>`) around the `<table>`.",
     );
     lines.push("");
   }

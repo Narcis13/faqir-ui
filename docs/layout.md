@@ -242,6 +242,8 @@ Three things worth knowing and nothing else:
   shifts it inside its line box instead of stacking it, so a row of badges stays a
   row. The 26 inline-level components are listed in `registry/base/rhythm.css`, and
   the list is derived from the registry by test rather than kept by hand.
+- **Page chrome opens no gap.** The element right after a `site-header` (or a
+  `skip-link`) takes no `--flow-space`, so `main` sits flush under the header bar.
 - **`data-gap` on the flow root re-tunes it**, on the same `0 1 2 3 4 6 8 10 12 16`
   ladder the layout primitives take, and `data-gap="0"` turns it off. It inherits, so
   it is written once per page. The rule weighs (0,0,0), so any component rule and any

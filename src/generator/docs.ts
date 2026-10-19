@@ -150,7 +150,7 @@ import { getHtmlRuleInventory, getRuleInventory } from "../audit/rules";
 // The hosted llms.txt pair is the CLI's own `--format llms` generator pointed at
 // the whole registry instead of at one project (task 0.7-15).
 import { formatContextLlms, formatContextLlmsFull } from "./context";
-import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-layer";
+import { BASE_LAYER_BLURB, baseLayerUiValues, baseLayerValueBlurb, loadBaseLayer } from "../base-layer";
 // The playground audits against the registry's own name list — the same one the
 // CLI uses — so `unknown-component` says the same thing in both (task 1.0R-11).
 import { knownUiValues } from "../utils/components";
@@ -2251,7 +2251,7 @@ function renderBaseLayerSection(registryRoot: string): string[] {
     file.defines.map((value) => [
       code(`data-ui="${value}"`),
       code(`base/${file.file}`),
-      esc(file.blurb),
+      esc(baseLayerValueBlurb(file, value)),
     ]),
   );
   return [
@@ -2266,7 +2266,10 @@ function renderBaseLayerSection(registryRoot: string): string[] {
     `      <p>${esc(
       "Write ordinary HTML inside — headings, paragraphs, lists, tables, blockquotes and code " +
         "blocks are all styled for you. prose sets its own measure (max-inline-size: " +
-        "var(--measure-prose)); wrap it in container when a page needs a different one.",
+        "var(--measure-prose)); wrap it in container when a page needs a different one. A table " +
+        "wider than the column scrolls inside its own wrapper — a div (role=\"region\", " +
+        "tabindex=\"0\", an aria-label) or a figure with a figcaption around the table — instead " +
+        "of widening the page.",
     )}</p>`,
     `      </section>`,
   ];
