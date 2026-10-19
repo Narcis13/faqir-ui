@@ -623,7 +623,11 @@ one) when it is not empty:
 plugins whose directives appear (`l-validate` → `faqir-validate.js`, from each
 plugin's `@ui:provides` header), sorted; then the controller files of the
 recipes the page uses — through calls or plain elements with a literal `data-ui`
-— with the recipe controllers they import, sorted.
+— with the recipe controllers they import, sorted. A component whose controller
+ships as an opt-in plugin, named by the plugin's `@ui:controller` header, counts
+the same way: `+chart` requires `faqir-chart.js`. Its markup is complete without
+it — the chart's data table is the chart until the plugin draws — so a page
+rendered for print without JavaScript still carries every number.
 
 ### 11.7 The `l-data` island
 
