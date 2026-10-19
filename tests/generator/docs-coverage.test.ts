@@ -207,7 +207,22 @@ describe("every official plugin runs live on the site", () => {
 
   it("uses every directive and magic a plugin provides in a live example", () => {
     const missing: string[] = [];
+    const components = discoverDocsComponents(REGISTRY);
     for (const p of plugins) {
+      // A plugin that carries a component's controller (`@ui:controller`,
+      // forecraft #36) provides that controller's methods rather than page
+      // vocabulary: it runs live where the component's example mounts the
+      // component and loads the plugin.
+      const source = readFileSync(join(REGISTRY, "core", "plugins", p.file), "utf8");
+      const controller = /^\/\/ @ui:controller\s+(\S+)\s*$/m.exec(source)?.[1];
+      if (controller) {
+        const c = components.find((x) => x.name === controller);
+        const example = (c && byPath.get(c.examplePath)) || "";
+        if (!example.includes(`data-ui="${controller}"`) || !example.includes(p.file)) {
+          missing.push(`${p.name}: the ${controller} example`);
+        }
+        continue;
+      }
       for (const provided of p.provides) {
         const name = provided.replace(/\(\)$/, "");
         const live = name.startsWith("$")

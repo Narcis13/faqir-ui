@@ -6,7 +6,7 @@
         "height": 900
       },
       "totals": {
-        "pages": 281,
+        "pages": 283,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -225,6 +225,12 @@
           "overlaps": 0
         },
         "components/primitives/card.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/chart.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -873,6 +879,12 @@
           "overlaps": 0
         },
         "examples/primitives/card.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/chart.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1708,7 +1720,7 @@
         "height": 812
       },
       "totals": {
-        "pages": 281,
+        "pages": 283,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -1927,6 +1939,12 @@
           "overlaps": 0
         },
         "components/primitives/card.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/chart.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2575,6 +2593,12 @@
           "overlaps": 0
         },
         "examples/primitives/card.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/chart.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,

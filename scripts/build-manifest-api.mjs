@@ -47,12 +47,32 @@ function controllerSource(layer, name, file) {
 }
 
 /**
+ * Controllers that ship as an opt-in plugin rather than inside the engine,
+ * keyed by component name: a `registry/core/plugins/*.js` whose header carries
+ * `// @ui:controller <name>` (faqir-chart draws the `chart` primitive). The
+ * plugin registers the controller through `Faqir.controller`, so `$ui` reaches
+ * it exactly as it reaches a recipe's — and its API belongs in the manifest the
+ * same way, read from the same `@ui:provides` line.
+ */
+export function pluginControllers(pluginsDir = join(REGISTRY, "core", "plugins")) {
+  const out = new Map();
+  if (!existsSync(pluginsDir)) return out;
+  for (const file of readdirSync(pluginsDir).filter((f) => f.endsWith(".js")).sort()) {
+    const source = readFileSync(join(pluginsDir, file), "utf8");
+    const name = /^\/\/ @ui:controller\s+([a-z0-9-]+)\s*$/m.exec(source)?.[1];
+    if (name) out.set(name, source);
+  }
+  return out;
+}
+
+/**
  * Every component with a controller, and the API its controller declares.
  * A component whose controller advertises nothing is absent from the result —
  * its manifest must then carry no `api` either.
  */
 export function collectControllerApis() {
   const apis = new Map(); // "<layer>/<name>" → { manifestPath, api }
+  const plugins = pluginControllers();
 
   for (const layer of LAYERS) {
     const base = join(REGISTRY, layer);
@@ -62,9 +82,9 @@ export function collectControllerApis() {
       if (!existsSync(manifestPath)) continue;
       const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
       const jsFile = manifest.files?.js;
-      if (!jsFile) continue;
+      if (!jsFile && !plugins.has(name)) continue;
 
-      const source = controllerSource(layer, name, jsFile);
+      const source = jsFile ? controllerSource(layer, name, jsFile) : plugins.get(name);
       if (source === null) continue;
 
       // A controller that delegates its surface (alert-dialog IS dialog with a
