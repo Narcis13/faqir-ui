@@ -1,5 +1,5 @@
 /* @ui:component document */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border space-2 space-4 space-6 space-8 space-12 shadow-lg radius-md font-body text-xs text-sm weight-semibold weight-bold leading-normal page-format page-orientation page-margin-top page-margin-right page-margin-bottom page-margin-left doc-running-header-height doc-running-footer-height doc-running-gap doc-print-border-color doc-heading-font doc-heading-weight doc-font doc-legal-size doc-legal-color doc-max-width doc-font-size doc-line-height doc-section-gap doc-component-gap doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-header-weight doc-table-header-fg doc-table-header-bg doc-table-border doc-table-num-font doc-table-footer-weight doc-table-footer-bg doc-table-stripe-bg doc-bg doc-fg doc-letter-margin-right doc-letter-margin-left doc-fold-mark-1 doc-mark-length doc-mark-inset doc-mark-width doc-mark-color doc-punch-mark-length doc-fold-mark-2 doc-running-header doc-running-footer doc-serif doc-page-label doc-page-separator doc-page-suffix doc-window-top doc-window-height doc-window-width doc-window-padding doc-window-left z-raised border-width texture-page */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border space-2 space-4 space-6 space-8 space-12 shadow-lg radius-md font-body text-xs text-sm weight-semibold weight-bold leading-normal page-format page-orientation page-margin-top page-margin-right page-margin-bottom page-margin-left doc-running-header-height doc-running-footer-height doc-running-gap doc-print-border-color doc-heading-font doc-heading-weight doc-font doc-legal-size doc-legal-color doc-max-width doc-font-size doc-line-height doc-section-gap doc-component-gap doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-header-weight doc-table-header-fg doc-table-header-bg doc-table-border doc-table-num-font doc-table-footer-weight doc-table-footer-bg doc-table-stripe-bg doc-bg doc-fg doc-letter-margin-right doc-letter-margin-left doc-fold-mark-1 doc-mark-length doc-mark-inset doc-mark-width doc-mark-color doc-punch-mark-length doc-fold-mark-2 doc-running-header doc-running-footer doc-serif doc-page-label doc-page-separator doc-page-suffix doc-window-top doc-window-height doc-window-width doc-window-padding doc-window-left doc-rule-scale doc-rule-strong-scale doc-table-flush doc-table-num-scale z-raised border-width border-width-strong texture-page */
 
 /* ── Page Rules ──
    Named pages. An unnamed `@page` is global once this sheet is bundled: every
@@ -333,6 +333,23 @@
 [data-ui="document"] [data-ui="table"] [data-part="td"] {
   padding: var(--doc-table-cell-pad-y) var(--doc-table-cell-pad-x);
   font-size: var(--doc-table-font-size);
+  border-bottom-width: calc(var(--border-width) * var(--doc-rule-scale));
+}
+
+/* The rule under the head. Not in a `bordered` table, whose grid draws every
+   cell edge at one weight. */
+[data-ui="document"] [data-ui="table"]:not([data-variant="bordered"]) [data-part="th"] {
+  border-bottom-width: calc(var(--border-width-strong) * var(--doc-rule-strong-scale));
+}
+
+/* A row's outer cells: a print theme that sets the rules flush with the text
+   column takes this inset away (forecraft #48). */
+[data-ui="document"] [data-ui="table"] :is([data-part="th"], [data-part="td"]):first-child {
+  padding-inline-start: calc(var(--doc-table-cell-pad-x) * (1 - var(--doc-table-flush)));
+}
+
+[data-ui="document"] [data-ui="table"] :is([data-part="th"], [data-part="td"]):last-child {
+  padding-inline-end: calc(var(--doc-table-cell-pad-x) * (1 - var(--doc-table-flush)));
 }
 
 [data-ui="document"] [data-ui="table"] [data-format="number"],
@@ -341,10 +358,15 @@
   font-variant-numeric: var(--doc-table-num-font);
 }
 
+[data-ui="document"] [data-ui="table"] [data-part="td"]:is([data-format="number"], [data-format="currency"], [data-format="percent"]) {
+  font-size: calc(var(--doc-table-font-size) * var(--doc-table-num-scale));
+}
+
 [data-ui="document"] [data-ui="table"] [data-part="tfoot"] [data-part="td"] {
   font-weight: var(--doc-table-footer-weight);
   background: var(--doc-table-footer-bg);
   border-top-color: var(--doc-table-border);
+  border-top-width: calc(var(--border-width-strong) * var(--doc-rule-strong-scale));
 }
 
 [data-ui="document"] [data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:nth-child(even) [data-part="td"] {
