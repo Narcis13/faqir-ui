@@ -177,7 +177,7 @@ describe("Integrations page is generated from the packages", () => {
   it("lists every named export of @faqir-ui/core", () => {
     const entry = readFileSync(join(REPO, "packages", "core", "src", "esm-entry.js"), "utf8");
     const names = [...entry.matchAll(/^export const (\w+) =/gm)].map((m) => m[1]!);
-    expect(names.length).toBe(19);
+    expect(names.length).toBe(20);
     for (const n of names) expect(html).toContain(`<code>${n}</code>`);
   });
 

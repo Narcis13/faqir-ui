@@ -236,8 +236,13 @@ describe("minified engine artifact", () => {
     // twelve overlay controllers, cleanup ownership that survives a detached
     // template, `l-model` listener teardown, and the missing-part guards that
     // name the part instead of throwing. See scripts/check-size.mjs for the ledger.
+    //
+    // 46 → 47 KB for this bundle only (forecraft #28/#10): 1.2.5 left it 15 bytes
+    // under 46 KB, and holding a not-yet-registered directive for a late plugin,
+    // the classic-`defer` boot and `Faqir.ui` cost ~114 bytes gzip. The
+    // `bun run size` budget for the same engine (46 KB) still holds.
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
-    expect(gzip).toBeLessThanOrEqual(46 * 1024);
+    expect(gzip).toBeLessThanOrEqual(47 * 1024);
   });
 });
 

@@ -127,7 +127,7 @@ devHooks = {
       'directive',
       'directive:' + dir.raw + ':' + describeElement(el),
       'Unknown directive "' + dir.raw + '" — no built-in handler and no plugin ' +
-        'registered Faqir.directive("' + dir.type + '", …). It does nothing.',
+        'registered Faqir.directive("' + dir.type + '", …). It does nothing until one is.',
       el,
       { directive: dir.raw, expression: dir.expression }
     );

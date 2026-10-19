@@ -46,7 +46,9 @@ Notes that matter in practice:
 - **Inspecting registers no reactive dependency.** Calling it inside or outside
   an effect never causes a re-run.
 - `controller.api` is the *same object* the component's controller returned, so
-  `Faqir.inspect(el).controller.api.open()` drives the real component.
+  `Faqir.inspect(el).controller.api.open()` drives the real component. To
+  reach a controller without the rest of the snapshot, `Faqir.ui(el)` returns
+  that same object (or `null`).
 - `variant` / `size` / `state` are read from the owning `[data-ui]` (the same
   rule the `$state` and `$variant` magics follow); `part` is read from the
   element itself.

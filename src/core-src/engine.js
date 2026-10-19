@@ -352,7 +352,7 @@
   // @ui:magic $store | every expression | Every store registered with `Faqir.store()`.
   // @ui:magic $state | every expression | `data-state` of the `[data-ui]` closest to the scope root. Writable — assigning sets the attribute — and reads re-run when a controller changes it.
   // @ui:magic $variant | every expression | `data-variant` of the same `[data-ui]`, writable and observed the same way.
-  // @ui:magic $ui | every expression | The controller API of that same `[data-ui]` — `$ui.open()`. Also callable, to reach ANOTHER component's controller by CSS selector: `$ui('#detail-drawer').open()`, which returns `null` when nothing matches or the match has no controller.
+  // @ui:magic $ui | every expression | The controller API of that same `[data-ui]` — `$ui.open()`. Also callable, to reach ANOTHER component's controller by CSS selector: `$ui('#detail-drawer').open()`, which returns `null` when nothing matches or the match has no controller. `Faqir.ui(selectorOrElement)` is the same lookup from plain JavaScript.
   // @ui:magic $dispatch | every expression | `$dispatch('name', detail)` fires a bubbling, composed `CustomEvent` from the scope root.
   // @ui:magic $nextTick | every expression | `$nextTick(fn)` queues `fn` as a microtask, so it runs after the effects a mutation queued have flushed and the DOM is updated.
   // @ui:magic $watch | every expression | `$watch('key', function (value, old) { … })` — returns a disposer.
@@ -1204,9 +1204,39 @@
         if (customDirectives.has(dir.type)) {
           var cleanupFn = customDirectives.get(dir.type)(el, dir, scope);
           if (typeof cleanupFn === 'function') addCleanup(el, cleanupFn);
+          return;
         }
-        /* @faqir:dev */ else if (devHooks) devHooks.unknownDirective(el, dir);
+        holdDirective(el, dir, scope);
+        /* @faqir:dev */ if (devHooks) devHooks.unknownDirective(el, dir);
     }
+  }
+
+  // A directive nothing has registered YET, held with the scope it was bound
+  // in. A plugin loaded after the boot — a slow `defer` script, an on-demand
+  // `import()` — registered its directive against a tree that had already been
+  // walked, and every element carrying it stayed inert with no error.
+  // `Faqir.directive()` now applies what was held for its name, exactly once:
+  // only elements the engine actually bound (so scopes, stray markup and
+  // teleports keep the scope they were bound in), and an element torn down in
+  // the meantime drops out through its own cleanup. An entry leaves the set
+  // when it is applied, so registering a directive twice applies nothing the
+  // second time.
+  var heldDirectives = new Set();
+
+  function holdDirective(el, dir, scope) {
+    var entry = [el, dir, scope];
+    heldDirectives.add(entry);
+    addCleanup(el, function() { heldDirectives.delete(entry); });
+  }
+
+  function registerDirective(name, handler) {
+    customDirectives.set(name, handler);
+    heldDirectives.forEach(function(entry) {
+      if (entry[1].type === name) {
+        heldDirectives.delete(entry);
+        applyDirective(entry[0], entry[1], entry[2]);
+      }
+    });
   }
 
   // --- 3.6 l-text ---
@@ -2921,6 +2951,16 @@
   // enough for the rest of the module graph and any `import().then(...)`, and
   // `DOMContentLoaded` still wins if it has not fired yet. `bootstrap` is
   // re-entry safe, so an explicit `Faqir.start()` before then costs nothing.
+  //
+  // Except for a classic `defer` script. It runs while `readyState` is
+  // `interactive` too, but with the page's other deferred scripts still to
+  // come — and a one-task timer can fire between two of them, so the engine
+  // booted before the plugins and `Faqir.data()` calls loaded after it
+  // (`faqir-rules`' `l-rules` stayed inert about four loads in six). A
+  // parser-inserted `defer` script always runs before `DOMContentLoaded`, so
+  // there the event alone is right; `load` covers a script that merely carries
+  // the attribute and was injected after the event. An `async` or injected
+  // script cannot tell whether the event has passed, and keeps the timer.
   var autoStarted = false;
   function autoStart() {
     if (autoStarted) return;
@@ -2929,10 +2969,11 @@
   }
 
   if (!isManual && typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', autoStart);
-    } else {
-      if (document.readyState === 'interactive') document.addEventListener('DOMContentLoaded', autoStart);
+    var readyState = document.readyState;
+    if (readyState !== 'complete') document.addEventListener('DOMContentLoaded', autoStart);
+    if (readyState === 'interactive' && currentScript && currentScript.defer && !currentScript.async) {
+      window.addEventListener('load', autoStart);
+    } else if (readyState !== 'loading') {
       setTimeout(autoStart, 0);
     }
   }
@@ -2957,7 +2998,7 @@
     nextTick: function(fn) { return queueMicrotask(fn || function() {}); },
     data: function(name, factory) { dataRegistry.set(name, factory); },
     store: function(name, obj) { globalStores[name] = reactive(obj); },
-    directive: function(name, handler) { customDirectives.set(name, handler); },
+    directive: registerDirective,
     magic: function(name, callback) {
       if (name === 'this') throw new Error('[Faqir] "this" is reserved: $this is the directive element');
       customMagics.set(name, callback);
@@ -2969,6 +3010,10 @@
     // Snapshot of Faqir's view of one element — scope, directives, controller,
     // protocol attributes. [0.7-12]
     inspect: inspect,
+    // A component's controller API from plain JavaScript — the function `$ui()`
+    // calls, by element or selector; `null` when nothing matches or the match
+    // has no controller.
+    ui: resolveUi,
     // The same object installed at window.__FAQIR_DEVTOOLS__. Exposed here too
     // so code holding a specific engine instance (a bundler import, a test
     // loading one build) reaches ITS handle rather than whichever engine
