@@ -258,7 +258,10 @@ describe("theme manifest · the token surface", () => {
     // in tokens/document.css: --doc-accent, --doc-serif, the two running
     // strings, the three counter labels and the fourteen DIN 5008 letter
     // geometry tokens (two margins, two folds, five mark, five window).
-    expect(SURFACE.length).toBe(319);
+    // Forecraft #48 added four, also in tokens/document.css, that give a print
+    // theme's table its voice: --doc-rule-scale, --doc-rule-strong-scale,
+    // --doc-table-num-scale and --doc-table-flush.
+    expect(SURFACE.length).toBe(323);
     expect(SURFACE).toContain("doc-accent");
     expect(SURFACE).toContain("mono-ligatures");
     expect(SURFACE).toContain("disabled-opacity");

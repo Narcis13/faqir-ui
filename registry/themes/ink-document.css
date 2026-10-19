@@ -1,6 +1,7 @@
 /* @ui:theme ink-document — brand-matched, print-optimized document theme */
 /* @ui:schemes light */
 /* Generated from oklch(0.3 0.06 60); white paper, flat surfaces, crisp edges, and ink-safe contrast. */
+/* Print voice: letterpress, from the parent's type pairing (slab). */
 
 :root {
   --palette-ink-50          : oklch(0.942 0.0108 60);
@@ -74,11 +75,16 @@
   --doc-section-gap         : var(--space-6);
   --doc-component-gap       : var(--space-3);
   --doc-table-font-size     : 9pt;
-  --doc-table-header-bg     : var(--color-bg-muted);
-  --doc-table-border        : var(--color-border-strong);
+  --doc-table-header-bg     : var(--palette-ink-100);
+  --doc-table-border        : var(--palette-ink-900);
   --doc-table-footer-bg     : var(--color-bg-muted);
   --doc-table-stripe-bg     : var(--color-bg-subtle);
   --doc-max-width           : 210mm;
+  --doc-table-header-fg     : var(--palette-ink-950);
+  --doc-table-header-weight : var(--weight-bold);
+  --doc-rule-scale          : 2;
+  --doc-rule-strong-scale   : 1.5;
+  --doc-print-border-color  : var(--palette-ink-900);
   --font-sans               : 'Arial', 'Helvetica Neue', system-ui, sans-serif;
   --font-mono               : 'Courier New', ui-monospace, monospace;
 }
