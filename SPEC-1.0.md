@@ -236,7 +236,7 @@ why they need no manifest declaration, which the documentation cross-checks exem
 
 | Attribute | Purpose | Values | Written by |
 |-----------|---------|--------|------------|
-| `data-accent` | Re-hues the five accent tokens for a subtree, keeping the active theme's own lightness and chroma. | `violet` \| `purple` \| `fuchsia` \| `pink` \| `custom` | author |
+| `data-accent` | Re-hues the five accent tokens for a subtree, keeping the active theme's own lightness and chroma. | `rose` \| `red` \| `orange` \| `blue` \| `indigo` \| `violet` \| `purple` \| `fuchsia` \| `pink` \| `custom` | author |
 | `data-density` | Re-declares the spacing and control-height ramps for a subtree. | `compact` \| `comfortable` \| `spacious` | author |
 | `data-motion` | The transition phase of one enter/leave cycle, driven by the engine. | `enter` \| `enter-active` \| `leave` \| `leave-active` | controller |
 | `data-skin` | Selects which theme's token declarations a subtree resolves — the scope selector `faqir theme bundle` emits when it scopes a theme to part of a page. | `<theme-name>` | author |

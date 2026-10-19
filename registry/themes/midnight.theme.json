@@ -381,6 +381,6 @@
   "distinctiveness": {
     "nearest": "aurora",
     "axis_distance": 4,
-    "token_distance": 0.0416
+    "token_distance": 0.0415
   }
 }

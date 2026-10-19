@@ -12,7 +12,7 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 | Attribute | Purpose | Values | Written by | Scope |
 |---|---|---|---|---|
-| `data-accent` | Re-hues the five accent tokens for a subtree, keeping the active theme's own lightness and chroma. | `violet`, `purple`, `fuchsia`, `pink`, `custom` | author | Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. `custom` takes its hue from `--accent-hue`. |
+| `data-accent` | Re-hues the five accent tokens for a subtree, keeping the active theme's own lightness and chroma. | `rose`, `red`, `orange`, `blue`, `indigo`, `violet`, `purple`, `fuchsia`, `pink`, `custom` | author | Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. `custom` takes its hue from `--accent-hue`. |
 | `data-density` | Re-declares the spacing and control-height ramps for a subtree. | `compact`, `comfortable`, `spacious` | author | Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. |
 | `data-motion` | The transition phase of one enter/leave cycle, driven by the engine. | `enter`, `enter-active`, `leave`, `leave-active` | controller | The element being transitioned. Removed again when the cycle ends. |
 | `data-skin` | Selects which theme's token declarations a subtree resolves — the scope selector `faqir theme bundle` emits when it scopes a theme to part of a page. | `<theme-name>` | author | Legal on any element; scopes the theme it names to that element's subtree without switching the whole page. |
@@ -826,12 +826,17 @@ Invariant in `spacing`: `--space-0`, `--space-px` — never scaled, at any densi
 
 ## accent — [data-accent] subtree modifier
 
-_`registry/tokens/accent.css` · 4 named hues · 7 tokens re-pointed per scope_
+_`registry/tokens/accent.css` · 9 named hues · 7 tokens re-pointed per scope_
 
 `data-accent` sets `--accent-hue` (OKLCH degrees) and re-points the tokens below to `oklch(from <the theme's own value> l c <hue>)` — the theme's lightness and chroma, the accent's hue. `custom` names no hue: set `--accent-hue` beside it.
 
 | Value | `--accent-hue` |
 |---|---|
+| `rose` | `16` |
+| `red` | `25` |
+| `orange` | `48` |
+| `blue` | `260` |
+| `indigo` | `277` |
 | `violet` | `293` |
 | `purple` | `304` |
 | `fuchsia` | `322` |

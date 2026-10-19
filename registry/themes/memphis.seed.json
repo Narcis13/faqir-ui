@@ -1,6 +1,6 @@
 {
   "name": "memphis",
-  "accent": "oklch(0.6 0.22 350)",
+  "accent": "oklch(0.585 0.22 350)",
   "neutral": "tinted",
   "scheme": "light",
   "type": {

@@ -452,7 +452,7 @@
   "distinctiveness": {
     "nearest": "memphis",
     "axis_distance": 11,
-    "token_distance": 0.032
+    "token_distance": 0.0318
   },
   "visual_matrix": false
 }

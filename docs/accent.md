@@ -43,6 +43,11 @@ alias would overrule them.
 
 | Value | Hue (OKLCH °) |
 |-------|---------------|
+| `rose` | 16 |
+| `red` | 25 |
+| `orange` | 48 |
+| `blue` | 260 |
+| `indigo` | 277 |
 | `violet` | 293 |
 | `purple` | 304 |
 | `fuchsia` | 322 |
@@ -58,36 +63,57 @@ the primary fill (4.5:1), and the focus ring on every surface (3:1, SC 1.4.11).
 Out-of-gamut results were measured twice — clipped per channel, as the gate
 does, and chroma-reduced at constant lightness, as CSS Color 4 specifies — so
 the result does not depend on how a browser maps a colour sRGB cannot show. A
-finding is one theme × scheme × pair below its minimum.
+finding is one theme × scheme × pair below its minimum. (`memphis` is
+light-only, so the gate measures its light values twice, and a `memphis`
+finding counts twice.)
 
-| Candidate | Findings, clip / chroma-reduce | Worst accent on the muted plate, clip / chroma-reduce | Worst theme, light scheme |
-|-----------|------------------|------------------|----------------|
-| red 25 | 1 / 0 | 4.48 / 4.65 | aurora |
-| orange 48 | 0 / 3 | 4.51 / 4.43 | neumorph, memphis |
-| amber 70 | 3 / 3 | 4.34 / 4.29 | neumorph, memphis |
-| yellow 86 | 5 / 5 | 4.21 / 4.22 | neumorph, memphis |
-| lime 131 | 19 / 10 | 3.86 / 4.00 | memphis |
-| green 150 | 31 / 17 | 3.56 / 3.92 | memphis |
-| emerald 162 | 39 / 14 | 3.37 / 3.95 | memphis |
-| teal 183 | 48 / 12 | 3.21 / 3.98 | memphis |
-| cyan 215 | 41 / 10 | 3.36 / 4.04 | memphis |
-| sky 237 | 24 / 7 | 3.72 / 4.11 | memphis |
-| blue 260 | 3 / 3 | 4.34 / 4.34 | neumorph, memphis |
-| indigo 277 | 1 / 1 | 4.49 / 4.49 | neumorph |
-| **violet 293** | **0 / 0** | 4.59 / 4.59 | neumorph |
-| **purple 304** | **0 / 0** | 4.64 / 4.64 | neumorph |
-| **fuchsia 322** | **0 / 0** | 4.68 / 4.68 | neumorph |
-| **pink 354** | **0 / 0** | 4.61 / 4.69 | aurora |
-| rose 16 | 1 / 0 | 4.47 / 4.67 | aurora |
+The first measurement kept four hues, violet to pink. The themes that bound the
+rest — `neumorph`, `memphis`, `aurora` and `paper` — draw their accent in
+that arc and cleared AA on the muted plate by a few hundredths in their own
+hue: OKLCH lightness is perceptual, WCAG luminance is not, and at equal
+lightness almost every other hue has the higher luminance. So those four
+themes' light-scheme primary was darkened — by the smallest step, in 0.005 of
+OKLCH lightness, at which every admitted hue clears the muted plate by at least
+the 4.59:1 the first four did:
 
-Why so few: OKLCH lightness is perceptual, WCAG luminance is not, and at equal
-lightness almost every hue has a higher luminance than the violet-to-pink arc.
-The themes that bind (neumorph, memphis, aurora, paper) draw their accent in
-that arc and clear AA on the muted plate by a few hundredths in their own hue,
-so moving them to a greener or bluer hue drops the accent text below 4.5:1 in the
-light scheme. `tests/tokens/forecraft-accent.test.ts` holds every named hue
-clean in every theme under both gamut models; adding one is additive under
-SPEC-1.0 §8.2 and has to pass the same test.
+| Theme | Light primary, before → after | How |
+|-------|-------------------------------|-----|
+| `neumorph` | 0.528 → 0.515 | seed accent lightness 0.6 → 0.585, regenerated; the whole ramp moves, the dark primary too (0.7 → 0.689) |
+| `memphis` | 0.528 → 0.515 | seed accent lightness 0.6 → 0.585, regenerated (light-only theme) |
+| `aurora` | 0.51 → 0.50 | primary, hover, active and ring each −0.01 |
+| `paper` | 0.50 → 0.495 | primary, hover, active and ring each −0.005 |
+
+Then the seventeen were measured again. Findings and the worst accent on the
+muted plate, each as clip / chroma-reduce, before → after the retune:
+
+| Candidate | Findings, before | Findings, after | Worst on the muted plate, before | after | Worst theme, after |
+|-----------|-----------------|-----------------|------------------|------------------|----------------|
+| **rose 16** | 1 / 0 | **0 / 0** | 4.47 / 4.67 | 4.61 / 4.74 | aurora |
+| **red 25** | 1 / 0 | **0 / 0** | 4.48 / 4.65 | 4.62 / 4.76 | aurora |
+| **orange 48** | 0 / 3 | **0 / 0** | 4.51 / 4.43 | 4.77 / 4.69 | neumorph |
+| amber 70 | 3 / 3 | 0 / 0 | 4.34 / 4.29 | 4.60 / 4.54 | neumorph |
+| yellow 86 | 5 / 5 | 3 / 3 | 4.21 / 4.22 | 4.46 / 4.46 | neumorph, memphis |
+| lime 131 | 19 / 10 | 11 / 10 | 3.86 / 4.00 | 4.08 / 4.23 | memphis |
+| green 150 | 31 / 17 | 31 / 10 | 3.56 / 3.92 | 3.75 / 4.15 | memphis |
+| emerald 162 | 39 / 14 | 34 / 10 | 3.37 / 3.95 | 3.55 / 4.18 | memphis |
+| teal 183 | 48 / 12 | 47 / 10 | 3.21 / 3.98 | 3.38 / 4.22 | memphis |
+| cyan 215 | 41 / 10 | 37 / 10 | 3.36 / 4.04 | 3.54 / 4.28 | memphis |
+| sky 237 | 24 / 7 | 23 / 6 | 3.72 / 4.11 | 3.93 / 4.35 | memphis |
+| **blue 260** | 3 / 3 | **0 / 0** | 4.34 / 4.34 | 4.60 / 4.60 | neumorph |
+| **indigo 277** | 1 / 1 | **0 / 0** | 4.49 / 4.49 | 4.72 / 4.72 | paper |
+| **violet 293** | **0 / 0** | **0 / 0** | 4.59 / 4.59 | 4.79 / 4.80 | default (dark) |
+| **purple 304** | **0 / 0** | **0 / 0** | 4.64 / 4.64 | 4.79 / 4.79 | organic (dark) |
+| **fuchsia 322** | **0 / 0** | **0 / 0** | 4.68 / 4.68 | 4.75 / 4.75 | nordic (dark) |
+| **pink 354** | **0 / 0** | **0 / 0** | 4.61 / 4.69 | 4.72 / 4.72 | nordic (dark) |
+
+Amber clears the gate after the retune, but by 4.54:1 under chroma reduction —
+the by-a-hair margin the retune exists to remove — so it is not named; reaching
+it would take a further darkening of `neumorph` and `memphis`, and so would
+yellow, which still fails in both. Lime through sky fail in nine to twelve
+themes each, `default` among them: out of reach of a retune of four.
+`tests/tokens/forecraft-accent.test.ts` holds every named hue clean in every
+theme under both gamut models; adding one is additive under SPEC-1.0 §8.2 and
+has to pass the same test.
 
 `custom` is how any other hue is reached, and it is not measured: the theme
 cannot know your hue, so the contrast is yours to check. It is a closed value —

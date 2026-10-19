@@ -19,15 +19,17 @@
      <div data-accent="custom" style="--accent-hue: 200"> … any other hue …
 
    ── The vocabulary ──
-   Closed: the four named hues below, plus `custom`. Each named hue is held by
+   Closed: the nine named hues below, plus `custom`. Each named hue is held by
    `tests/tokens/forecraft-accent.test.ts` (via `checkAccentContrast` in
    src/audit/contrast-tokens.ts) to clear every pair the `contrast-tokens` gate
    checks — primary text on the muted and subtle plates, the primary label on
    the primary fill, the focus ring on every surface — in every shipped theme,
    light and dark. Hues that failed in any theme × scheme were dropped; the
    numbers are in that test. At equal OKLCH lightness two hues still differ in
-   WCAG luminance, and themes tuned to clear AA by a hair in their own hue do
-   not clear it in most others.
+   WCAG luminance, so a theme tuned to clear AA by a hair in its own hue does
+   not clear it in most others — the four themes that did (neumorph, memphis,
+   aurora, paper) were darkened just enough to admit rose to orange and blue to
+   indigo. Amber, yellow and the green-to-sky arc stay out (docs/accent.md).
 
    `custom` names no hue: the author states `--accent-hue` (a number of degrees,
    or an angle) beside it. Nothing measures a custom hue against the theme — that
@@ -69,6 +71,11 @@
    component knows about it. It only re-declares tokens. */
 
 /* ── The named hues (OKLCH degrees) ── */
+[data-accent="rose"]    { --accent-hue: 16; }
+[data-accent="red"]     { --accent-hue: 25; }
+[data-accent="orange"]  { --accent-hue: 48; }
+[data-accent="blue"]    { --accent-hue: 260; }
+[data-accent="indigo"]  { --accent-hue: 277; }
 [data-accent="violet"]  { --accent-hue: 293; }
 [data-accent="purple"]  { --accent-hue: 304; }
 [data-accent="fuchsia"] { --accent-hue: 322; }
