@@ -218,6 +218,17 @@ with no shell, [`@faqir-ui/core`](packages/core/README.md) publishes a prebuilt 
 Swap the stylesheet to change theme; every theme ships a bundle. Every `dist/`
 file has a SHA-384 hash in `dist/sri.json` for `integrity=` pinning.
 
+A page whose Content-Security-Policy has no `'unsafe-eval'` swaps the engine
+tag for the [strict-CSP build](#strict-csp-build), pinned to an exact version
+with its hash:
+
+```html
+<!-- The strict-CSP engine: l-* expressions interpreted, never compiled -->
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@<version>/dist/faqir-core.csp.min.js"
+        integrity="sha384-<integrity["faqir-core.csp.min.js"] in packages/core/cdn.json>"
+        crossorigin="anonymous" defer></script>
+```
+
 ---
 
 ## Why Faqir
@@ -1211,7 +1222,8 @@ Two engine behaviours are deliberate and worth knowing before you deploy:
 
 - **`l-*` expressions are compiled with `new Function`**, so a page that uses
   them needs `script-src 'unsafe-eval'`. Without it the engine still mounts
-  controllers; expressions silently yield `undefined`.
+  controllers; expressions silently yield `undefined`. The
+  [strict-CSP build](#strict-csp-build) below needs no `'unsafe-eval'`.
 - **`l-html` writes `innerHTML` unsanitized**, exactly like Alpine's `x-html`.
   Use `l-text` for anything you did not author.
 
@@ -1223,6 +1235,29 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval';
 
 The engine injects no inline style, so `style-src 'self'` is enough; the
 `l-cloak` rule ships in Faqir's CSS.
+
+### Strict-CSP build
+
+Where `'unsafe-eval'` is not an option, load `faqir-core.csp.js` instead of
+`faqir-core.js` — `core/faqir-core.csp.js` after `faqir init`,
+`dist/faqir-core.csp.min.js` on the CDN (snippet above), or
+`import Faqir from "@faqir-ui/core/csp"`. It is the same engine, controllers
+and API with one difference: expressions go through a small interpreter (a
+tokenizer, a Pratt parser and an evaluator) instead of `new Function`, so the
+policy drops `'unsafe-eval'` and keeps `script-src 'self'`.
+
+The interpreter takes the JavaScript subset directive expressions use — member,
+optional and computed access, calls and `new`, every operator, ternaries,
+assignment including compound forms and `++`/`--`, template and regex
+literals, arrays and objects with spread, methods and getters, arrow and
+`function` expressions with block bodies (`if`, `return`, `let`/`const`/`var`,
+`for…of`/`for…in`) — and scope lookup works as `with ($scope)` does in the
+default build. Anything else (classes, `async`/`await`, destructuring,
+`switch`, `try`, `while`) fails like any expression error, naming the
+expression; `faqir-core.csp.dev.js` adds why. `constructor`, `__proto__` and
+`prototype` are not reachable from an expression. It weighs about 4.7 KB gzip
+more than the default build, under a budget of its own. Details:
+[docs/security.md §1](docs/security.md#the-strict-csp-build).
 
 The threat model is *generated, trusted markup*: an `l-*` attribute value is
 JavaScript, so interpolating user input into one is remote code execution. Put

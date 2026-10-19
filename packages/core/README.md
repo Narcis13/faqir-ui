@@ -53,6 +53,7 @@ for tamper-proof loads:
 | `faqir-core.mjs` | Real ESM — what `import "@faqir-ui/core"` resolves to. `export default` plus one named export per engine member. |
 | `faqir-core.js` | Canonical UMD engine — what `<script src>` and the CDN load. Reachable explicitly at `@faqir-ui/core/faqir-core.js`. |
 | `faqir-core.min.js` (+ `.map`) | Minified classic-script build; a plain `<script src>` sets `window.Faqir`. |
+| `faqir-core.csp.mjs` · `faqir-core.csp.js` · `faqir-core.csp.min.js` (+ `.map`) | The same three shapes of the strict-CSP engine, for a page served without `'unsafe-eval'`: `l-*` expressions are interpreted, never compiled. `import "@faqir-ui/core/csp"` resolves to the ESM one. Its JavaScript subset and policy: [docs/security.md](https://github.com/Narcis13/faqir-ui/blob/main/docs/security.md#the-strict-csp-build). |
 | `faqir.{theme}.css` | Full CSS bundle per theme: all tokens + theme + base + every component. Self-contained (no `@import`). |
 | `themes.json` | Each theme's bundle file and the density it was designed at — see [Themes and density](#themes-and-density). |
 | `plugins/` | Official self-registering drops — see [Plugins](#plugins) below. |
