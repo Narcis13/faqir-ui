@@ -16,9 +16,9 @@
   --color-fg-subtle:       oklch(0.57 0.018 300);    /* subtle violet-gray */
 
   /* ── Interactive: Primary (vivid violet) ── */
-  --color-primary:         oklch(0.51 0.24 300);     /* vivid violet */
-  --color-primary-hover:   oklch(0.46 0.25 300);
-  --color-primary-active:  oklch(0.41 0.23 300);
+  --color-primary:         oklch(0.50 0.24 300);     /* vivid violet */
+  --color-primary-hover:   oklch(0.45 0.25 300);
+  --color-primary-active:  oklch(0.40 0.23 300);
   --color-primary-fg:      white;
   --color-primary-subtle:  oklch(0.93 0.05 300);
 
@@ -44,7 +44,7 @@
   /* ── Borders ── */
   --color-border:          oklch(0.89 0.01 300);
   --color-border-strong:   oklch(0.81 0.015 300);
-  --color-ring:            oklch(0.51 0.24 300);
+  --color-ring:            oklch(0.50 0.24 300);
 
   /* ── Signature gradient accent (decorative; violet → cyan) ── */
   --gradient-accent:       linear-gradient(135deg, oklch(0.51 0.24 300), oklch(0.60 0.14 220));

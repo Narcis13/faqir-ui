@@ -240,7 +240,7 @@
       ]),
       section("Accent", true, [
         // The named hues of tokens/accent.css — the ones measured clean in every theme.
-        row("Named accent", select("accent", defaultOr([["violet", "Violet"], ["purple", "Purple"], ["fuchsia", "Fuchsia"], ["pink", "Pink"]]))),
+        row("Named accent", select("accent", defaultOr([["rose", "Rose"], ["red", "Red"], ["orange", "Orange"], ["blue", "Blue"], ["indigo", "Indigo"], ["violet", "Violet"], ["purple", "Purple"], ["fuchsia", "Fuchsia"], ["pink", "Pink"]]))),
         row("Hue shift", range("hue", -180, 180, 5, function (v) { return v + "°"; })),
         row("Chroma", range("chroma", 0, 2, 0.05, times)),
       ]),

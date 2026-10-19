@@ -356,7 +356,7 @@
   "preview": "neumorph.preview.html",
   "seed": {
     "name": "neumorph",
-    "accent": "oklch(0.6 0.2 300)",
+    "accent": "oklch(0.585 0.2 300)",
     "neutral": "tinted",
     "scheme": "both",
     "type": {
@@ -452,7 +452,7 @@
   "distinctiveness": {
     "nearest": "candy",
     "axis_distance": 7,
-    "token_distance": 0.0356
+    "token_distance": 0.0357
   },
   "visual_matrix": false
 }

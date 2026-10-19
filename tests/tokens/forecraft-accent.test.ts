@@ -19,37 +19,49 @@
  *    vocabulary does not depend on how a browser maps an out-of-gamut colour.
  * 5. **The audit** accepts `data-accent` anywhere, as it accepts `data-density`.
  *
+ * 6. **The retune is load-bearing.** Rose, red, orange, blue and indigo are named
+ *    because four themes were darkened for them; put any one of those themes
+ *    back and the gate fails, so a later "harmless" lightening cannot pass.
+ *
  * ── The measurement that chose the vocabulary ──
  * Seventeen candidates, each at the Tailwind v4 palette's 500-step hue rounded
  * to the degree, re-hued into all 31 themes × light/dark. Findings (theme ×
  * scheme × pair below its minimum), then the worst `--color-primary` on
- * `--color-bg-muted` (AA 4.5), each under clip / chroma-reduction:
+ * `--color-bg-muted` (AA 4.5), each under clip / chroma-reduction — first as
+ * the themes shipped, then after the retune:
  *
- *   red 25        1 / 0   4.48 / 4.65
- *   orange 48     0 / 3   4.51 / 4.43
- *   amber 70      3 / 3   4.34 / 4.29
- *   yellow 86     5 / 5   4.21 / 4.22
- *   lime 131     19 / 10  3.86 / 4.00
- *   green 150    31 / 17  3.56 / 3.92
- *   emerald 162  39 / 14  3.37 / 3.95
- *   teal 183     48 / 12  3.21 / 3.98
- *   cyan 215     41 / 10  3.36 / 4.04
- *   sky 237      24 / 7   3.72 / 4.11
- *   blue 260      3 / 3   4.34 / 4.34
- *   indigo 277    1 / 1   4.49 / 4.49
- *   violet 293    0 / 0   4.59 / 4.59  ← kept
- *   purple 304    0 / 0   4.64 / 4.64  ← kept
- *   fuchsia 322   0 / 0   4.68 / 4.68  ← kept
- *   pink 354      0 / 0   4.61 / 4.69  ← kept
- *   rose 16       1 / 0   4.47 / 4.67
- *   (teal also drops the focus ring to 2.95:1 on default's muted plate)
+ *                 as shipped               retuned
+ *   rose 16       1 / 0   4.47 / 4.67      0 / 0   4.61 / 4.74  ← added
+ *   red 25        1 / 0   4.48 / 4.65      0 / 0   4.62 / 4.76  ← added
+ *   orange 48     0 / 3   4.51 / 4.43      0 / 0   4.77 / 4.69  ← added
+ *   amber 70      3 / 3   4.34 / 4.29      0 / 0   4.60 / 4.54  (under the floor)
+ *   yellow 86     5 / 5   4.21 / 4.22      3 / 3   4.46 / 4.46
+ *   lime 131     19 / 10  3.86 / 4.00     11 / 10  4.08 / 4.23
+ *   green 150    31 / 17  3.56 / 3.92     31 / 10  3.75 / 4.15
+ *   emerald 162  39 / 14  3.37 / 3.95     34 / 10  3.55 / 4.18
+ *   teal 183     48 / 12  3.21 / 3.98     47 / 10  3.38 / 4.22
+ *   cyan 215     41 / 10  3.36 / 4.04     37 / 10  3.54 / 4.28
+ *   sky 237      24 / 7   3.72 / 4.11     23 / 6   3.93 / 4.35
+ *   blue 260      3 / 3   4.34 / 4.34      0 / 0   4.60 / 4.60  ← added
+ *   indigo 277    1 / 1   4.49 / 4.49      0 / 0   4.72 / 4.72  ← added
+ *   violet 293    0 / 0   4.59 / 4.59      0 / 0   4.79 / 4.80  ← kept
+ *   purple 304    0 / 0   4.64 / 4.64      0 / 0   4.79 / 4.79  ← kept
+ *   fuchsia 322   0 / 0   4.68 / 4.68      0 / 0   4.75 / 4.75  ← kept
+ *   pink 354      0 / 0   4.61 / 4.69      0 / 0   4.72 / 4.72  ← kept
+ *   (as shipped, teal also dropped the focus ring to 2.95:1 on default's muted plate)
  *
  * The binding pair is the accent as text on the muted plate, in the light
- * scheme of the themes whose own hue is violet-to-pink and which clear AA there
- * by a hair (neumorph 4.63, memphis, aurora, paper): at equal OKLCH lightness
- * almost every other hue has the higher WCAG luminance. The numbers are a
- * comment, not assertions — a theme retune may move them, and only the kept
- * hues are a promise.
+ * scheme of the themes whose own hue is violet-to-pink and which cleared AA
+ * there by a hair (neumorph 4.63, memphis, aurora, paper): at equal OKLCH
+ * lightness almost every other hue has the higher WCAG luminance. The retune
+ * darkened exactly those four themes' light primary, by the smallest 0.005
+ * step at which every added hue clears the muted plate by at least the 4.59
+ * the first four did: neumorph and memphis by seed (accent lightness 0.6 →
+ * 0.585, primary 0.528 → 0.515), aurora by 0.01 (0.51 → 0.50) and paper by
+ * 0.005 (0.50 → 0.495), each with its hover, active and ring. Amber clears
+ * the gate after it, but at 4.54 — under that floor, so not named. The
+ * numbers are a comment, not assertions — a theme change may move them, and
+ * only the named hues are a promise.
  */
 import { describe, expect, it } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
@@ -81,6 +93,8 @@ import { TOKEN_FILES_ORDERED } from "../../src/utils/bundler";
 import { isSurfaceTokenFile, stripCssComments } from "../../src/theme-manifest";
 import { auditHtmlSource } from "../../src/audit/html-audit";
 import { loadRegistryManifestMap } from "../../src/utils/components";
+import { generateThemeBundle } from "../../src/commands/theme-generate";
+import { themeBaseSources } from "../../src/theme/sources";
 
 const ROOT = join(import.meta.dir, "../..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
@@ -119,6 +133,13 @@ describe("data-accent · one closed vocabulary", () => {
     // `custom` names no hue — it reads the author's.
     expect(ACCENT_SRC).not.toContain(`[data-accent="${ACCENT_CUSTOM}"]`);
     expect(ACCENT_HUE_TOKEN).toBe("--accent-hue");
+  });
+
+  it("only grows: every hue it has named keeps its name and its number", () => {
+    // Removing or re-numbering a value is a major change under SPEC-1.0 §8.2;
+    // adding one is additive and extends this list.
+    const NAMED_SO_FAR = { rose: 16, red: 25, orange: 48, blue: 260, indigo: 277, violet: 293, purple: 304, fuchsia: 322, pink: 354 };
+    for (const [name, hue] of Object.entries(NAMED_SO_FAR)) expect(ACCENT_HUES[name], name).toBe(hue);
   });
 
   it("names its hues in hue order, each a legal protocol value", () => {
@@ -464,4 +485,85 @@ describe("data-accent · the audit accepts it anywhere", () => {
       expect(findings, value).toEqual([]);
     }
   });
+});
+
+// ── 6. the retune ───────────────────────────────────────────────────────────
+//
+// Rose, red, orange, blue and indigo are named because the four themes that
+// bound them were darkened. Each theme is rebuilt here as it shipped before —
+// a generated one from its old seed, an authored one by restoring its old light
+// primary family — to show the retune is what the vocabulary stands on.
+
+/** The hues the retune added. */
+const ADDED = { rose: 16, red: 25, orange: 48, blue: 260, indigo: 277 } as const;
+/** The worst accent-on-muted-plate the first four hues had before the retune. */
+const FIRST_ROUND_FLOOR = 4.59;
+
+const regenerate = (name: string, accent: string) => {
+  const seed = JSON.parse(readFileSync(join(THEMES_DIR, `${name}.seed.json`), "utf8"));
+  return generateThemeBundle({ ...seed, accent }, themeBaseSources(join(ROOT, "registry"))).generated[0].css;
+};
+/** `css` with each `[now, before]` value put back — every one must be present. */
+const restore = (css: string, values: [string, string][]) =>
+  values.reduce((out, [now, before]) => {
+    expect(out, now).toContain(now);
+    return out.replaceAll(now, before);
+  }, css);
+
+const RETUNED: Record<string, { gateFails: boolean; before: () => string }> = {
+  neumorph: { gateFails: true, before: () => regenerate("neumorph", "oklch(0.6 0.2 300)") },
+  memphis: { gateFails: true, before: () => regenerate("memphis", "oklch(0.6 0.22 350)") },
+  aurora: {
+    gateFails: true,
+    before: () =>
+      restore(read("registry/themes/aurora.css"), [
+        ["oklch(0.50 0.24 300)", "oklch(0.51 0.24 300)"], // primary and ring
+        ["oklch(0.45 0.25 300)", "oklch(0.46 0.25 300)"],
+        ["oklch(0.40 0.23 300)", "oklch(0.41 0.23 300)"],
+      ]),
+  },
+  // paper cleared the gate in every added hue already, by 4.515 in blue; its
+  // retune bought the margin, not the pass.
+  paper: {
+    gateFails: false,
+    before: () =>
+      restore(read("registry/themes/paper.css"), [
+        ["oklch(0.495 0.14 45)", "oklch(0.50 0.14 45)"],
+        ["oklch(0.445 0.15 45)", "oklch(0.45 0.15 45)"],
+        ["oklch(0.415 0.14 45)", "oklch(0.42 0.14 45)"],
+        ["oklch(0.515 0.14 45)", "oklch(0.52 0.14 45)"],
+      ]),
+  },
+};
+
+/** The lowest `--color-primary` on `--color-bg-muted`, over the added hues and both schemes. */
+function mutedPlateFloor(themeCss: string): number {
+  const built = buildSchemeLookups(themeCss, BASE_CSS);
+  let floor = Infinity;
+  for (const hue of Object.values(ADDED)) {
+    const lookups = accentLookups(built, hue);
+    for (const scheme of ["light", "dark"] as const) {
+      const lk = lookups[scheme];
+      const fg = parseCssColor(resolveColorString(lk.get("color-primary")!, lk)!)!;
+      const bg = parseCssColor(resolveColorString(lk.get("color-bg-muted")!, lk)!)!;
+      floor = Math.min(floor, contrastRatio(fg, bg));
+    }
+  }
+  return floor;
+}
+
+describe("data-accent · the retune the added hues stand on", () => {
+  for (const [name, { gateFails, before }] of Object.entries(RETUNED)) {
+    it(`${name}: the added hues clear its muted plate by the first round's margin — and did not before`, () => {
+      const now = read(`registry/themes/${name}.css`);
+      const old = before();
+      expect(old).not.toBe(now);
+      expect(mutedPlateFloor(now)).toBeGreaterThanOrEqual(FIRST_ROUND_FLOOR);
+      expect(mutedPlateFloor(old)).toBeLessThan(FIRST_ROUND_FLOOR);
+      // The theme was clean before, in its own hue; only the added hues needed it.
+      expect(checkThemeContrast({ themeName: name, themeCss: old, baseCss: BASE_CSS })).toEqual([]);
+      const findings = checkAccentContrast({ themeName: name, themeCss: old, baseCss: BASE_CSS }, ADDED);
+      expect(findings.length > 0).toBe(gateFails);
+    });
+  }
 });

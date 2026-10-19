@@ -770,7 +770,7 @@ active theme's own lightness and chroma, so every theme keeps its character and
 only the hue moves. `--doc-accent`, the print ink, follows it.
 
 ```html
-<html data-theme="auto" data-accent="violet">      <!-- violet · purple · fuchsia · pink -->
+<html data-theme="auto" data-accent="blue">        <!-- rose · red · orange · blue · indigo · violet · purple · fuchsia · pink -->
 <section data-accent="custom" style="--accent-hue: 200">…any other hue…</section>
 ```
 

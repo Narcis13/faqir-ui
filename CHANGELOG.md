@@ -144,7 +144,8 @@ parameters, `switch`, `try` or `while` must be rewritten for it. The default
 engine is byte-identical.
 
 - **Added** — `data-accent`, the fifth sanctioned token modifier (SPEC-1.0 §4,
-  additive under §8.2): `violet | purple | fuchsia | pink` re-hue
+  additive under §8.2): `rose | red | orange | blue | indigo | violet |
+  purple | fuchsia | pink` re-hue
   `--color-primary`, `-hover`, `-active`, `-subtle` and `--color-ring` for a
   subtree, keeping the active theme's own lightness and chroma; `custom` reads
   `--accent-hue`. Each named hue clears every `contrast-tokens` pair in all 31
@@ -152,6 +153,12 @@ engine is byte-identical.
   syntax it is a no-op. New `registry/tokens/accent.css`, `docs/accent.md`, an
   `l-tweak` "Named accent" dial, and `checkAccentContrast` / `accentLookups` /
   `rehueColor` in `contrast-tokens`.
+- **Changed** — the light-scheme primary of `neumorph`, `memphis`, `aurora`
+  and `paper` is a shade darker (0.005–0.013 OKLCH lightness), so the accent
+  clears AA on their muted plate in every named `data-accent` hue, not only
+  their own. `neumorph` and `memphis` move by seed (accent lightness 0.6 →
+  0.585), so their whole accent ramp moves with it, `neumorph`'s dark-scheme
+  primary included (0.7 → 0.689 lightness).
 - **Added** — `chart` primitive (`data-variant="column|bar|line"`): its
   `<table data-part="data">` is the chart without JavaScript and prints under
   the drawn one; `faqir-chart.js`, an opt-in plugin (4 KB budget), draws an
