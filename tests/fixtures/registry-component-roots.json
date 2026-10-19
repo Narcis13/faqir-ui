@@ -345,6 +345,9 @@
     "skeleton": 8,
     "stack": 2
   },
+  "primitives/skip-link/skip-link.html": {
+    "skip-link": 1
+  },
   "primitives/spinner/spinner.html": {
     "spinner": 4
   },

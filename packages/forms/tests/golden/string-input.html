@@ -1,5 +1,5 @@
 <!-- @ui:requires faqir-core.js faqir-validate.js -->
-<form id="contact-form" l-data l-validate aria-label="Contact &amp; profile" aria-describedby="contact-form-description" data-theme="paper" data-density="compact">
+<form id="contact-form" l-data l-validate aria-label="Contact &amp; profile" aria-describedby="contact-form-description" data-theme="paper" data-density="compact" data-gap="4">
   <h1>Contact &amp; profile</h1>
   <p id="contact-form-description">Tell us &lt;only&gt; what you want to share.</p>
   <div data-ui="field-group">
@@ -9,5 +9,8 @@
     </div>
     <p data-part="description" id="contact-field-displayname-hint">Shown to other people &amp; agents.</p>
     <p data-part="error" id="contact-field-displayname-error" aria-live="polite"></p>
+  </div>
+  <div>
+    <button type="submit" data-ui="button" data-variant="primary">Submit</button>
   </div>
 </form>

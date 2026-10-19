@@ -22,12 +22,12 @@ export interface LQrCodeProps {
   size?: LQrCodeSize;
 }
 
-/** `qr-code` — SVG QR code generator from text input with configurable size and error correction Exposes: `render()`, `update()`. */
+/** `qr-code` — SVG QR code generator (byte mode, versions 1–40) from text input with configurable size and error correction Emits: `@error` (payload: `(detail, event)`). Exposes: `render()`, `update()`. */
 export const LQrCode = defineFaqirRecipe<LQrCodeProps>({
   name: "qr-code",
   create: createQRCode,
   methods: ["render", "update"],
-  events: [],
+  events: ["error"],
   stringProps: [{ prop: "value", default: "" }],
   boolProps: [],
   variantProps: [

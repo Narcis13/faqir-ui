@@ -136,7 +136,7 @@ Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split 
 
 ## Component Inventory
 
-**53 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, spinner, spotlight, stack, stamp, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
+**54 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, skip-link, spinner, spotlight, stack, stamp, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
 
 **29 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 
@@ -164,8 +164,9 @@ The base layer is loaded by every project and is not a component: these `data-ui
 | `data-ui` | Defined in | What it styles |
 |-----------|------------|----------------|
 | `prose` | `base/prose.css` | typography defaults for long-form content |
+| `visually-hidden` | `base/reset.css` | text a screen reader reads and the page does not show (alias: .sr-only) |
 
-Use it for any run of authored copy — documentation, an article, a changelog, the body of a marketing page. Write ordinary HTML inside; it styles the elements for you:
+Use `prose` for any run of authored copy — documentation, an article, a changelog, the body of a marketing page. Write ordinary HTML inside; it styles the elements for you:
 
 ```html
 <article data-ui="prose">
@@ -175,7 +176,9 @@ Use it for any run of authored copy — documentation, an article, a changelog, 
 </article>
 ```
 
-Width is the one thing it sets for you: `max-inline-size: var(--measure-prose)`. Pair it with `container` when the page needs a different measure.
+Width is the one thing it sets for you: `max-inline-size: var(--measure-prose)`. Pair it with `container` when the page needs a different measure. A table wider than the column scrolls inside its own wrapper: `<div role="region" tabindex="0" aria-label="…"><table>…</table></div>` (or a `<figure>` with a `<figcaption>`).
+
+`<span data-ui="visually-hidden">…</span>` hides text from sight and keeps it for screen readers — the label of an icon-only control, a caption the layout does not show. Write it instead of `class="sr-only"` (a `no-class-attribute` warning). Never put it on a focusable element: a link that appears on focus is the `skip-link` primitive.
 
 ## Official Plugins
 
@@ -243,26 +246,28 @@ Composes: `card`, `input`, `button`, `separator`, `label`
       <h2 data-part="title">{title}</h2>
       <p data-part="description">{description}</p>
     </div>
-    <div data-part="error" role="alert" hidden>{error_message}</div>
-    <form data-part="form" aria-label="{form_label}">
-      <div data-part="name-field">
-        <label data-ui="label" for="{id}-name">Full name</label>
-        <input data-ui="input" type="text" id="{id}-name" autocomplete="name">
+    <div data-part="body">
+      <div data-part="error" role="alert" hidden>{error_message}</div>
+      <form data-part="form" aria-label="{form_label}">
+        <div data-part="name-field">
+          <label data-ui="label" for="{id}-name">Full name</label>
+          <input data-ui="input" type="text" id="{id}-name" autocomplete="name">
+        </div>
+        <div data-part="email-field">
+          <label data-ui="label" for="{id}-email">Email</label>
+          <input data-ui="input" type="email" id="{id}-email" autocomplete="email">
+        </div>
+        <div data-part="password-field">
+          <label data-ui="label" for="{id}-password">Password</label>
+          <input data-ui="input" type="password" id="{id}-password" autocomplete="current-password">
+        </div>
+        <button data-ui="button" data-variant="primary" data-part="submit" type="submit">{submit_text}</button>
+      </form>
+      <div data-part="separator">
+        <div data-ui="separator" role="separator"><span data-part="label">OR</span></div>
       </div>
-      <div data-part="email-field">
-        <label data-ui="label" for="{id}-email">Email</label>
-        <input data-ui="input" type="email" id="{id}-email" autocomplete="email">
-      </div>
-      <div data-part="password-field">
-        <label data-ui="label" for="{id}-password">Password</label>
-        <input data-ui="input" type="password" id="{id}-password" autocomplete="current-password">
-      </div>
-      <button data-ui="button" data-variant="primary" data-part="submit" type="submit">{submit_text}</button>
-    </form>
-    <div data-part="separator">
-      <div data-ui="separator" role="separator"><span data-part="label">OR</span></div>
+      <div data-part="social">{social_buttons}</div>
     </div>
-    <div data-part="social">{social_buttons}</div>
     <div data-part="footer">{footer_content}</div>
   </div>
 </div>
@@ -421,14 +426,14 @@ faqir inspect <component>          # full manifest
 **Development**
 
 ```bash
-faqir theme set|list|create|generate|bundle <name>        # manage themes, generate one from a seed (--seed/--accent/one flag per axis), or scope one to a subtree (bundle <name> --scope)
-faqir fonts list|add|remove <family> [--role <role>]      # install a hash-verified OFL family and point a role token at it
-faqir variant add|remove <component> <group>=<value>      # add/remove a variant value (manifest + CSS together)
-faqir scaffold <name> [--output <path>] [--theme <name>]  # generate a whole page — see the Scaffolds table
-faqir bundle [--minify] [--watch]                         # compose CSS into one file
-faqir dev [--port <n>] [--bundle]                         # local dev server with live reload
-faqir bindings vue|react [--out <dir>] [--check]          # generate typed Vue/React components from manifests
-faqir template [--check]                                  # install the server-side template engine into <output_dir>/template
+faqir theme set|list|create|generate|bundle <name>                    # manage themes, generate one from a seed (--seed/--accent/one flag per axis), or scope one to a subtree (bundle <name> --scope)
+faqir fonts list|add|remove <family> [--role <role>|none] [--italic]  # install a hash-verified OFL family and point a role token at it
+faqir variant add|remove <component> <group>=<value>                  # add/remove a variant value (manifest + CSS together)
+faqir scaffold <name> [--output <path>] [--theme <name>]              # generate a whole page — see the Scaffolds table
+faqir bundle [--minify] [--watch]                                     # compose CSS into one file
+faqir dev [--port <n>] [--bundle]                                     # local dev server with live reload
+faqir bindings vue|react [--out <dir>] [--check]                      # generate typed Vue/React components from manifests
+faqir template [--check]                                              # install the server-side template engine into <output_dir>/template
 ```
 
 **Quality**
@@ -455,7 +460,7 @@ Every command accepts `--json` for machine-readable output.
 
 Full anatomy trees, variant tables, and safe/unsafe transforms for every component:
 
-- [references/primitives.md](references/primitives.md) — 53 primitives
+- [references/primitives.md](references/primitives.md) — 54 primitives
 - [references/recipes.md](references/recipes.md) — 29 recipes
 - [references/patterns.md](references/patterns.md) — 23 patterns
 - [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`

@@ -1,5 +1,5 @@
 <!-- @ui:requires faqir-core.js faqir-validate.js -->
-<form id="faqir-form" l-data="{ rowsContacts: [{ __key: 1 }], seqContacts: 1 }" l-validate>
+<form id="faqir-form" l-data="{ rowsContacts: [{ __key: 1 }], seqContacts: 1 }" l-validate data-gap="4">
   <fieldset data-ui="card" data-variant="outlined">
     <legend data-part="title">Emergency contacts</legend>
     <p data-part="description">People we may call.</p>
@@ -42,4 +42,7 @@
       <button type="button" data-ui="button" data-variant="outline" data-size="sm" @click="rowsContacts.push({ __key: (seqContacts = seqContacts + 1) })" :disabled="rowsContacts.length &gt;= 3">Add contact</button>
     </div>
   </fieldset>
+  <div>
+    <button type="submit" data-ui="button" data-variant="primary">Submit</button>
+  </div>
 </form>

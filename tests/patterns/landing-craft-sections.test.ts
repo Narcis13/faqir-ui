@@ -158,7 +158,7 @@ describe("toggle-group · data-variant=\"segmented\"", () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].values).toEqual(["default", "segmented"]);
     expect(groups[0].default).toBe("default");
-    expect(m.version).toBe("1.2.0");
+    expect(m.version).toBe("1.2.1");
     expect(m.props?.["--toggle-group-track-bg"]?.default).toBe("var(--color-bg-muted)");
     expect(m.props?.["--toggle-group-thumb-bg"]?.default).toBe("var(--color-bg)");
     expect((m.a11y as { notes?: string }).notes).toContain("single mode");
@@ -376,7 +376,7 @@ describe("hero · data-variant=\"cover\"", () => {
   const cover = find("hero", (r) => r.selector.includes('[data-variant="cover"]'));
 
   it("declares cover as a layout value", () => {
-    expect(m.version).toBe("1.3.0");
+    expect(m.version).toBe("1.4.0");
     expect(m.variants.layout.values).toEqual(["center", "split", "cover"]);
     expect(m.variants.layout.default).toBe("center");
     expect(m.templates.html_cover).toContain('data-variant="cover"');

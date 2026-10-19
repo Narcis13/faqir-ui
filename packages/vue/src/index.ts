@@ -66,7 +66,7 @@ export type { LPageBreakProps, LPageBreakVariant } from "./components/page-break
 export { LProgress } from "./components/progress.js";
 export type { LProgressProps, LProgressVariant, LProgressSize } from "./components/progress.js";
 export { LQuote } from "./components/quote.js";
-export type { LQuoteProps, LQuoteVariant, LQuoteSize, LQuoteAlign } from "./components/quote.js";
+export type { LQuoteProps, LQuoteVariant, LQuoteSize, LQuoteAlign, LQuoteMark } from "./components/quote.js";
 export { LRadio } from "./components/radio.js";
 export type { LRadioProps, LRadioSize } from "./components/radio.js";
 export { LRating } from "./components/rating.js";
@@ -83,6 +83,8 @@ export { LSignature } from "./components/signature.js";
 export type { LSignatureProps, LSignatureSize, LSignatureAlign } from "./components/signature.js";
 export { LSkeleton } from "./components/skeleton.js";
 export type { LSkeletonProps, LSkeletonVariant } from "./components/skeleton.js";
+export { LSkipLink } from "./components/skip-link.js";
+export type { LSkipLinkProps } from "./components/skip-link.js";
 export { LSpinner } from "./components/spinner.js";
 export type { LSpinnerProps, LSpinnerSize } from "./components/spinner.js";
 export { LSpotlight } from "./components/spotlight.js";

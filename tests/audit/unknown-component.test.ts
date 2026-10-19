@@ -89,6 +89,7 @@ describe("the known-value set", () => {
     // framework, so calling them unknown would report Faqir's own markup broken.
     expect(componentDefinedUiValues(REGISTRY)).toEqual([
       "button-group",
+      "checkbox-group",
       "checkbox-label",
       "heading",
       "input-group",

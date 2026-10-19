@@ -244,7 +244,7 @@ export function componentDefinedUiValues(registryPath: string): string[] {
  *  • the base layer ({@link baseLayerUiValues}) — `data-ui="prose"` is styling
  *    with no manifest, which is precisely why it would look unknown;
  *  • the companion values a component's own sheet defines
- *    ({@link componentDefinedUiValues}) — `button-group` and six others.
+ *    ({@link componentDefinedUiValues}) — `button-group` and seven others.
  *
  * Read from the registry rather than from `registry-index.json`: the index
  * carries neither aliases nor the values that have no component directory, and

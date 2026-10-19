@@ -10,18 +10,23 @@
 // third-party host for type: see the catalog's header for why that is the
 // stance, and `src/fonts/install.ts` for how `fonts.css` is produced.
 
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
 import { ensureDir } from "../utils/fs";
 import { emitJSON, isJSONMode } from "../utils/json-output";
-import { generateBundle } from "../utils/bundler";
+import { TOKEN_FILES_ORDERED, generateBundle } from "../utils/bundler";
+import { axesFromCss } from "../theme/axes";
+import type { Axis } from "../theme/seed";
 import {
   FONT_CATALOG,
   familyBytes,
   findFamily,
+  isSingleWeight,
+  italicFiles,
   roleStack,
+  staticWeights,
   type CatalogEntry,
   type FontRole,
 } from "../fonts/catalog";
@@ -63,17 +68,21 @@ function printHelp(): void {
   console.log("Subcommands:");
   log.table([
     ["list", "Show the curated catalog with roles, classes and sizes"],
-    ["add <family> [--role <r>]", "Download, verify and install a family"],
+    ["add <family> [--role <r>] [--italic]", "Download, verify and install a family"],
     ["remove <family>", "Remove a family and its files"],
   ]);
   log.blank();
   console.log("Roles:");
-  log.table(ROLE_ORDER.map((role): [string, string] => [role, `sets ${ROLE_TOKENS[role]}`]));
+  log.table([
+    ...ROLE_ORDER.map((role): [string, string] => [role, `sets ${ROLE_TOKENS[role]}`]),
+    ["none", "sets no token: @font-face rules only, for your own font-family"],
+  ]);
   log.blank();
   console.log("Examples:");
   console.log("  faqir fonts list");
   console.log("  faqir fonts add fraunces --role heading");
   console.log("  faqir fonts add inter --role body --role ui");
+  console.log("  faqir fonts add instrument-serif --role none");
   console.log("  faqir fonts remove fraunces");
   log.blank();
   log.dim(
@@ -81,7 +90,84 @@ function printHelp(): void {
       "first catalogued role is used. A role has exactly one family, so assigning " +
       "one takes it off whoever held it.",
   );
+  log.dim(
+    "--italic also installs the family's true-italic faces, where the catalog pins them " +
+      "(`fonts list` shows which do); without it, emphasis is a browser-slanted upright.",
+  );
   log.dim("No Google Fonts link: the WOFF2 files are downloaded once and served by your project.");
+}
+
+/** The number each heading voice class draws at (`HEADING_WEIGHTS`, resolved). */
+const VOICE_WEIGHTS: Record<Axis<"type.voice.weight">, number> = {
+  regular: 400,
+  medium: 500,
+  semibold: 600,
+  bold: 700,
+  black: 800,
+};
+
+/**
+ * The active theme's heading voice weight, read from the project's installed
+ * `tokens/theme.css` over its base token files — the same derivation
+ * `theme-manifest`'s axes use. Null when the project carries no theme file or
+ * it cannot be read; the caller then warns without naming a number.
+ */
+export function headingVoiceWeight(
+  outputDir: string,
+): { voice: Axis<"type.voice.weight">; weight: number } | null {
+  const tokensDir = join(outputDir, "tokens");
+  const themePath = join(tokensDir, "theme.css");
+  if (!existsSync(themePath)) return null;
+  try {
+    const base = ["index.css", ...TOKEN_FILES_ORDERED]
+      .map((file) => join(tokensDir, file))
+      .filter((path) => existsSync(path))
+      .map((path) => readFileSync(path, "utf8"));
+    const voice = axesFromCss(readFileSync(themePath, "utf8"), base).type.voice?.weight;
+    return voice ? { voice, weight: VOICE_WEIGHTS[voice] } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What a single-weight family costs, said once at install time (forecraft
+ * upstream note 18). Only a static family with exactly one weight warns: a
+ * variable family draws every weight in its range, and a 400/700 static pair
+ * never reaches synthesis for a heading voice.
+ */
+export function weightWarnings(
+  entry: CatalogEntry,
+  roles: readonly FontRole[],
+  heading: { voice: string; weight: number } | null,
+): string[] {
+  if (!isSingleWeight(entry)) return [];
+  const only = staticWeights(entry)![0];
+  const textRoles = roles.filter((role) => role !== "heading");
+  if (roles.includes("heading") && !roles.includes("body") && !roles.includes("ui")) {
+    if (heading && heading.weight === only) return [];
+    const asked = heading
+      ? `the active theme draws headings at ${heading.weight} (${heading.voice})`
+      : "a heading voice heavier than that is drawn at it";
+    return [
+      `${entry.family} ships one weight (${only}) and ${asked} — fonts.css sets ` +
+        `font-synthesis-weight: none, so headings render at ${only} instead of a synthesized bold. ` +
+        `For the theme's weight, pick a variable heading family or a theme with a regular heading voice.`,
+    ];
+  }
+  if (textRoles.length > 0) {
+    return [
+      `${entry.family} ships one weight (${only}): bold ${textRoles.join("/")} text set in it ` +
+        `is synthesized by the browser.`,
+    ];
+  }
+  if (roles.length === 0) {
+    return [
+      `${entry.family} ships one weight (${only}): where you set it, add ` +
+        `font-synthesis-weight: none if a heavier weight should not be synthesized.`,
+    ];
+  }
+  return [];
 }
 
 /** Human-readable byte size, matching `faqir add icons`. */
@@ -92,10 +178,14 @@ function formatBytes(n: number): string {
 interface FontsArgs {
   family: string | null;
   roles: FontRole[];
+  /** `--role none`: install the faces, point no role token at them. */
+  noRole: boolean;
+  /** `--italic`: install the family's true-italic faces too. */
+  italic: boolean;
 }
 
 function parseArgs(args: string[], subcommand: string): FontsArgs {
-  const parsed: FontsArgs = { family: null, roles: [] };
+  const parsed: FontsArgs = { family: null, roles: [], noRole: false, italic: false };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -103,11 +193,22 @@ function parseArgs(args: string[], subcommand: string): FontsArgs {
       const value = arg.startsWith("--role=") ? arg.slice("--role=".length) : args[++i];
       if (!value) throw new Error("--role requires a value.");
       for (const role of value.split(",").map((part) => part.trim()).filter(Boolean)) {
+        if (role === "none") {
+          parsed.noRole = true;
+          continue;
+        }
         if (!(ROLE_ORDER as readonly string[]).includes(role)) {
-          throw new Error(`Unknown role '${role}'. Roles are: ${ROLE_ORDER.join(", ")}.`);
+          throw new Error(`Unknown role '${role}'. Roles are: ${ROLE_ORDER.join(", ")}, or none.`);
         }
         if (!parsed.roles.includes(role as FontRole)) parsed.roles.push(role as FontRole);
       }
+      if (parsed.noRole && parsed.roles.length > 0) {
+        throw new Error("--role none cannot be combined with another role.");
+      }
+      continue;
+    }
+    if (arg === "--italic" && subcommand === "add") {
+      parsed.italic = true;
       continue;
     }
     if (arg === "--json") continue;
@@ -168,6 +269,18 @@ async function fontsList(args: string[]): Promise<void> {
           sha256: file.sha256,
           url: file.url,
         })),
+        // Additive (fonts_schema_version stays 1): the pinned true-italic faces
+        // `--italic` installs, empty where the catalog has none for the family.
+        italics: italicFiles(entry).map((file) => ({
+          file: file.file,
+          subset: file.subset,
+          weight: file.weight,
+          bytes: file.bytes,
+          sha256: file.sha256,
+          url: file.url,
+        })),
+        single_weight: isSingleWeight(entry),
+        installed: installed.some((font) => font.id === entry.id),
         installed_roles: roleOf(entry.id),
       })),
     });
@@ -179,11 +292,21 @@ async function fontsList(args: string[]): Promise<void> {
   log.table(
     FONT_CATALOG.map((entry): [string, string] => {
       const roles = roleOf(entry.id);
-      const mark = roles.length > 0 ? ` ✓ installed as ${roles.join(" + ")}` : "";
+      const mark = roles.length > 0
+        ? ` ✓ installed as ${roles.join(" + ")}`
+        : installed.some((font) => font.id === entry.id)
+          ? " ✓ installed, no role"
+          : "";
+      const shape = entry.variable
+        ? "variable"
+        : isSingleWeight(entry)
+          ? `static, one weight (${staticWeights(entry)![0]})`
+          : "static";
+      const italics = italicFiles(entry).length > 0 ? ", italics with --italic" : "";
       return [
         entry.id,
         `${entry.family} — ${entry.class}, suits ${entry.roles.join("/")}, ` +
-          `${entry.variable ? "variable" : "static"}, ${formatBytes(familyBytes(entry))}${mark}`,
+          `${shape}${italics}, ${formatBytes(familyBytes(entry))}${mark}`,
       ];
     }),
   );
@@ -221,9 +344,22 @@ async function fontsAdd(args: string[]): Promise<void> {
   const entry = resolveFamily(parsed.family);
 
   // No `--role` takes the family's primary catalogued role, which is the one a
-  // reader of `fonts list` would pick anyway.
-  const roles = parsed.roles.length > 0 ? parsed.roles : [entry.roles[0]];
+  // reader of `fonts list` would pick anyway; `--role none` takes no role.
+  const roles: FontRole[] = parsed.noRole
+    ? []
+    : parsed.roles.length > 0
+      ? parsed.roles
+      : [entry.roles[0]];
   const unsuited = roles.filter((role) => !entry.roles.includes(role));
+
+  // Refused before any download: an italic the catalog has no pin for cannot
+  // be verified, and installing it unverified is the one thing `fonts` never does.
+  if (parsed.italic && italicFiles(entry).length === 0) {
+    throw new Error(
+      `${entry.family} has no italic faces pinned in this catalog yet — ` +
+        `'faqir fonts list' shows the families that do. Install it without --italic.`,
+    );
+  }
 
   const config = await readConfig(cwd);
   const outputDir = join(cwd, config.output_dir);
@@ -233,12 +369,13 @@ async function fontsAdd(args: string[]): Promise<void> {
 
   // Download and verify everything BEFORE touching the project: a bad hash or a
   // dead URL must leave no files, no stylesheet and no config change.
-  const downloaded = await downloadFamily(entry);
+  const downloaded = await downloadFamily(entry, { italic: parsed.italic });
 
   // A displaced family that ends up holding no role leaves the install list but
   // keeps its files: `remove` is what deletes bytes, so a mis-aimed `add` is
   // recoverable without a second download.
-  const result = assignRoles(config.fonts ?? [], entry, roles);
+  const result = assignRoles(config.fonts ?? [], entry, roles, { italic: parsed.italic });
+  const held = result.fonts.find((font) => font.id === entry.id)?.roles ?? [];
   ensureDir(join(outputDir, FONTS_DIR, entry.id));
   for (const { file, bytes } of downloaded) {
     await Bun.write(fontFilePath(outputDir, entry.id, file.file), bytes);
@@ -263,6 +400,7 @@ async function fontsAdd(args: string[]): Promise<void> {
       family: entry.family,
       license: entry.license,
       roles,
+      italic: parsed.italic,
       files: downloaded.map(({ file }) => `${FONTS_DIR}/${entry.id}/${file.file}`),
       bytes: downloaded.reduce((total, { bytes }) => total + bytes.byteLength, 0),
       stack: roleStack(entry),
@@ -272,10 +410,13 @@ async function fontsAdd(args: string[]): Promise<void> {
     displaced: result.displaced.map(([role, id]) => ({ role, id })),
     fonts: result.fonts,
     bundle_regenerated: rebundled,
-    warnings: unsuited.map(
-      (role) =>
-        `${entry.family} is catalogued for ${entry.roles.join("/")}, not ${role} — installed anyway.`,
-    ),
+    warnings: [
+      ...unsuited.map(
+        (role) =>
+          `${entry.family} is catalogued for ${entry.roles.join("/")}, not ${role} — installed anyway.`,
+      ),
+      ...weightWarnings(entry, held, headingVoiceWeight(outputDir)),
+    ],
   };
 
   if (wantsJSON(args)) {
@@ -285,12 +426,14 @@ async function fontsAdd(args: string[]): Promise<void> {
 
   for (const warning of payload.warnings) log.warn(warning);
   log.success(
-    `Installed ${entry.family} (${entry.license}) as ${roles.join(" + ")} — ` +
+    `Installed ${entry.family} (${entry.license}) ` +
+      `${roles.length > 0 ? `as ${roles.join(" + ")}` : "with no role (@font-face rules only)"} — ` +
       `${formatBytes(payload.installed.bytes)} in ${downloaded.length} file(s).`,
   );
   for (const file of payload.installed.files) log.step(`${config.output_dir}/${file}`);
   log.step(`${config.output_dir}/${FONTS_CSS_FILENAME}`);
   for (const role of roles) log.dim(`${ROLE_TOKENS[role]}: ${roleStack(entry)}`);
+  if (roles.length === 0) log.dim(`font-family: ${roleStack(entry)};   — wherever you want it`);
   for (const { role, id } of payload.displaced) {
     log.dim(`${ROLE_TOKENS[role as FontRole]} moved off ${id}; 'faqir fonts remove ${id}' deletes its files.`);
   }

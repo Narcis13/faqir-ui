@@ -52,7 +52,7 @@ block content
     | Nothing else crosses into the partial. The page below has a user in its data, and the partial still cannot see it.
   include "partials/failure.faqir" (failure=err.scope)
   p
-    | Names are relative to the loader's root from every file, never to the including file. An include chain that returns to a file already on it, or that nests deeper than 16, is found when the template compiles, so a compiled template cannot recurse.
+    | Names are relative to the loader's root from every file, never to the including file. An include chain that returns to a file already on it, or that nests deeper than 16, is found when the template compiles. A partial recurses only through an include that carries a depth budget, such as depth=3, which the render enforces.
 
   h2#components Component calls
   p

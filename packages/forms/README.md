@@ -19,6 +19,61 @@ and a form that carries rules adds `faqir-rules.js`. The HTML contains a
 machine-readable `@ui:requires` comment so page assemblers can retain those
 runtime requirements.
 
+A single-page form ends in a footer holding its submit button,
+`<div><button type="submit" data-ui="button" data-variant="primary">`, labelled
+`i18n.submitLabel` ("Submit"); `opts.submit: false` leaves it out for a page
+that places its own. A wizard's navigation already ends in one and is not
+affected.
+
+### Options
+
+| Option | Effect |
+| --- | --- |
+| `idPrefix` | prefix of every id (`<prefix>-form`, `<prefix>-rules`, …); default `"faqir"` |
+| `radioThreshold` | enum cardinality rendered as radios / checkbox groups; default `4` |
+| `theme`, `density` | `data-theme` / `data-density` on the form |
+| `i18n` | the fixed strings: `submitLabel`, `backLabel`, `nextLabel`, `selectPlaceholder`, … |
+| `rules` | a [rules definition](#rules) the form carries |
+| `submit` | `false` drops the single-page submit button |
+| `heading` | `false` drops the `<h1>` and description paragraph a root `title` / `description` render; the form keeps `aria-label` |
+| `labelledBy` | an id (or ids): the form gets `aria-labelledby` instead of `aria-label` |
+
+`heading` and `labelledBy` are for a page that draws its own hero above the
+form: `{ heading: false, labelledBy: "hero-title" }` keeps the schema's `title`
+and `description` (the rules and the accessible name still come from it)
+without a second heading inside the card.
+
+## Submitting: `faqir:valid-submit`
+
+Both shapes announce a finished submit the same way. `faqir-validate` fires
+`faqir:valid-submit` on the form — bubbling, cancelable, once per submit:
+
+- a **single-page** form, on every clean submit, just before the browser
+  submits natively. Cancel the event (`preventDefault()`) and there is no
+  native post — that is the SPA hook. A submit that had to wait on an async
+  check fires it when the check answers.
+- a **wizard**, on the clean submit of its last step: the submit whose
+  `l-validate` hook sets the form's `data-state="submitted"`. Next on an
+  earlier step fires nothing.
+
+`event.detail` is the form's data: `Faqir.rules.data(form)` when `faqir-rules`
+is loaded — coerced through the form's definition, with a field a rule hid left
+out, exactly what a server's `coerce(definition, fromFormData(body))` makes of
+the post (see [`@faqir-ui/rules`](../rules#in-the-browser--l-rules)) — and
+otherwise the same read uncoerced (name → value, a list where a name repeats).
+Either way a control the wizard disabled still answers, so every step's answers
+are there, which `new FormData(form)` on the last step does not give you.
+
+```js
+document.addEventListener("faqir:valid-submit", async (event) => {
+  event.preventDefault();
+  await fetch("/api/forms/signup", { method: "POST", body: JSON.stringify(event.detail) });
+});
+```
+
+The page's verdict is advisory: re-run the definition on the server
+(`validate(rulesFor(schema, ui, opts), body)`).
+
 ## `buildForm`: the same form as DOM nodes
 
 ```js
@@ -68,6 +123,9 @@ without `'unsafe-eval'` needs the same arrangements as any other Faqir page.
 | `string` + `format: "date"` | `date-picker` + `calendar` |
 | `string` + `enum` (1–4 values) | radio group |
 | `string` + `enum` (5+ values) | select |
+| `string` or `integer` + `enum` + widget `scale` | horizontal radio group with end captions |
+| `integer` + `enum` | radio group (1–4 values) or select, like a string enum |
+| `integer` + `minimum`/`maximum` + widget `scale` | one radio per step of the range, as a scale |
 | `number` | `input[type=number][step=any]` |
 | `integer` | `input[type=number][step=1]` |
 | `boolean` | checkbox (or `switch` via uiSchema) |
@@ -82,8 +140,18 @@ The default cardinality threshold is **4** — shared by single enums
 (radio vs select) and enum arrays (checkbox group vs multi-select) — and is
 exported as `DEFAULT_RADIO_THRESHOLD`. Set `opts.radioThreshold` to change it,
 or force one field via its UI schema `widget` (`"radio"`, `"select"`,
-`"checkbox-group"`, `"multi-select"`, …). The mapping table above is mirrored
-row-for-row by a checklist in `tests/forms.test.ts`.
+`"checkbox-group"`, `"multi-select"`, `"scale"`, …). The mapping table above is
+mirrored row-for-row by a checklist in `tests/forms.test.ts` (the scale and
+integer-enum rows by `tests/forecraft-widgets.test.ts`).
+
+A **date** field renders the `date-picker` recipe. Its visible input shows the
+date as a person reads it ("October 15, 2026") and carries no `name`; a hidden
+`<input data-part="value" name="…">` holds the ISO date (`2026-10-15`), which
+the date-picker controller keeps current on every pick, `setValue()` and
+`clear()`, firing `input` and `change` on it. So `FormData`, a native submit,
+`l-model` and the rules all read the ISO value, which is what `format: "date"`
+accepts on the server. The label, `required` and the description wiring stay on
+the visible input.
 
 ## UI schema
 
@@ -102,7 +170,29 @@ const uiSchema = {
 ```
 
 Both the terse keys and their `ui:*` aliases are accepted; providing
-conflicting aliases throws. Nested-object UI schemas mirror the schema
+conflicting aliases throws.
+
+Layout keys, on any scalar or enum-array field:
+
+| Key | Values | Renders |
+| --- | --- | --- |
+| `width` | `"full"`, `"half"`, `"third"` | `data-span` on the field-group: from the md tier up the fields' container (the form, a group card, a wizard step) becomes a six-track grid and the field takes that share of a row; a phone stays one column |
+| `orientation` | `"vertical"`, `"horizontal"` | `data-orientation` on a radio group or checkbox group: horizontal is a wrapping row (only those two widgets) |
+| `minLabel`, `maxLabel` | strings | captions under the first and last choice of a `scale` (only that widget), each wired to its option's `aria-describedby` |
+
+```js
+const uiSchema = {
+  firstName: { width: "half" },
+  lastName: { width: "half" },
+  contact: { widget: "radio", orientation: "horizontal" },
+  recommend: { widget: "scale", minLabel: "Not likely", maxLabel: "Very likely" }, // integer 0–10
+};
+```
+
+A `scale` is a horizontal radio group: on a string or integer `enum`, or on an
+`integer` with `minimum` and `maximum` (every value in the range, or every
+`multipleOf`, or every `step` from the minimum — at most 21 choices). It cannot
+go in a repeatable row, where every enum renders as a select. Nested-object UI schemas mirror the schema
 structure (child name → child UI). Repeatable groups take `items` (per-row
 UI), `addLabel`, and `removeLabel`.
 
@@ -136,7 +226,9 @@ one `card` panel per step, and Back/Next/Submit buttons, driven by an `l-data`
 (`:hidden`, `:data-state`); inactive steps' controls are `:disabled`-gated, so
 `faqir-validate` validates exactly the active step before each advance — the
 Next button is a submit, and the `l-validate` on-valid hook advances or, on the
-final step, marks the form `data-state="submitted"`. Zero custom JS.
+final step, marks the form `data-state="submitted"` — which is what makes
+`faqir-validate` fire [`faqir:valid-submit`](#submitting-faqirvalid-submit).
+Zero custom JS.
 
 ## Rules
 
@@ -190,9 +282,36 @@ one, and neither can two steps in a row, because one jump steps over one page.
 When the definition contains any `jump`, the wizard's Next and Back read
 `$rules.next` instead of counting by one.
 
+### `rulesFor`: the definition as data
+
+A server that re-checks a submission needs the definition the page enforces,
+without rendering HTML and parsing the script back out of it:
+
+```js
+import { renderForm, rulesFor } from "@faqir-ui/forms";
+import { coerce, fromFormData, validate } from "@faqir-ui/rules";
+
+const definition = rulesFor(jsonSchema, uiSchema, opts); // null: this form carries none
+const verdict = validate(definition, coerce(definition, fromFormData(body)));
+```
+
+`rulesFor` takes `renderForm`'s arguments and returns exactly the object the
+form's `<idPrefix>-rules` script holds — the same render, so the two cannot
+drift, and the same errors — or `null` when that form carries no definition.
+
 Everything emitted is lint-clean by construction: `faqir rules lint` (and
 `lintDefinition`, the same function) reports nothing for a definition this
 renderer produced, which is what `tests/rules.test.ts` checks case by case.
+
+### Spacing
+
+The form carries `data-gap` — `opts.gap`, one of the rhythm steps (`0`, `1`,
+`2`, `3`, `4`, `6`, `8`, `10`, `12`, `16`), default `"4"` — which sets the
+step between its fields through the base rhythm. A `ui:groups` card body and a
+wizard step's body inside the form keep the same step (`card`), so a grouped
+form and a wizard space their fields exactly as a flat form does; the
+`form-page` pattern uses the same step between its heading, description,
+fields and buttons.
 
 ## Repeatable groups
 

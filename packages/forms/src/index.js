@@ -39,13 +39,21 @@ const OBJECT_ARRAY_ITEM_KEYS = new Set(["type", "properties", "required", "addit
 const UI_KEYS = new Set([
   "widget", "ui:widget", "placeholder", "ui:placeholder",
   "rows", "ui:rows", "enumLabels", "ui:enumLabels",
+  "width", "ui:width", "orientation", "ui:orientation",
+  "minLabel", "ui:minLabel", "maxLabel", "ui:maxLabel",
 ]);
-const ENUM_ARRAY_UI_KEYS = new Set(["widget", "ui:widget", "enumLabels", "ui:enumLabels"]);
+const ENUM_ARRAY_UI_KEYS = new Set([
+  "widget", "ui:widget", "enumLabels", "ui:enumLabels",
+  "width", "ui:width", "orientation", "ui:orientation",
+]);
 const OBJECT_ARRAY_UI_KEYS = new Set(["items", "addLabel", "ui:addLabel", "removeLabel", "ui:removeLabel"]);
 const GROUP_KEYS = new Set(["title", "description", "fields"]);
 const WIZARD_KEYS = new Set(["label", "steps"]);
 const STEP_KEYS = new Set(["title", "description", "fields", "when"]);
-const OPTION_KEYS = new Set(["idPrefix", "radioThreshold", "theme", "density", "i18n", "rules"]);
+const OPTION_KEYS = new Set([
+  "idPrefix", "radioThreshold", "theme", "density", "i18n", "rules",
+  "heading", "labelledBy", "submit", "gap",
+]);
 const I18N_KEYS = new Set([
   "requiredMarker", "selectPlaceholder", "datePickerLabel", "calendarLabel",
   "addRowLabel", "removeRowLabel", "backLabel", "nextLabel", "submitLabel", "wizardNavLabel",
@@ -53,8 +61,21 @@ const I18N_KEYS = new Set([
 const STRING_FORMATS = new Set(["date", "email", "uri"]);
 const WIDGETS = new Set([
   "input", "textarea", "select", "radio", "checkbox", "switch", "date-picker",
-  "checkbox-group", "multi-select",
+  "checkbox-group", "multi-select", "scale",
 ]);
+/** `ui:width` → the field-group's `data-span`: a share of the row from the md tier up. */
+const WIDTHS = new Set(["full", "half", "third"]);
+/** `ui:orientation` → `data-orientation` on a radio-group or checkbox-group. */
+const ORIENTATIONS = new Set(["vertical", "horizontal"]);
+/** The most choices an integer-range `scale` draws; past that it is an input, not a scale. */
+const MAX_SCALE_STEPS = 21;
+/**
+ * `opts.gap` → `data-gap` on the form: the step between its fields, on the
+ * spacing ladder `base/rhythm.css` gives every flow root. A card body inside the
+ * form (a `ui:groups` fieldset, a wizard step) continues the same step.
+ */
+const GAPS = new Set(["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"]);
+export const DEFAULT_FORM_GAP = "4";
 
 const DEFAULT_I18N = Object.freeze({
   requiredMarker: "*",
@@ -125,6 +146,23 @@ function assertStringArray(value, path) {
     throw new Error(`@faqir-ui/forms: ${path} values must be unique.`);
   }
   return /** @type {string[]} */ (value);
+}
+
+/**
+ * A non-empty array of unique integers — an integer field's enum (a 1–5 rating,
+ * a 0–10 scale). @param {unknown} value @param {string} path
+ */
+function assertIntegerArray(value, path) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new TypeError(`@faqir-ui/forms: ${path} must be a non-empty integer array.`);
+  }
+  value.forEach((item, index) => {
+    if (!Number.isInteger(item)) throw new TypeError(`@faqir-ui/forms: ${path}[${index}] must be an integer.`);
+  });
+  if (new Set(value).size !== value.length) {
+    throw new Error(`@faqir-ui/forms: ${path} values must be unique.`);
+  }
+  return /** @type {number[]} */ (value);
 }
 
 /** Does a JSON value fit a scalar field's type? @param {unknown} value @param {string} type */
@@ -286,7 +324,25 @@ function normalizeOptions(raw) {
 
   const rules = raw.rules === undefined ? null : normalizeRulesOption(raw.rules);
 
-  return { prefix, threshold, theme, density, i18n, rules };
+  for (const key of ["heading", "submit"]) {
+    if (raw[key] !== undefined && typeof raw[key] !== "boolean") {
+      throw new TypeError(`@faqir-ui/forms: opts.${key} must be a boolean.`);
+    }
+  }
+  const heading = raw.heading !== false;
+  const submit = raw.submit !== false;
+  const labelledBy = raw.labelledBy === undefined ? undefined : assertString(raw.labelledBy, "opts.labelledBy").trim();
+  if (labelledBy !== undefined && labelledBy.length === 0) throw new Error("@faqir-ui/forms: opts.labelledBy cannot be empty.");
+
+  let gap = DEFAULT_FORM_GAP;
+  if (raw.gap !== undefined) {
+    gap = typeof raw.gap === "number" ? String(raw.gap) : assertString(raw.gap, "opts.gap");
+    if (!GAPS.has(gap)) {
+      throw new Error(`@faqir-ui/forms: opts.gap must be one of the rhythm steps ${[...GAPS].join(", ")}; received ${JSON.stringify(raw.gap)}.`);
+    }
+  }
+
+  return { prefix, threshold, theme, density, i18n, rules, heading, submit, labelledBy, gap };
 }
 
 /**
@@ -328,8 +384,9 @@ function validateFieldSchema(schema, path) {
   if (schema.description !== undefined) assertString(schema.description, `${path}.description`);
 
   if (schema.enum !== undefined) {
-    if (type !== "string") throw new Error(`@faqir-ui/forms: ${path}.enum is supported only for string fields.`);
-    assertStringArray(schema.enum, `${path}.enum`);
+    if (type === "string") assertStringArray(schema.enum, `${path}.enum`);
+    else if (type === "integer") assertIntegerArray(schema.enum, `${path}.enum`);
+    else throw new Error(`@faqir-ui/forms: ${path}.enum is supported only for string or integer fields.`);
   }
 
   if (schema.format !== undefined) {
@@ -550,6 +607,12 @@ function normalizeUi(ui, schema, path, inRow = false) {
   const placeholderRaw = uiValue(ui, "placeholder", "ui:placeholder", path);
   const rowsRaw = uiValue(ui, "rows", "ui:rows", path);
   const labelsRaw = uiValue(ui, "enumLabels", "ui:enumLabels", path);
+  const width = normalizeWidth(ui, path);
+  const orientation = normalizeOrientation(ui, path);
+  const minLabelRaw = uiValue(ui, "minLabel", "ui:minLabel", path);
+  const maxLabelRaw = uiValue(ui, "maxLabel", "ui:maxLabel", path);
+  const minLabel = minLabelRaw === undefined ? undefined : assertString(minLabelRaw, `${path}.minLabel`);
+  const maxLabel = maxLabelRaw === undefined ? undefined : assertString(maxLabelRaw, `${path}.maxLabel`);
 
   const widget = widgetRaw === undefined ? undefined : assertString(widgetRaw, `${path}.widget`);
   if (widget !== undefined && !WIDGETS.has(widget)) {
@@ -573,19 +636,34 @@ function normalizeUi(ui, schema, path, inRow = false) {
 
   const type = schema.type;
   const format = schema.format;
+  // A scale is a row of radios, so it goes where a radio group goes — and on an
+  // integer range, which is a choice list the schema spells as two bounds.
+  const choices = inRow ? ["select"] : ["select", "radio", "scale"];
   const allowed = schema.const !== undefined
     ? new Set(type === "string" ? ["input", "textarea"] : ["input"])
-    : type === "string"
-    ? schema.enum !== undefined
-      ? inRow ? new Set(["select"]) : new Set(["select", "radio"])
-      : format === "date"
-        ? new Set(["date-picker"])
-        : new Set(["input", "textarea"])
-    : type === "boolean"
-      ? new Set(["checkbox", "switch"])
-      : new Set(["input"]);
+    : schema.enum !== undefined
+      ? new Set(choices)
+      : type === "string"
+        ? format === "date"
+          ? new Set(["date-picker"])
+          : new Set(["input", "textarea"])
+        : type === "boolean"
+          ? new Set(["checkbox", "switch"])
+          : type === "integer" && !inRow
+            ? new Set(["input", "scale"])
+            : new Set(["input"]);
   if (widget !== undefined && !allowed.has(widget)) {
     throw new Error(`@faqir-ui/forms: widget "${widget}" is incompatible with ${path.replace(/^uiSchema/, "jsonSchema.properties")}.`);
+  }
+  if ((minLabel !== undefined || maxLabel !== undefined) && widget !== "scale") {
+    throw new Error(`@faqir-ui/forms: ${path}.minLabel/maxLabel are supported only with the scale widget.`);
+  }
+  /** @type {string[] | undefined} */
+  let scaleValues;
+  if (widget === "scale") {
+    scaleValues = schema.enum !== undefined
+      ? (/** @type {Array<string | number>} */ (schema.enum)).map(String)
+      : integerRange(schema, path);
   }
   if (rows !== undefined && widget !== "textarea") {
     throw new Error(`@faqir-ui/forms: ${path}.rows is supported only with the textarea widget.`);
@@ -594,7 +672,66 @@ function normalizeUi(ui, schema, path, inRow = false) {
     throw new Error(`@faqir-ui/forms: ${path}.placeholder is supported only for string fields.`);
   }
 
-  return { widget, placeholder: placeholder ?? examplePlaceholder(schema), rows, enumLabels };
+  return {
+    widget, placeholder: placeholder ?? examplePlaceholder(schema), rows, enumLabels,
+    width, orientation, minLabel, maxLabel, scaleValues,
+  };
+}
+
+/**
+ * The values an integer-range `scale` offers: every integer from `minimum` to
+ * `maximum` — every multiple of `multipleOf` in it, or every `step` from the
+ * minimum — capped at MAX_SCALE_STEPS, past which it is not a scale.
+ * @param {Record<string, unknown>} schema @param {string} path
+ */
+function integerRange(schema, path) {
+  const field = path.replace(/^uiSchema/, "jsonSchema.properties");
+  if (schema.minimum === undefined || schema.maximum === undefined) {
+    throw new Error(
+      `@faqir-ui/forms: widget "scale" on ${field} needs an enum or both minimum and maximum — the scale's ends.`,
+    );
+  }
+  const min = /** @type {number} */ (schema.minimum);
+  const max = /** @type {number} */ (schema.maximum);
+  if (!Number.isInteger(min) || !Number.isInteger(max)) {
+    throw new Error(`@faqir-ui/forms: widget "scale" on ${field} needs integer minimum and maximum.`);
+  }
+  /** @type {string[]} */
+  const values = [];
+  const multiple = /** @type {number | undefined} */ (schema.multipleOf);
+  const step = multiple === undefined ? /** @type {number} */ (schema.step ?? 1) : 1;
+  for (let value = min; value <= max && values.length <= MAX_SCALE_STEPS; value += step) {
+    if (multiple === undefined || value % multiple === 0) values.push(String(value));
+  }
+  if (values.length > MAX_SCALE_STEPS) {
+    throw new Error(
+      `@faqir-ui/forms: widget "scale" on ${field} would draw more than ${MAX_SCALE_STEPS} choices; a range that wide is an input.`,
+    );
+  }
+  if (values.length === 0) throw new Error(`@faqir-ui/forms: widget "scale" on ${field} has no value in its range.`);
+  return values;
+}
+
+/** `width` / `ui:width`. @param {Record<string, unknown>} ui @param {string} path */
+function normalizeWidth(ui, path) {
+  const raw = uiValue(ui, "width", "ui:width", path);
+  if (raw === undefined) return undefined;
+  const width = assertString(raw, `${path}.width`);
+  if (!WIDTHS.has(width)) {
+    throw new Error(`@faqir-ui/forms: ${path}.width must be one of ${[...WIDTHS].map((w) => `"${w}"`).join(", ")}.`);
+  }
+  return width;
+}
+
+/** `orientation` / `ui:orientation`. @param {Record<string, unknown>} ui @param {string} path */
+function normalizeOrientation(ui, path) {
+  const raw = uiValue(ui, "orientation", "ui:orientation", path);
+  if (raw === undefined) return undefined;
+  const orientation = assertString(raw, `${path}.orientation`);
+  if (!ORIENTATIONS.has(orientation)) {
+    throw new Error(`@faqir-ui/forms: ${path}.orientation must be "vertical" or "horizontal".`);
+  }
+  return orientation;
 }
 
 /**
@@ -606,6 +743,8 @@ function normalizeEnumArrayUi(ui, values, path) {
   assertKnownKeys(ui, ENUM_ARRAY_UI_KEYS, path);
   const widgetRaw = uiValue(ui, "widget", "ui:widget", path);
   const labelsRaw = uiValue(ui, "enumLabels", "ui:enumLabels", path);
+  const width = normalizeWidth(ui, path);
+  const orientation = normalizeOrientation(ui, path);
   const widget = widgetRaw === undefined ? undefined : assertString(widgetRaw, `${path}.widget`);
   if (widget !== undefined && widget !== "checkbox-group" && widget !== "multi-select") {
     throw new Error(`@faqir-ui/forms: widget "${widget}" is incompatible with ${path} (enum arrays render as checkbox-group or multi-select).`);
@@ -618,7 +757,7 @@ function normalizeEnumArrayUi(ui, values, path) {
     }
     enumLabels = labelsRaw.map((value, index) => assertString(value, `${path}.enumLabels[${index}]`));
   }
-  return { widget, enumLabels };
+  return { widget, enumLabels, width, orientation };
 }
 
 /**
@@ -1270,20 +1409,36 @@ function pushPattern(attrs, schema) {
 }
 
 /**
+ * @typedef {{
+ *   widget?: string, placeholder?: string, rows?: number, enumLabels?: string[],
+ *   width?: string, orientation?: string, minLabel?: string, maxLabel?: string, scaleValues?: string[],
+ * }} FieldUi
+ */
+
+/**
  * @param {Record<string, unknown>} schema
- * @param {{ widget?: string, placeholder?: string, rows?: number, enumLabels?: string[] }} ui
+ * @param {FieldUi} ui
  * @param {FieldCtx} ctx
  */
 function renderControl(schema, ui, ctx) {
   const common = commonControlAttrs(ctx);
   const type = /** @type {string} */ (schema.type);
 
-  if (type === "string" && schema.enum !== undefined) {
-    const values = /** @type {string[]} */ (schema.enum);
+  // A choice list: a string or integer enum, or an integer range drawn as a
+  // scale. Values go into the markup as strings; the rules' `fields` map
+  // coerces an integer field's answer back to a number on both sides.
+  if (schema.enum !== undefined || ui.widget === "scale") {
+    const values = ui.scaleValues ?? (/** @type {Array<string | number>} */ (schema.enum)).map(String);
     const labels = ui.enumLabels ?? values;
+    const defaultValue = schema.default === undefined ? undefined : String(schema.default);
     const widget = ui.widget ?? (!ctx.dyn && values.length <= ctx.threshold ? "radio" : "select");
-    if (widget === "radio") return renderRadio(values, labels, schema.default, common, ctx);
-    return renderSelect(values, labels, schema.default, ui.placeholder, common, ctx);
+    if (widget === "scale") {
+      return renderRadio(values, labels, defaultValue, common, ctx, {
+        orientation: "horizontal", minLabel: ui.minLabel, maxLabel: ui.maxLabel,
+      });
+    }
+    if (widget === "radio") return renderRadio(values, labels, defaultValue, common, ctx, { orientation: ui.orientation });
+    return renderSelect(values, labels, defaultValue, ui.placeholder, common, ctx);
   }
 
   if (type === "string" && schema.format === "date" && schema.const === undefined) {
@@ -1332,23 +1487,39 @@ function renderControl(schema, ui, ctx) {
   return [`<input${renderAttrs(attrs)}>`];
 }
 
+/** The `data-orientation` a radio-group or checkbox-group carries; vertical is its default, so it is left off. @param {string | undefined} orientation */
+function orientationAttr(orientation) {
+  return orientation === "horizontal" ? ' data-orientation="horizontal"' : "";
+}
+
 /**
- * @param {string[]} values @param {string[]} labels @param {unknown} defaultValue
+ * A radio group — and, given captions, a scale: the same group laid out as a
+ * row (`data-orientation="horizontal"`) with the ends' captions under it. Each
+ * caption describes the option at its end, so a screen reader hears "0, Not
+ * likely" on the first radio and "10, Very likely" on the last.
+ * @param {string[]} values @param {string[]} labels @param {string | undefined} defaultValue
  * @param {string[]} common
  * @param {FieldCtx} ctx
+ * @param {{ orientation?: string, minLabel?: string, maxLabel?: string }} [layout]
  */
-function renderRadio(values, labels, defaultValue, common, ctx) {
+function renderRadio(values, labels, defaultValue, common, ctx, layout = {}) {
   const labelId = `${ctx.id}-label`;
   const describedBy = common.find((attr) => attr.startsWith("aria-describedby="));
   const requiredAttrs = common.filter((attr) => attr === "required" || attr.startsWith("aria-required="));
-  const lines = [`<div data-ui="radio-group" role="radiogroup" aria-labelledby="${attrValue(labelId)}"${describedBy ? ` ${describedBy}` : ""}>`];
+  const hasCaptions = layout.minLabel !== undefined || layout.maxLabel !== undefined;
+  const minId = layout.minLabel !== undefined ? `${ctx.id}-min-caption` : null;
+  const maxId = layout.maxLabel !== undefined ? `${ctx.id}-max-caption` : null;
+  const lines = [`<div data-ui="radio-group" role="radiogroup"${orientationAttr(layout.orientation)} aria-labelledby="${attrValue(labelId)}"${describedBy ? ` ${describedBy}` : ""}>`];
+  const last = values.length - 1;
   values.forEach((value, index) => {
     const optionId = `${ctx.id}-option-${index + 1}`;
     const attrs = [
       'data-ui="radio"', 'type="radio"', `id="${attrValue(optionId)}"`,
       `name="${attrValue(ctx.name)}"`, `value="${attrValue(value)}"`, ...requiredAttrs,
     ];
-    if (describedBy) attrs.push(describedBy);
+    const caption = index === 0 && minId ? minId : index === last && maxId ? maxId : null;
+    if (caption) attrs.push(`aria-describedby="${attrValue(`${caption} ${ctx.describedBy}`)}"`);
+    else if (describedBy) attrs.push(describedBy);
     if (ctx.disabledExpr) attrs.push(`:disabled="${attrValue(ctx.disabledExpr)}"`);
     if (defaultValue === value) attrs.push("checked");
     lines.push("  <label data-ui=\"radio-label\">");
@@ -1356,12 +1527,18 @@ function renderRadio(values, labels, defaultValue, common, ctx) {
     lines.push(`    <span data-part="label">${escapeHtml(labels[index])}</span>`);
     lines.push("  </label>");
   });
+  if (hasCaptions) {
+    lines.push('  <div data-part="captions">');
+    lines.push(minId ? `    <span id="${attrValue(minId)}">${escapeHtml(/** @type {string} */ (layout.minLabel))}</span>` : "    <span></span>");
+    lines.push(maxId ? `    <span id="${attrValue(maxId)}">${escapeHtml(/** @type {string} */ (layout.maxLabel))}</span>` : "    <span></span>");
+    lines.push("  </div>");
+  }
   lines.push("</div>");
   return lines;
 }
 
 /**
- * @param {string[]} values @param {string[]} labels @param {unknown} defaultValue
+ * @param {string[]} values @param {string[]} labels @param {string | undefined} defaultValue
  * @param {string | undefined} placeholder @param {string[]} common
  * @param {FieldCtx} ctx
  */
@@ -1405,11 +1582,12 @@ function renderMultiSelect(values, labels, defaults, common) {
  * enforceable, so `required` renders the marker only (documented).
  * @param {string[]} values @param {string[]} labels @param {string[]} defaults
  * @param {FieldCtx} ctx
+ * @param {string | undefined} [orientation]
  */
-function renderCheckboxGroup(values, labels, defaults, ctx) {
+function renderCheckboxGroup(values, labels, defaults, ctx, orientation) {
   const labelId = `${ctx.id}-label`;
   const describedBy = `aria-describedby="${attrValue(ctx.describedBy)}"`;
-  const lines = [`<div data-ui="checkbox-group" role="group" aria-labelledby="${attrValue(labelId)}" ${describedBy}>`];
+  const lines = [`<div data-ui="checkbox-group" role="group"${orientationAttr(orientation)} aria-labelledby="${attrValue(labelId)}" ${describedBy}>`];
   values.forEach((value, index) => {
     const optionId = `${ctx.id}-option-${index + 1}`;
     const attrs = [
@@ -1428,24 +1606,35 @@ function renderCheckboxGroup(values, labels, defaults, ctx) {
 }
 
 /**
+ * A date field: the visible input shows the date as a person reads it and is
+ * not submitted; the hidden `value` part carries the field's `name` and the ISO
+ * date the `date-picker` controller keeps in it, so `FormData`, a native submit,
+ * `l-model` and the rules all read `2026-10-15`, never "October 15, 2026". The
+ * label, `required` and the description wiring stay on the visible input, which
+ * is the one a person reaches.
  * @param {Record<string, unknown>} schema
  * @param {{ placeholder?: string }} ui
  * @param {string[]} common
  * @param {FieldCtx} ctx
  */
 function renderDatePicker(schema, ui, common, ctx) {
+  const naming = (/** @type {string} */ attr) => attr.startsWith("name=") || attr.startsWith(":name=");
   const inputAttrs = [
-    'data-part="input"', ...common, 'type="text"', 'role="combobox"', "readonly",
+    'data-part="input"', ...common.filter((attr) => !naming(attr)), 'type="text"', 'role="combobox"', "readonly",
     'aria-haspopup="dialog"', 'aria-expanded="false"',
     `aria-label="${attrValue(interpolateTitle(ctx.i18n.datePickerLabel, ctx.title))}"`,
   ];
   if (ui.placeholder !== undefined) inputAttrs.push(`placeholder="${attrValue(ui.placeholder)}"`);
   if (schema.default !== undefined) inputAttrs.push(`value="${attrValue(/** @type {string} */ (schema.default))}"`);
+  const valueAttrs = ['data-part="value"', 'type="hidden"', ...common.filter(naming)];
+  if (schema.default !== undefined) valueAttrs.push(`value="${attrValue(/** @type {string} */ (schema.default))}"`);
+  if (ctx.disabledExpr) valueAttrs.push(`:disabled="${attrValue(ctx.disabledExpr)}"`);
   const calendarAttrs = ['data-ui="calendar"', 'data-size="md"'];
   if (schema.default !== undefined) calendarAttrs.push(`data-value="${attrValue(/** @type {string} */ (schema.default))}"`);
 
   return [
     '<div data-ui="date-picker" data-state="closed" data-size="md">',
+    `  <input${renderAttrs(valueAttrs)}>`,
     '  <div data-part="trigger">',
     `    <input${renderAttrs(inputAttrs)}>`,
     '    <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>',
@@ -1527,7 +1716,7 @@ function allocateScopeName(state, kind, pathNames) {
  * Build one field-group (label + control + description + error) at zero indent.
  * Shared by scalar fields and enum-array fields, at any nesting level.
  * @param {Record<string, unknown>} schema
- * @param {{ widget?: string, placeholder?: string, rows?: number, enumLabels?: string[] }} ui
+ * @param {FieldUi} ui
  * @param {FormState} state
  * @param {{ pathNames: string[], required: boolean, disabledExpr: string | null, row: { arrayId: string, arrayName: string, childName: string } | null, enumArray: { values: string[], defaults: string[] } | null }} spec
  */
@@ -1582,12 +1771,12 @@ function buildFieldGroup(schema, ui, state, spec) {
     const labels = ui.enumLabels ?? enumArray.values;
     chosenWidget = ui.widget ?? (enumArray.values.length <= state.threshold ? "checkbox-group" : "multi-select");
     control = chosenWidget === "checkbox-group"
-      ? renderCheckboxGroup(enumArray.values, labels, enumArray.defaults, ctx)
+      ? renderCheckboxGroup(enumArray.values, labels, enumArray.defaults, ctx, ui.orientation)
       : renderMultiSelect(enumArray.values, labels, enumArray.defaults, commonControlAttrs(ctx));
   } else {
     chosenWidget = ui.widget ?? (
-      schema.type === "string" && schema.enum !== undefined
-        ? !dyn && (/** @type {string[]} */ (schema.enum)).length <= state.threshold ? "radio" : "select"
+      schema.enum !== undefined
+        ? !dyn && (/** @type {unknown[]} */ (schema.enum)).length <= state.threshold ? "radio" : "select"
         : schema.type === "string" && schema.format === "date" && schema.const === undefined ? "date-picker"
           : schema.type === "boolean" ? "checkbox" : "input"
     );
@@ -1595,8 +1784,14 @@ function buildFieldGroup(schema, ui, state, spec) {
     if (typeof schema.pattern === "string" && htmlPattern(schema.pattern) === null) state.flags.patternInRules = true;
     control = renderControl(schema, ui, ctx);
   }
+  if (ui.orientation !== undefined && chosenWidget !== "radio" && chosenWidget !== "checkbox-group") {
+    throw new Error(
+      `@faqir-ui/forms: uiSchema.${pathNames.join(".")}.orientation applies to a radio or checkbox-group widget; ` +
+      `this field renders as ${chosenWidget}${chosenWidget === "scale" ? ", which is always a row" : ""}.`,
+    );
+  }
 
-  const labelTargetsOption = chosenWidget === "radio" || chosenWidget === "checkbox-group";
+  const labelTargetsOption = chosenWidget === "radio" || chosenWidget === "checkbox-group" || chosenWidget === "scale";
   const labelId = `${id}-label`;
   const label = `${escapeHtml(title)}${required ? ` <span data-part="required">${escapeHtml(state.i18n.requiredMarker)}</span>` : ""}`;
   // A radio/checkbox group's aria-labelledby points to this exact field-group label.
@@ -1605,7 +1800,7 @@ function buildFieldGroup(schema, ui, state, spec) {
   const labelForBind = dyn && !labelTargetsOption ? ` :for="${attrValue(dyn.idExpr)}"` : "";
 
   const lines = [
-    '<div data-ui="field-group">',
+    `<div data-ui="field-group"${ui.width === undefined ? "" : ` data-span="${attrValue(ui.width)}"`}>`,
     `  <label data-part="label"${labelIdAttr} for="${attrValue(labelForValue)}"${labelForBind}>${label}</label>`,
     '  <div data-part="input">',
     ...control.map((line) => `    ${line}`),
@@ -1855,6 +2050,36 @@ function renderWizard(wizard, renderNamedField, i18n, jumps = false) {
  * @returns {string}
  */
 export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
+  return composeForm(jsonSchema, uiSchema, opts).html;
+}
+
+/**
+ * The rules definition `renderForm` embeds in its `<prefix>-rules` script for
+ * the same arguments, as a plain object — what a server hands `validate()` —
+ * or `null` when that form carries no definition. It is the same render, not a
+ * second derivation: the definition depends on what the render accepted, so
+ * the two cannot drift. Throws exactly where `renderForm` throws.
+ *
+ * @param {Record<string, unknown>} jsonSchema
+ * @param {Record<string, unknown>} [uiSchema]
+ * @param {Record<string, unknown>} [opts]
+ * @returns {Record<string, unknown> | null}
+ */
+export function rulesFor(jsonSchema, uiSchema = {}, opts = {}) {
+  const { rules } = composeForm(jsonSchema, uiSchema, opts);
+  // A copy through JSON, as the script carries it: the author's rule objects
+  // are not handed back to be mutated, and what comes back is what parses.
+  return rules === null ? null : JSON.parse(JSON.stringify(rules));
+}
+
+/**
+ * The one render behind `renderForm` and `rulesFor`.
+ * @param {Record<string, unknown>} jsonSchema
+ * @param {Record<string, unknown>} uiSchema
+ * @param {Record<string, unknown>} opts
+ * @returns {{ html: string, rules: Record<string, unknown> | null }}
+ */
+function composeForm(jsonSchema, uiSchema, opts) {
   const root = assertRecord(jsonSchema, "jsonSchema");
   const uiRoot = assertRecord(uiSchema, "uiSchema");
   const rawOptions = assertRecord(opts, "opts");
@@ -2025,21 +2250,36 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
     formAttrs.push("l-validate");
   }
   if (rulesDefinition) formAttrs.push(`l-rules="#${attrValue(rulesId)}"`);
-  if (root.title !== undefined) formAttrs.push(`aria-label="${attrValue(/** @type {string} */ (root.title))}"`);
-  if (root.description !== undefined) formAttrs.push(`aria-describedby="${attrValue(`${normalizedOptions.prefix}-form-description`)}"`);
+  // `labelledBy`: the page's own heading names the form. `heading: false`
+  // keeps the name (`aria-label`) but drops the visible `<h1>` and description
+  // — and the describedby that would point at a paragraph no longer there.
+  const { heading, labelledBy } = normalizedOptions;
+  if (labelledBy !== undefined) formAttrs.push(`aria-labelledby="${attrValue(labelledBy)}"`);
+  else if (root.title !== undefined) formAttrs.push(`aria-label="${attrValue(/** @type {string} */ (root.title))}"`);
+  if (heading && root.description !== undefined) formAttrs.push(`aria-describedby="${attrValue(`${normalizedOptions.prefix}-form-description`)}"`);
   if (normalizedOptions.theme !== undefined) formAttrs.push(`data-theme="${attrValue(normalizedOptions.theme)}"`);
   if (normalizedOptions.density !== undefined) formAttrs.push(`data-density="${attrValue(normalizedOptions.density)}"`);
+  formAttrs.push(`data-gap="${attrValue(normalizedOptions.gap)}"`);
 
   /** @type {string[]} */
   const output = [`<!-- @ui:requires ${dependencies} -->`];
   if (rulesDefinition) output.push(...rulesScriptLines(rulesId, rulesDefinition));
   output.push(`<form${renderAttrs(formAttrs)}>`);
   if (root.additionalProperties === false) output.push(`  ${CLOSED_NOTE}`);
-  if (root.title !== undefined) output.push(`  <h1>${escapeHtml(/** @type {string} */ (root.title))}</h1>`);
-  if (root.description !== undefined) {
+  if (heading && root.title !== undefined) output.push(`  <h1>${escapeHtml(/** @type {string} */ (root.title))}</h1>`);
+  if (heading && root.description !== undefined) {
     output.push(`  <p id="${attrValue(`${normalizedOptions.prefix}-form-description`)}">${escapeHtml(/** @type {string} */ (root.description))}</p>`);
   }
   output.push(...indentLines(bodyLines, 1));
+  // A single-page form ends in its submit button, as a wizard's last step does
+  // (`opts.submit: false` leaves it to the page).
+  if (!wizard && normalizedOptions.submit) {
+    output.push(
+      "  <div>",
+      `    <button type="submit" data-ui="button" data-variant="primary">${escapeHtml(normalizedOptions.i18n.submitLabel)}</button>`,
+      "  </div>",
+    );
+  }
   output.push("</form>");
-  return output.join("\n") + "\n";
+  return { html: output.join("\n") + "\n", rules: rulesDefinition };
 }

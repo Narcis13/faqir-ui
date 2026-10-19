@@ -34,7 +34,7 @@ export const LTooltip = createFaqirRecipe<LTooltipProps>({
   variantProps: [
     { prop: "position", values: ["top", "bottom", "left", "right"] },
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["tooltip"]],["data-state",["hidden"]]],"children":[{"tag":"button","attrs":[["data-part",["trigger"]],["aria-describedby",[{"p":"id"},"-content"]]],"children":[],"slot":"trigger"},{"tag":"div","attrs":[["data-part",["content"]],["id",[{"p":"id"},"-content"]],["role",["tooltip"]],["hidden",true]],"children":[],"slot":"content"}],"dyn":[["position","data-variant"]]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["tooltip"]],["data-state",["hidden"]]],"children":[{"tag":"button","attrs":[["data-part",["trigger"]],["data-ui",["button"]],["data-variant",["outline"]],["aria-describedby",[{"p":"id"},"-content"]]],"children":[],"slot":"trigger"},{"tag":"div","attrs":[["data-part",["content"]],["id",[{"p":"id"},"-content"]],["role",["tooltip"]],["hidden",true]],"children":[],"slot":"content"}],"dyn":[["position","data-variant"]]} as unknown as RecipeNode,
 }, "LTooltip");
 
 export default LTooltip;

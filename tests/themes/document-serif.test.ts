@@ -32,8 +32,11 @@ function lightLookup(themeCss: string): Map<string, string> {
 describe("document-serif theme", () => {
   it("is explicitly light-only and uses serif document typography", () => {
     expect(CSS).toContain("@ui:schemes light");
-    expect(CSS).toMatch(/--doc-font:\s*'Georgia'/);
-    expect(CSS).toMatch(/--doc-heading-font:\s*'Times New Roman'/);
+    // The document faces are the project's role families (forecraft #38), which
+    // this theme points at its serif palette — Georgia first, Times after it.
+    expect(CSS).toMatch(/--doc-font:\s*var\(--font-body\)/);
+    expect(CSS).toMatch(/--doc-heading-font:\s*var\(--font-heading\)/);
+    expect(VALUES.light.get("font-serif")).toMatch(/^'Georgia', 'Times New Roman'/);
     expect(parseThemeSchemes(CSS).dark.size).toBe(0);
   });
 

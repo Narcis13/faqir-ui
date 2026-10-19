@@ -14,7 +14,7 @@ export type LQrCodeEcl = "L" | "M" | "Q" | "H";
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on root). */
 export type LQrCodeSize = "sm" | "md" | "lg";
 
-export interface LQrCodeProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "value" | "ecl" | "size"> {
+export interface LQrCodeProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "value" | "ecl" | "size" | "onError"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
   /** Template text/attr substitution (default: ""). */
@@ -23,14 +23,16 @@ export interface LQrCodeProps extends Omit<ComponentPropsWithoutRef<"div">, "id"
   ecl?: LQrCodeEcl;
   /** `data-size` on root; omitted when unset (manifest default: "md"). */
   size?: LQrCodeSize;
+  /** `faqir:error` → `(detail, event)`. */
+  onError?: FaqirEventHandler;
 }
 
-/** `qr-code` — SVG QR code generator from text input with configurable size and error correction Exposes via ref: `render()`, `update()`. */
+/** `qr-code` — SVG QR code generator (byte mode, versions 1–40) from text input with configurable size and error correction Emits: `onError` (payload: `(detail, event)`). Exposes via ref: `render()`, `update()`. */
 export const LQrCode = createFaqirRecipe<LQrCodeProps>({
   name: "qr-code",
   create: createQRCode,
   methods: ["render", "update"],
-  events: [],
+  events: ["error"],
   slots: [],
   stringProps: [{ prop: "value", default: "" }],
   boolProps: [],

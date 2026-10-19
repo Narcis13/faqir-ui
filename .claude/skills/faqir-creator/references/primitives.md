@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-53 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+54 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -861,7 +861,7 @@ _kind: primitive · category: feedback_
 Progress bar with animated fill, color variants, and an optional percentage label
 
 ```html
-<div data-ui="progress" data-variant="{variant}" role="progressbar" aria-label="Progress" aria-valuenow="{value}" aria-valuemin="0" aria-valuemax="100"><div data-part="track"><div data-part="fill" style="width: {value}%"></div></div><span data-part="label">{value}%</span></div>
+<div data-ui="progress" data-variant="{variant}" data-value="{value}" role="progressbar" aria-label="Progress" aria-valuenow="{value}" aria-valuemin="0" aria-valuemax="100"><div data-part="track"><div data-part="fill"></div></div><span data-part="label">{value}%</span></div>
 ```
 
 **Anatomy**
@@ -869,7 +869,7 @@ Progress bar with animated fill, color variants, and an optional percentage labe
 ```text
 [data-ui='progress']  ·  <div> · content: slots
 ├─ [data-part='track']  <div>  required  — Background track container
-├─ [data-part='fill']  <div>  required  — Filled portion — width set via inline style or reactive binding
+├─ [data-part='fill']  <div>  required  — Filled portion. Its width comes from data-value on the root (pure CSS, no style attribute), or from an inline style or reactive binding on the fill, which wins when both are present
 └─ [data-part='label']  <span>  optional  — Optional visible text showing the current percentage or status; when present, sized to keep 100% fully inside the root
 ```
 
@@ -880,7 +880,7 @@ Progress bar with animated fill, color variants, and an optional percentage labe
 | variant | `default`, `success`, `warning`, `destructive` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `Change data-variant to any listed variant`, `Change data-size to any listed size`, `Update fill width percentage and matching label text`, `Add or remove the label slot`
+- **Safe transforms:** `Change data-variant to any listed variant`, `Change data-size to any listed size`, `Update data-value (or the fill's width) with the matching aria-valuenow and label text`, `Add or remove the label slot`
 - **Unsafe (never do):** `Remove data-ui attribute`, `Remove track or fill slots`
 - **A11y:** role=progressbar
 - **Required ARIA:** `aria-label`; `aria-valuenow`; `aria-valuemin`; `aria-valuemax`
@@ -921,8 +921,9 @@ A quotation and its attribution — testimonial, pull quote or featured endorsem
 | style | `plain`, `card`, `pull` | `plain` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 | align | `start`, `center` | `start` | `data-align` | root |
+| mark | `above`, `hang`, `none` | `above` | `data-mark` | root |
 
-- **Safe transforms:** `change-style`, `change-size`, `change-align`, `add-author`, `remove-author`, `add-avatar-in-media`, `add-rating-before-text`, `change-custom-property-colors`
+- **Safe transforms:** `change-style`, `change-size`, `change-align`, `change-mark`, `add-author`, `remove-author`, `add-avatar-in-media`, `add-rating-before-text`, `change-custom-property-colors`
 - **Unsafe (never do):** `remove-text`, `replace-blockquote-with-a-div`, `type-literal-quotation-marks-in-the-text`, `put-the-attribution-inside-the-blockquote`, `add-data-size-to-the-media-part-instead-of-the-avatar`
 - **Required ARIA:** `the quotation in a <blockquote>, the attribution in the figure's <figcaption>`; `alt text on any image inside the media slot`
 
@@ -946,7 +947,8 @@ Custom styled radio button for single selection within a group, with size varian
 
 ```text
 [data-ui='radio']  ·  <input> · content: inline
-└─ [data-part='label']  <span>  optional  — Text label displayed next to the radio button
+├─ [data-part='label']  <span>  optional  — Text label displayed next to the radio button
+└─ [data-part='captions']  <div>  optional  — Written as the last child of a horizontal radio-group: two <span>s, the captions of the first and the last option (a scale's ends), laid out under the options. Give each an id and add it to its option's aria-describedby so the caption is announced with the option; an end with no caption is an empty <span>.
 ```
 
 **Variants**
@@ -1156,6 +1158,31 @@ Loading placeholder with text/circle/rect variants and a shimmer animation that 
 - **Safe transforms:** `change-variant`, `change-custom-property-dimensions`
 - **Unsafe (never do):** `remove-aria-hidden`, `add-text-content`
 - **Required ARIA:** `aria-hidden="true" on root`
+
+## skip-link
+
+_kind: primitive · category: navigation_
+
+"Skip to content" link: the page's first tab stop, visually hidden until it takes focus, then pinned to the top-start corner above everything else
+
+```html
+<a data-ui="skip-link" href="#{main_id}">{text}</a>
+```
+
+**Anatomy**
+
+```text
+[data-ui='skip-link']  ·  <a> · content: inline
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `change-text-content`, `change-target-id`
+- **Unsafe (never do):** `remove-href`, `move-after-other-focusable-content`, `hide-with-display-none`
+- **A11y:** keys: Tab, Enter
+- **Required ARIA:** `href pointing at the id of the page's <main> (or its first content landmark)`; `visible link text that says where it goes ("Skip to content")`
 
 ## spinner
 

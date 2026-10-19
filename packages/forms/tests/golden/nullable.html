@@ -63,7 +63,7 @@
   ]
 }
 </script>
-<form id="nullable-form" l-data="{ rowsContacts: [{ __key: 1 }], seqContacts: 1 }" l-validate l-rules="#nullable-rules" aria-label="Nullable fields">
+<form id="nullable-form" l-data="{ rowsContacts: [{ __key: 1 }], seqContacts: 1 }" l-validate l-rules="#nullable-rules" aria-label="Nullable fields" data-gap="4">
   <h1>Nullable fields</h1>
   <div data-ui="field-group">
     <label data-part="label" for="nullable-field-nickname">Nickname <span data-part="required">*</span></label>
@@ -127,4 +127,7 @@
       <button type="button" data-ui="button" data-variant="outline" data-size="sm" @click="rowsContacts.push({ __key: (seqContacts = seqContacts + 1) })">Add Contacts</button>
     </div>
   </fieldset>
+  <div>
+    <button type="submit" data-ui="button" data-variant="primary">Submit</button>
+  </div>
 </form>

@@ -102,7 +102,7 @@ line       = statement | element | call | fill | piped | comment ;
 statement  = "doctype" "html"
            | "layout" string
            | "block" name
-           | "include" string [ "(" attrs ")" ]
+           | "include" string [ "(" attrs ")" ] [ "depth=" digit { digit } ]   (* 1–16, §10.3 *)
            | "params" attrs                  (* no parentheses, §10.3 *)
            | "if" expr | "else" "if" expr | "else"
            | "each" ident [ "," ident ] "in" expr
@@ -424,7 +424,35 @@ include "partials/nav-item.faqir" (href=item.href label=item.label current=page.
   below the first statement — is `misplaced`.
 - An include that reaches back to a file already on its chain is
   `include-cycle`; a chain deeper than 16 includes is `include-depth`. Both are
-  found at compile time, so a compiled template cannot recurse.
+  found at compile time, so a template without a budget cannot recurse.
+- **Bounded recursion.** An include written with a **depth budget**,
+  `depth=N` after its parameters, may reach back to a partial on its chain —
+  itself, or through other partials:
+
+  ```
+  //- partials/block.faqir
+  params block
+  section
+    h2 {{ block.title }}
+    each child in block.children
+      include "partials/block.faqir" (block=child) depth=3
+  ```
+
+  ```
+  //- the page
+  include "partials/block.faqir" (block=report)
+  ```
+
+  `N` is a whole number from 1 to 16 (`bad-line` otherwise). At render, the
+  include may open its partial only while that partial is open fewer than `N`
+  times on the include chain: here a report three blocks deep renders, and a
+  fourth level is the render error `include-depth` at the include's line and
+  column. Every include that reaches back to its chain needs the budget — one
+  without it is still `include-cycle` — and the file being compiled is not a
+  partial, so it can never be included. How deep a recursion goes depends on
+  the data, so the compile-time `include-depth` check counts a budgeted
+  include that reaches back as nothing; render enforces the chain limit of 16,
+  and the step and output limits (§13), on every include.
 
 ## 11. Components
 
@@ -701,7 +729,7 @@ finds every use. `compile(…, { raw: false })` refuses both forms
 |---|---|---|
 | Template nesting per file | 64 levels | `too-deep` |
 | Expression nesting | 32 levels | `expr-too-deep` |
-| Include chain | 16 | `include-depth` (compile; also enforced at render) |
+| Include chain | 16 | `include-depth` (compile; also enforced at render, where a budgeted recursion is counted) |
 | Output | 16 MiB (16 777 216 UTF-16 code units), render option `maxOutput` | `output-limit` |
 | Render steps (nodes rendered + loop iterations) | 10 000 000, render option `maxSteps` | `step-limit` |
 | `json()` nesting | 64 levels | `json-value` |
@@ -739,7 +767,7 @@ errors: when there is any, `ast` is `null`. Codes are stable; messages are not.
 | `no-loader` | `include` or `layout` without a loader |
 | `bad-path` | an include or layout name outside §10.1's rules |
 | `not-found` | the loader has no such file |
-| `include-cycle` | an include chain that returns to a file on it |
+| `include-cycle` | an include chain that returns to a file on it, through an include without a `depth=` budget (§10.3) |
 | `include-depth` | an include chain deeper than 16 |
 | `unknown-param` | an include passing a parameter its partial's `params` does not declare |
 | `missing-param` | an include leaving out a parameter declared without a default |
@@ -781,7 +809,7 @@ involved.
 | `unsafe-url` | a URL attribute whose scheme is not allowed |
 | `json-value` | a `json()` value that is not JSON data (§11.7) |
 | `helper-error` | a helper missing from `render`'s helpers, or one that threw |
-| `include-depth` | an AST whose includes nest deeper than 16 |
+| `include-depth` | includes nesting deeper than 16, or a budgeted include whose partial is already open `depth` times (§10.3) |
 | `output-limit` | output beyond `maxOutput` |
 | `step-limit` | more than `maxSteps` steps |
 | `bad-ast` | a node the renderer does not know, or a malformed or too deeply nested AST |
@@ -875,7 +903,7 @@ error carry `loc: [fileIndex, line, col]`, indexing `Template.files`.
 | `Raw` | `{ type, text, loc }` or `{ type, expr, loc }` |
 | `If` | `{ type, branches: { test: Expr \| null, body: Node[] }[], loc }` |
 | `Each` | `{ type, names: string[], of: Expr, body: Node[], else: Node[], loc }` |
-| `Include` | `{ type, name, params: { name, value: AttrValue }[], loc }` |
+| `Include` | `{ type, name, params: { name, value: AttrValue }[], depth?: number, loc }` — `depth`, the recursion budget (§10.3), only when written |
 | `Params` | `{ type, params: { name, value: AttrValue \| null }[], loc }` — a partial's first node (§10.3); `null` is a parameter without a default |
 | `Component` | `{ type, name, id: AttrValue \| null, body: Node[], loc }` |
 | `Copy` | `{ type, slot, bodies: Node[][], loc }` — one fill of a repeating part (§11.4): the Nth copy of `slot` in its component renders `bodies[0]` when N is 1, else the last body |
@@ -992,6 +1020,14 @@ engine is the layer under it, not a competitor:
    the only way to write markup the engine did not build is `raw`.
 9. **One layout level, replace-only blocks, no mixins.** Each dropped feature is
    one less thing a hostile template can use and one less rule to learn.
+   Recursion is off by default too: an include cycle is `include-cycle`, so an
+   untrusted template that recurses by accident or on purpose fails to compile.
+   The one exception is written on the include itself — a `depth=N` budget
+   (§10.3) — because nested data (a tree of report blocks) otherwise needs one
+   dispatcher partial per level. It adds nothing a hostile template could not
+   already do: a budget is at most the include-depth limit of 16, render counts
+   it, and a recursion is bounded by the same step and output limits as a
+   chain of sixteen distinct partials.
 10. **Step limit.** Besides the output limit, rendering counts steps, so nested
     loops over large data with empty bodies cannot spin without output.
 11. **The `@ui:requires` comment is always written** when the page needs

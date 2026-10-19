@@ -372,8 +372,9 @@ describe("hero · the phone case is the base rule", () => {
         subject: { "data-part": "headline" },
         widthPx,
       });
-    expect(headline(390)).toBe("var(--text-3xl)");
-    expect(headline(sm)).toBe("var(--text-4xl)");
+    // --hero-display-size overrides every layout (forecraft #21); unset, the sizes are these.
+    expect(headline(390)).toBe("var(--hero-display-size, var(--text-3xl))");
+    expect(headline(sm)).toBe("var(--hero-display-size, var(--text-4xl))");
   });
 
   it("the split variant keeps its own headline size on both sides of sm", () => {
@@ -386,7 +387,7 @@ describe("hero · the phone case is the base rule", () => {
           subject: { "data-part": "headline" },
           widthPx,
         }),
-      ).toBe("var(--text-3xl)");
+      ).toBe("var(--hero-display-size, var(--text-3xl))");
     }
   });
 });

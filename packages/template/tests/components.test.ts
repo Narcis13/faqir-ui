@@ -43,10 +43,10 @@ describe("calls render the reference tree (§11.2)", () => {
 
   it("puts string props where the reference uses them, defaults otherwise", () => {
     const out = run("+dialog(id='confirm' title=t triggerText='Delete…')\n  @body\n    p Sure?\n", { t: "Delete <the> flow" });
-    expect(out).toContain('<button data-part="trigger">Delete…</button>');
+    expect(out).toContain('<button data-part="trigger" data-ui="button" data-variant="primary">Delete…</button>');
     expect(out).toContain('<h2 id="confirm-title" data-part="title">Delete &lt;the&gt; flow</h2>');
     expect(out).toContain('aria-labelledby="confirm-title"');
-    expect(run("+dialog(title='T')\n  @body\n    p b\n")).toContain('<button data-part="trigger">Open</button>');
+    expect(run("+dialog(title='T')\n  @body\n    p b\n")).toContain('<button data-part="trigger" data-ui="button" data-variant="primary">Open</button>');
   });
 
   it("passes aria-*, data-*, class and faqir-core attributes onto the root", () => {

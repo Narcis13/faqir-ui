@@ -158,6 +158,32 @@
   border-block-end: var(--border-width) solid var(--color-border);
 }
 
+/* Wide tables — a table is as wide as its widest row, and on a phone that row
+   pushed the whole page into sideways scroll. Wrap the table and the wrapper
+   scrolls instead:
+
+     <div role="region" tabindex="0" aria-label="Plan comparison">
+       <table>…</table>
+     </div>
+
+   or a <figure> with a <figcaption> (point aria-labelledby at the caption).
+   The wrapper is plain HTML — prose takes no parts — and any <div> or
+   <figure> whose child is a <table> qualifies, which is the shape a markdown
+   renderer emits once it wraps tables. `tabindex="0"` with a role and a name
+   makes the scroller reachable and announced from the keyboard, and the
+   default ring from reset.css shows its focus; the table inside drops its
+   own block margin so the wrapper carries it. A bare table is unchanged. */
+[data-ui="prose"] :where(div, figure):has(> table) {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  margin-block: var(--space-6);
+  margin-inline: 0;
+}
+
+[data-ui="prose"] :where(div, figure):has(> table) > table {
+  margin-block: 0;
+}
+
 /* Definition lists — "each setting and what it does". A term reads as a label
    and its definitions sit indented under it, one group spaced from the next. */
 [data-ui="prose"] dl {

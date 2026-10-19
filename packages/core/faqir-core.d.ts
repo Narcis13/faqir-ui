@@ -179,6 +179,22 @@ export interface RulesState {
   readonly next: Readonly<Record<string, string>>;
 }
 
+/**
+ * `Faqir.rules`, installed by `plugins/faqir-rules.js` beside `$rules`. Optional
+ * on {@link FaqirGlobal} for the same reason `validate` is.
+ */
+export interface RulesApi {
+  /**
+   * The form's data as a server's `coerce(definition, fromFormData(body))`
+   * would make it — every named control read the way `FormData` reads it,
+   * except that a control someone else disabled (a wizard's other steps) still
+   * answers and one a `show` rule hides does not. On a form with no bound
+   * `l-rules` it is the same read, uncoerced. `form` is an element or a
+   * selector. This is the `detail` of `faqir:valid-submit`.
+   */
+  data(form: Element | string): Record<string, unknown>;
+}
+
 /** What one programmatic validator answers: pass, fail, or a message. */
 export type ValidatorResult = boolean | string;
 
@@ -445,6 +461,8 @@ export interface DatePickerApi extends ControllerApi {
   close(): void;
   getValue(): CalendarValue;
   setValue(date: string): void;
+  /** No date: empties the calendar, the visible input and the value part. */
+  clear(): void;
   navigate(month: number, year: number): void;
   selectDate(date: Date | string): void;
 }
@@ -868,7 +886,11 @@ export interface FaqirGlobal {
   data<T extends Record<string, unknown>>(name: string, factory: () => T): void;
   /** Register a global reactive store, reachable in expressions as `$store.<name>`. */
   store<T extends object>(name: string, obj: T): void;
-  /** Register `l-<name>`. The `l-` prefix is NOT part of `name`. */
+  /**
+   * Register `l-<name>`. The `l-` prefix is NOT part of `name`. Registered
+   * after the boot, it is applied once to every element already bound that
+   * carries it, in the scope that element was bound in.
+   */
   directive(name: string, handler: DirectiveHandler): void;
   /** Register `$<name>`. The `$` is NOT part of `name`. */
   magic(name: string, callback: MagicFactory): void;
@@ -887,9 +909,12 @@ export interface FaqirGlobal {
   // ── Lifecycle ──
   /**
    * Bootstrap. Runs automatically — on `DOMContentLoaded`, or one task after the
-   * engine is evaluated when the document is already parsed (a module, `defer`
+   * engine is evaluated when the document is already parsed (a module, `async`
    * script or bundler import), so `data()` / `directive()` calls made right after
-   * importing it are seen. Opt out with `data-manual` on the engine's `<script>`,
+   * importing it are seen. A classic `defer` script waits for `DOMContentLoaded`,
+   * so the deferred plugin scripts after it register first. A directive
+   * registered after the boot still binds the elements already bound.
+   * Opt out with `data-manual` on the engine's `<script>`,
    * or on the page's `<script type="module">` when the engine is imported.
    * Safe to call again: already-bound markup is not re-bound.
    */
@@ -921,6 +946,15 @@ export interface FaqirGlobal {
     target: Element | string,
   ): Inspection<A> | null;
   /**
+   * The controller API of the component matching `target` — the same thing
+   * `$ui(target)` returns in an expression, for plain JavaScript. A selector
+   * or an element, which may be the `[data-ui]` root or anything inside it;
+   * the nearest enclosing component answers. `null` when nothing matches or
+   * the match has no controller. Pass the API type to narrow it:
+   * `Faqir.ui<ToastApi>("#toasts")?.add({ … })`.
+   */
+  ui<A extends ControllerApi = ControllerApi>(target: Element | string | null | undefined): A | null;
+  /**
    * The same object installed at `window.__FAQIR_DEVTOOLS__`. Exposed here
    * too so code holding a specific engine instance reaches ITS handle rather
    * than whichever engine touched the global last.
@@ -936,6 +970,8 @@ export interface FaqirGlobal {
    * the engine for exactly this reason.  [1.1B-03]
    */
   readonly validate?: ValidateApi;
+  /** The form reader `plugins/faqir-rules.js` installs; absent until that file loads. */
+  readonly rules?: RulesApi;
   /** The theme studio `plugins/faqir-tweak.js` installs; absent until that file loads. */
   readonly tweak?: TweakApi;
 }
@@ -959,7 +995,7 @@ declare namespace Faqir {
     ToggleGroupApi, TooltipApi, TreeViewApi, ControllerApis, ProtocolState,
     Inspection, DevtoolsScope, DevtoolsComponent, DevtoolsWarning, Devtools,
     ValidatorResult, ValidatorContext, FieldValidator, ValidateApi,
-    RulesState, FaqirGlobal };
+    RulesState, RulesApi, FaqirGlobal };
 }
 
 export default Faqir;
@@ -984,6 +1020,7 @@ export declare const controller: FaqirGlobal["controller"];
 export declare const start: FaqirGlobal["start"];
 export declare const initTree: FaqirGlobal["initTree"];
 export declare const inspect: FaqirGlobal["inspect"];
+export declare const ui: FaqirGlobal["ui"];
 export declare const devtools: FaqirGlobal["devtools"];
 export declare const destroy: FaqirGlobal["destroy"];
 

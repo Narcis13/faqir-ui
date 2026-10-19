@@ -23,6 +23,8 @@ export interface RulesPluginEngine {
     handler: (el: any, dir: { expression?: string }, scope: any) => unknown,
   ): void;
   devtools?: { report?(message: string, el?: unknown): boolean };
+  /** Written by `install`: the plugin's public surface, `Faqir.rules`. */
+  rules?: RulesApi;
   validate?: {
     register(
       form: unknown,
@@ -32,6 +34,18 @@ export interface RulesPluginEngine {
       message?: string,
     ): unknown; // faqir-validate answers with the function that undoes it
   };
+}
+
+/** `Faqir.rules`, installed beside `l-rules` and `$rules`. */
+export interface RulesApi {
+  /**
+   * The form's data as a server's `coerce(definition, fromFormData(body))`
+   * would make it: every named control read the way `FormData` reads it, except
+   * that a control someone else disabled (a wizard's other steps) still answers
+   * and one a `show` rule hides does not. On a form with no bound `l-rules` it
+   * is the uncoerced `fromFormData` read. `form` is an element or a selector.
+   */
+  data(form: Element | string): Record<string, unknown>;
 }
 
 /** Register `l-rules` and the `$rules` magic on one engine instance. */

@@ -2329,6 +2329,12 @@ draft of §20 spaced every non-first child, and the printed `invoice` scaffold c
 back with every heading floating 48px above its own section. Prose headings keep
 their own margins from `registry/base/prose.css`, where that decision belongs.
 
+**Page chrome opens no gap.** A `site-header` is the page's chrome, not a section of
+its content, and a `skip-link` is out of the flow: the element right after either one
+takes no `--flow-space`, so a page's `main` starts flush under its header bar instead
+of below a band of page colour. The exception is a second zero-weight rule in
+`registry/base/rhythm.css`, over the same participant set.
+
 ```html
 <section>
   <div data-ui="surface" data-variant="raised" data-size="lg">

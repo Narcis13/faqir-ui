@@ -1,5 +1,5 @@
 <!-- @ui:requires faqir-core.js faqir-validate.js -->
-<form id="faqir-form" l-data l-validate>
+<form id="faqir-form" l-data l-validate data-gap="4">
   <div data-ui="field-group">
     <label data-part="label" id="faqir-field-plan-label" for="faqir-field-plan-option-1">Plan <span data-part="required">*</span></label>
     <div data-part="input">
@@ -24,5 +24,8 @@
     </div>
     <p data-part="description" id="faqir-field-plan-hint">Choose one billing plan.</p>
     <p data-part="error" id="faqir-field-plan-error" aria-live="polite"></p>
+  </div>
+  <div>
+    <button type="submit" data-ui="button" data-variant="primary">Submit</button>
   </div>
 </form>

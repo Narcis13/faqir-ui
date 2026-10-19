@@ -7,7 +7,7 @@
  *
  *   - engine               src/core-src/engine.js         ≤ 14 KB gzip
  *     (directives, reactivity, plugin API — no controllers)
- *   - engine + controllers registry/core/faqir-core.js    ≤ 46 KB gzip
+ *   - engine + controllers registry/core/faqir-core.js    ≤ 47 KB gzip
  *     (the shipped single-file build: engine + every recipe controller)
  *   - dev engine           registry/core/faqir-core.dev.js  no budget
  *     (development build — measured and printed, never enforced; task 0.7-12)
@@ -42,10 +42,10 @@ const KB = 1024;
 //
 // `engineWithControllers` has moved twice before, each time for a named
 // feature and recorded here: 42 → 43 KB for the 29th recipe controller, and
-// 43 → 44 KB for `inspect`/devtools. Wave 2 took it 44 → 45 KB: the shared exit-transition helper the four overlay controllers now wait on (`whenExitDone` — see W2-1's drawer bug), the unscoped-directive sweep that makes `<form l-validate>` bind at all, applying a scope root's own directives, and `$ui('#id')` for reaching another component's controller. Wave 3 took it 45 → 46 KB: `aria-activedescendant` in the four widgets that declared the combobox contract and never implemented it, the dismiss-on-destroy path in twelve overlay controllers, cleanup ownership that survives a detached template (`l-if`/`l-for`/`l-teleport`), `l-model` listener teardown, and the missing-part guards that name the part instead of throwing.
+// 43 → 44 KB for `inspect`/devtools. Wave 2 took it 44 → 45 KB: the shared exit-transition helper the four overlay controllers now wait on (`whenExitDone` — see W2-1's drawer bug), the unscoped-directive sweep that makes `<form l-validate>` bind at all, applying a scope root's own directives, and `$ui('#id')` for reaching another component's controller. Wave 3 took it 45 → 46 KB: `aria-activedescendant` in the four widgets that declared the combobox contract and never implemented it, the dismiss-on-destroy path in twelve overlay controllers, cleanup ownership that survives a detached template (`l-if`/`l-for`/`l-teleport`), `l-model` listener teardown, and the missing-part guards that name the part instead of throwing. The forecraft notes (1.2.5 downstream) took it 46 → 47 KB: QR versions 11–40 — ISO/IEC 18004 Table 9 for every version and ECL, packed one character per value (about 220 B gzip of the move), the computed codeword count and Annex E alignment centres — the qr-code and barcode `data-state="error"` + `faqir:error` reporting, command-palette `<a href>` items and `data-value`, and toggle-group following a `:checked` binding. The binding constraint was `tests/build/core-package.test.ts` (the packaged `faqir-core.min.js`), about 40 B under its 46 KB at the start.
 export const BUDGETS = {
   engine: 14 * KB,
-  engineWithControllers: 46 * KB,
+  engineWithControllers: 47 * KB,
   plugin: 2 * KB,
   // @faqir-ui/template's core entry: the runtime that renders a compiled AST
   // (docs/template.md §15.1). The compiler is its own entry, run at save time.
@@ -60,6 +60,9 @@ export const BUDGETS = {
 //   (`Faqir.validate.register/unregister/run`) and async validators — the
 //   debounce, the last-wins token, the `validating` state and the submit that
 //   waits on an in-flight check.
+//   3 → 4 KB, measured at 3.20 KB: `faqir:valid-submit` — the one event a
+//   finished submit fires, single page or wizard, and the control reader that
+//   gives it its detail when faqir-rules is not loaded.
 //
 // · faqir-rules, 2 → 11 KB: the plugin IS `@faqir-ui/rules`, bundled. 1.1B-04's
 //   plan budgeted 6 KB, written before the evaluator existed; the evaluator
@@ -75,6 +78,9 @@ export const BUDGETS = {
 //   that still reads a wizard's disabled steps, the observer that holds
 //   rule-hidden controls disabled, reset and teardown, and the pattern check
 //   for controls whose markup carries no `pattern` attribute.
+//   13 → 14 KB, measured at 12.99 KB here and 13.09 KB by the test: that
+//   control reader made public as `Faqir.rules.data(form)` — the detail of
+//   `faqir:valid-submit` — when the bundle had 22 bytes of the 13 left.
 //
 // · faqir-tweak, 2 → 4 KB: the plugin is a whole panel — six sections of
 //   labelled dials built from the registry's own primitives, the override
@@ -83,8 +89,8 @@ export const BUDGETS = {
 //   moves gets a control, and that list is what the kilobytes buy.
 export const PLUGIN_BUDGETS = {
   "faqir-tweak.js": 4 * KB,
-  "faqir-validate.js": 3 * KB,
-  "faqir-rules.js": 13 * KB,
+  "faqir-validate.js": 4 * KB,
+  "faqir-rules.js": 14 * KB,
 };
 
 // ── Pure budget logic (no I/O, no Bun) ───────────────────────────────────────

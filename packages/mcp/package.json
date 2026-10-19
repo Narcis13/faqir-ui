@@ -9,10 +9,16 @@
   "main": "./dist/index.mjs",
   "exports": {
     ".": "./dist/index.mjs",
+    "./audit": {
+      "types": "./audit.d.ts",
+      "import": "./dist/audit.mjs",
+      "default": "./dist/audit.mjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
+    "audit.d.ts",
     "registry",
     "README.md"
   ],

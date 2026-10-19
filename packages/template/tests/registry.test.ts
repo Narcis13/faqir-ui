@@ -25,19 +25,12 @@ const EXCEPTIONS: Record<string, RegExp> = {};
 
 /**
  * Components that render, but whose reference markup — `templates.html`,
- * which the engine writes exactly — fails one audit rule. Each is a gap in
- * the manifest, not in the engine: the component's own example page
- * (`<name>.html`) gives the trigger `data-ui="button"`, its `templates.html`
- * does not, and `trigger-contract` (which reads the stylesheet: the recipe
- * styles no `trigger` part) asks for it.
+ * which the engine writes exactly — fails one audit rule. Each would be a gap
+ * in the manifest, not in the engine. There are none: dialog, drawer, sheet
+ * and tooltip used to be here for `trigger-contract` until their
+ * `templates.html` trigger carried `data-ui="button"` like their example pages.
  */
-const AUDIT_EXCEPTIONS: Record<string, string> = {
-  "alert-dialog": "trigger-contract:trigger",
-  dialog: "trigger-contract:trigger",
-  drawer: "trigger-contract:trigger",
-  sheet: "trigger-contract:trigger",
-  tooltip: "trigger-contract:trigger",
-};
+const AUDIT_EXCEPTIONS: Record<string, string> = {};
 
 const entries = Object.entries((table as any).components) as [string, any][];
 let inputs: RegistryAuditInputs & { styles: Map<string, string> };

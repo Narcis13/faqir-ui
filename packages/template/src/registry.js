@@ -432,7 +432,7 @@ export const components = {
    "defaultSlot": false,
    "slots": {
     "trigger": {
-     "required": true
+     "required": false
     },
     "overlay": {
      "required": false
@@ -551,6 +551,18 @@ export const components = {
         "data-part",
         [
          "trigger"
+        ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "destructive"
         ]
        ]
       ],
@@ -4156,6 +4168,18 @@ export const components = {
         [
          "trigger"
         ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "primary"
+        ]
        ]
       ],
       "children": [
@@ -4427,6 +4451,18 @@ export const components = {
         "data-part",
         [
          "trigger"
+        ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "primary"
         ]
        ]
       ],
@@ -5090,11 +5126,6 @@ export const components = {
      "attr": "data-disabled",
      "value": null,
      "kind": "presence"
-    },
-    "multiple": {
-     "attr": "multiple on [data-part",
-     "value": "input']",
-     "kind": "value"
     }
    },
    "props": {
@@ -7544,7 +7575,11 @@ export const components = {
     }
    },
    "states": {},
-   "props": {},
+   "props": {
+    "value": {
+     "default": "0"
+    }
+   },
    "bools": [],
    "tree": {
     "tag": "div",
@@ -7553,6 +7588,14 @@ export const components = {
       "data-ui",
       [
        "progress"
+      ]
+     ],
+     [
+      "data-value",
+      [
+       {
+        "p": "value"
+       }
       ]
      ],
      [
@@ -7565,6 +7608,14 @@ export const components = {
       "aria-label",
       [
        "Progress"
+      ]
+     ],
+     [
+      "aria-valuenow",
+      [
+       {
+        "p": "value"
+       }
       ]
      ],
      [
@@ -7600,12 +7651,6 @@ export const components = {
           [
            "fill"
           ]
-         ],
-         [
-          "style",
-          [
-           "width: %"
-          ]
          ]
         ],
         "children": [],
@@ -7625,6 +7670,9 @@ export const components = {
        ]
       ],
       "children": [
+       {
+        "p": "value"
+       },
        "%"
       ],
       "slot": "label"
@@ -7666,7 +7714,23 @@ export const components = {
      "default": "md"
     }
    },
-   "states": {},
+   "states": {
+    "empty": {
+     "attr": "data-state",
+     "value": "empty",
+     "kind": "value"
+    },
+    "ready": {
+     "attr": "data-state",
+     "value": "ready",
+     "kind": "value"
+    },
+    "error": {
+     "attr": "data-state",
+     "value": "error",
+     "kind": "value"
+    }
+   },
    "props": {
     "value": {
      "default": ""
@@ -7740,6 +7804,15 @@ export const components = {
       "center"
      ],
      "default": "start"
+    },
+    "mark": {
+     "attr": "data-mark",
+     "values": [
+      "above",
+      "hang",
+      "none"
+     ],
+     "default": "above"
     },
     "size": {
      "attr": "data-size",
@@ -7849,6 +7922,10 @@ export const components = {
      [
       "align",
       "data-align"
+     ],
+     [
+      "mark",
+      "data-mark"
      ]
     ]
    }
@@ -8622,6 +8699,18 @@ export const components = {
         [
          "trigger"
         ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "primary"
+        ]
        ]
       ],
       "children": [
@@ -9232,6 +9321,40 @@ export const components = {
       "variant",
       "data-variant"
      ]
+    ]
+   }
+  },
+  "skip-link": {
+   "defaultSlot": true,
+   "slots": {},
+   "variants": {},
+   "states": {},
+   "props": {
+    "text": {
+     "default": "Skip to content"
+    }
+   },
+   "bools": [],
+   "tree": {
+    "tag": "a",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "skip-link"
+      ]
+     ],
+     [
+      "href",
+      [
+       "#"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "p": "text"
+     }
     ]
    }
   },
@@ -11890,6 +12013,18 @@ export const components = {
         "data-part",
         [
          "trigger"
+        ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "outline"
         ]
        ],
        [

@@ -76,6 +76,39 @@ a clean MCP channel.
 | `FAQIR_REGISTRY_PATH` | Point the server at a specific registry root (defaults to the bundled registry). |
 | `FAQIR_PROJECT_ROOT` | The host project root (defaults to `process.cwd()`): what `faqir_project_context` reads, the project the write/verify tools audit against, and the boundary every `root` input must stay inside. |
 
+## Programmatic audit: `@faqir-ui/mcp/audit`
+
+The auditor is also a plain function, for an app that audits HTML it renders
+(a preview endpoint, a save hook, a test) without spawning
+`faqir audit --stdin --json` — and the second of start-up that costs — per call:
+
+```js
+import { auditHtml } from "@faqir-ui/mcp/audit";
+
+const report = await auditHtml(html);                     // against the registry
+const report = await auditHtml(html, { root: process.cwd() }); // + a project's components
+if (!report.passed) console.error(report.results);
+```
+
+It resolves to the document `faqir audit --stdin --json` prints — same
+`audit_schema_version`, `counts`, `vendor_counts` and `results` (each with
+`rule_id`, `severity`, `file: "<stdin>"`, `line`, `column`, `message`,
+`fixable`) — because both call one function over the same inputs; the test
+suite holds the two equal for every audit fixture. `report.passed` is the CLI's
+exit code.
+
+| Option | Meaning |
+|--------|---------|
+| `root` | A project directory: with a `faqir.config.json`, its own components, edited manifests, stylesheets and `audit.forbid_directives` apply, as `faqir audit --stdin` run there. Omitted: the registry alone. |
+| `components` | Extra component manifests (an array, or an object keyed by name) laid over the registry — an app's own components outside a Faqir project. Each is schema-checked; an invalid one throws. |
+| `skipRules` | Rule ids to skip, as `--skip-rules`. |
+| `strict` | Also report `undeclared-markup-attribute`, as the `faqir_audit_html` tool's `strict`. |
+| `registry` | Audit against another registry root (default: the one this package ships). |
+
+The registry is read once per process and reused. Importing the subpath starts
+nothing — unlike the package's `.` entry, which is the stdio server. ESM only,
+Node ≥ 18 (or Bun); types ship as `audit.d.ts`.
+
 ## Host configuration
 
 The published package is `npx`-ready — the registry ships inside it, so no local

@@ -19,7 +19,7 @@
  * two accept exactly the same subset and fail with the same messages.
  */
 
-import { DEFAULT_RADIO_THRESHOLD, renderForm } from "./index.js";
+import { DEFAULT_FORM_GAP, DEFAULT_RADIO_THRESHOLD, renderForm } from "./index.js";
 
 const DEFAULT_I18N = Object.freeze({
   requiredMarker: "*",
@@ -28,6 +28,7 @@ const DEFAULT_I18N = Object.freeze({
   calendarLabel: "Calendar",
   addRowLabel: "Add {title}",
   removeRowLabel: "Remove {title}",
+  submitLabel: "Submit",
 });
 
 /** The fixed text `renderForm` leaves where a schema says `additionalProperties: false`. */
@@ -142,16 +143,23 @@ function commonAttrs(ctx) {
 /**
  * @param {BuildState} state @param {string[]} values @param {string[]} labels
  * @param {(value: string) => boolean} checked @param {FieldCtx} ctx @param {"radio" | "checkbox"} kind
+ * @param {{ orientation?: string, minLabel?: string, maxLabel?: string }} [layout]
+ *   A row, and a scale's end captions, as `renderForm` writes them.
  */
-function optionGroup(state, values, labels, checked, ctx, kind) {
+function optionGroup(state, values, labels, checked, ctx, kind, layout = {}) {
   const { doc } = state;
   const group = el(doc, "div", {
     "data-ui": kind === "radio" ? "radio-group" : "checkbox-group",
     role: kind === "radio" ? "radiogroup" : "group",
+    "data-orientation": layout.orientation === "horizontal" ? "horizontal" : undefined,
     "aria-labelledby": `${ctx.id}-label`,
     "aria-describedby": ctx.describedBy,
   });
+  const minId = layout.minLabel !== undefined ? `${ctx.id}-min-caption` : null;
+  const maxId = layout.maxLabel !== undefined ? `${ctx.id}-max-caption` : null;
+  const last = values.length - 1;
   values.forEach((value, index) => {
+    const caption = index === 0 && minId ? minId : index === last && maxId ? maxId : null;
     const label = el(doc, "label", { "data-ui": `${kind}-label` });
     label.append(
       el(doc, "input", {
@@ -163,14 +171,37 @@ function optionGroup(state, values, labels, checked, ctx, kind) {
         // A checkbox group's minimum is not natively enforceable: the marker only.
         required: kind === "radio" && ctx.required,
         "aria-required": kind === "radio" && ctx.required ? "true" : undefined,
-        "aria-describedby": ctx.describedBy,
+        "aria-describedby": caption ? `${caption} ${ctx.describedBy}` : ctx.describedBy,
         checked: checked(value),
       }),
       el(doc, "span", { "data-part": "label" }, labels[index]),
     );
     group.append(label);
   });
+  if (minId || maxId) {
+    const captions = el(doc, "div", { "data-part": "captions" });
+    captions.append(
+      minId ? el(doc, "span", { id: minId }, layout.minLabel) : el(doc, "span"),
+      maxId ? el(doc, "span", { id: maxId }, layout.maxLabel) : el(doc, "span"),
+    );
+    group.append(captions);
+  }
   return group;
+}
+
+/**
+ * The choices of an integer-range scale, as `renderForm` draws them (it has
+ * already checked the range). @param {Schema} schema
+ */
+function rangeValues(schema) {
+  /** @type {string[]} */
+  const values = [];
+  const multiple = schema.multipleOf;
+  const step = multiple === undefined ? schema.step ?? 1 : 1;
+  for (let value = schema.minimum; value <= schema.maximum; value += step) {
+    if (multiple === undefined || value % multiple === 0) values.push(String(value));
+  }
+  return values;
 }
 
 /**
@@ -195,10 +226,13 @@ function select(state, values, labels, selected, ctx, prompt) {
 function datePicker(state, schema, placeholder, ctx) {
   const { doc } = state;
   const root = el(doc, "div", { "data-ui": "date-picker", "data-state": "closed", "data-size": "md" });
+  // The hidden value part submits the ISO date under the field's name; the
+  // visible input shows the date and carries no name.
+  root.append(el(doc, "input", { "data-part": "value", type: "hidden", name: ctx.name, value: schema.default }));
   const trigger = el(doc, "div", { "data-part": "trigger" });
   trigger.append(
     el(doc, "input", {
-      "data-part": "input", ...commonAttrs(ctx), type: "text", role: "combobox", readonly: true,
+      "data-part": "input", ...commonAttrs(ctx), name: undefined, type: "text", role: "combobox", readonly: true,
       "aria-haspopup": "dialog", "aria-expanded": "false",
       "aria-label": interpolateTitle(state.i18n.datePickerLabel, ctx.title),
       placeholder, value: schema.default,
@@ -239,12 +273,25 @@ function scalarControl(state, schema, ui, ctx, inRow) {
   );
   const type = schema.type;
 
-  if (type === "string" && schema.enum !== undefined) {
-    const values = /** @type {string[]} */ (schema.enum);
+  if (schema.enum !== undefined || widget === "scale") {
+    const values = schema.enum !== undefined ? schema.enum.map(String) : rangeValues(schema);
     const labels = uiValue(ui, "enumLabels") ?? values;
     const chosen = widget ?? (!inRow && values.length <= state.threshold ? "radio" : "select");
-    const isDefault = (/** @type {string} */ value) => schema.default === value;
-    if (chosen === "radio") return { widget: chosen, control: optionGroup(state, values, labels, isDefault, ctx, "radio") };
+    const isDefault = (/** @type {string} */ value) => schema.default !== undefined && String(schema.default) === value;
+    if (chosen === "scale") {
+      return {
+        widget: chosen,
+        control: optionGroup(state, values, labels, isDefault, ctx, "radio", {
+          orientation: "horizontal", minLabel: uiValue(ui, "minLabel"), maxLabel: uiValue(ui, "maxLabel"),
+        }),
+      };
+    }
+    if (chosen === "radio") {
+      return {
+        widget: chosen,
+        control: optionGroup(state, values, labels, isDefault, ctx, "radio", { orientation: uiValue(ui, "orientation") }),
+      };
+    }
     const prompt = placeholder ?? interpolateTitle(state.i18n.selectPlaceholder, ctx.title);
     return { widget: chosen, control: select(state, values, labels, isDefault, ctx, prompt) };
   }
@@ -325,14 +372,14 @@ function fieldGroup(state, name, rawSchema, ui, fieldName, required, inRow) {
     built = {
       widget,
       control: widget === "checkbox-group"
-        ? optionGroup(state, values, labels, isDefault, ctx, "checkbox")
+        ? optionGroup(state, values, labels, isDefault, ctx, "checkbox", { orientation: uiValue(ui, "orientation") })
         : select(state, values, labels, isDefault, ctx, undefined),
     };
   } else {
     built = scalarControl(state, schema, ui, ctx, inRow);
   }
 
-  const targetsOption = built.widget === "radio" || built.widget === "checkbox-group";
+  const targetsOption = built.widget === "radio" || built.widget === "checkbox-group" || built.widget === "scale";
   const label = el(doc, "label", {
     "data-part": "label",
     id: targetsOption ? `${id}-label` : undefined,
@@ -342,7 +389,7 @@ function fieldGroup(state, name, rawSchema, ui, fieldName, required, inRow) {
 
   const slot = el(doc, "div", { "data-part": "input" });
   slot.append(built.control);
-  const group = el(doc, "div", { "data-ui": "field-group" });
+  const group = el(doc, "div", { "data-ui": "field-group", "data-span": uiValue(ui, "width") });
   group.append(label, slot);
   if (schema.description !== undefined) {
     group.append(el(doc, "p", { "data-part": "description", id: hintId }, schema.description));
@@ -502,18 +549,22 @@ export function buildForm(jsonSchema, document, uiSchema = {}, opts = {}) {
     nextId: () => `${prefix}-field-${++counter}`,
   };
 
+  const heading = options.heading !== false;
+  const labelledBy = typeof options.labelledBy === "string" ? options.labelledBy.trim() : undefined;
   const form = /** @type {HTMLFormElement} */ (el(document, "form", {
     id: `${prefix}-form`,
     "l-data": true,
     "l-validate": true,
-    "aria-label": schema.title,
-    "aria-describedby": schema.description === undefined ? undefined : `${prefix}-form-description`,
+    "aria-labelledby": labelledBy,
+    "aria-label": labelledBy === undefined ? schema.title : undefined,
+    "aria-describedby": !heading || schema.description === undefined ? undefined : `${prefix}-form-description`,
     "data-theme": options.theme,
     "data-density": options.density,
+    "data-gap": String(options.gap ?? DEFAULT_FORM_GAP),
   }));
   if (schema.additionalProperties === false) form.append(document.createComment(CLOSED_NOTE));
-  if (schema.title !== undefined) form.append(el(document, "h1", {}, schema.title));
-  if (schema.description !== undefined) {
+  if (heading && schema.title !== undefined) form.append(el(document, "h1", {}, schema.title));
+  if (heading && schema.description !== undefined) {
     form.append(el(document, "p", { id: `${prefix}-form-description` }, schema.description));
   }
 
@@ -531,6 +582,11 @@ export function buildForm(jsonSchema, document, uiSchema = {}, opts = {}) {
     }
   } else {
     for (const name of Object.keys(schema.properties)) append(form, name);
+  }
+  if (options.submit !== false) {
+    const footer = el(document, "div", {});
+    footer.append(el(document, "button", { type: "submit", "data-ui": "button", "data-variant": "primary" }, state.i18n.submitLabel));
+    form.append(footer);
   }
   return form;
 }

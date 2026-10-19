@@ -30,11 +30,11 @@ export interface LDatePickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
   onDateChange?: FaqirEventHandler;
 }
 
-/** `date-picker` — Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe Emits: `onCalendarChange`, `onDateChange` (payload: `(detail, event)`). Exposes via ref: `open()`, `close()`, `getValue()`, `setValue()`, `navigate()`, `selectDate()`. */
+/** `date-picker` — Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe Emits: `onCalendarChange`, `onDateChange` (payload: `(detail, event)`). Exposes via ref: `open()`, `close()`, `getValue()`, `setValue()`, `clear()`, `navigate()`, `selectDate()`. */
 export const LDatePicker = createFaqirRecipe<LDatePickerProps>({
   name: "date-picker",
   create: createDatePicker,
-  methods: ["open", "close", "getValue", "setValue", "navigate", "selectDate"],
+  methods: ["open", "close", "getValue", "setValue", "clear", "navigate", "selectDate"],
   events: ["calendar-change", "date-change"],
   slots: ["trigger", "input", "icon", "calendar"],
   stringProps: [],

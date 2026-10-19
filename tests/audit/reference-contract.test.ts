@@ -108,12 +108,18 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   // Text as a link (1.1F-18): an anchor root had no rule, so it had no example.
   // Three anchors were added and nothing was recomposed.
   "primitives/text/text.html": "3 added anchors: a linked text, a mono id link, a done link",
+  // The skip link (forecraft #8): the first header opens with the new
+  // skip-link primitive, so the page's first tab stop skips the bar.
+  "patterns/site-header/site-header.html": "1 added skip-link as the first header's first child",
   // Landing craft (docs/landing-craft.md): each component gained values, and its
   // reference gained one example per value. Nothing existing was recomposed.
   "patterns/hero/hero.html": "2 added heroes: a cover layout, and a cover with data-animate inside a backdrop",
   "primitives/highlight/highlight.html": "6 added highlights in display headings: foil, outline and echo",
   "primitives/separator/separator.html": "4 added separators: the ornament style, bare and labelled",
   "recipes/toggle-group/toggle-group.html": "2 added groups: the segmented variant, with two and with three options",
+  // A single-page form renders its submit button (forecraft #2), and the
+  // pattern is that render byte for byte. Nothing existing was recomposed.
+  "patterns/form-page/form-page.html": "1 added button: the form's submit, in its footer",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

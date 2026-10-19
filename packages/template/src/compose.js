@@ -2,7 +2,8 @@
 // partials, resolved at compile time through the host's loader. The result is
 // one body with every block in place, and a table of parsed partials that
 // `Include` nodes name. Cycles and over-deep chains are found here, so a
-// compiled template cannot recurse.
+// compiled template recurses only through an include with a depth budget,
+// which render enforces.
 
 import { reportAt } from "./diagnostics.js";
 import { parseFile } from "./parse.js";
@@ -235,7 +236,16 @@ function resolveIncludes(nodes, c, chain) {
  */
 function includeHeight(node, c, chain) {
   if (chain.includes(node.name)) {
-    reportAt(c.ctx, "include-cycle", `including "${node.name}" returns to a file on its own chain: ${[...chain, node.name].join(" → ")}`, node.loc);
+    // Recursion is allowed only within an explicit budget, which render
+    // enforces: how deep it goes depends on the data (§10.3). The file being
+    // compiled is not a partial, so it cannot be included at all.
+    const partial = c.partials[node.name];
+    if (node.depth === undefined || !partial) {
+      const hint = partial ? "; give the include a budget (depth=N) to recurse" : "";
+      reportAt(c.ctx, "include-cycle", `including "${node.name}" returns to a file on its own chain: ${[...chain, node.name].join(" → ")}${hint}`, node.loc);
+    } else {
+      checkParams(node, partial, c);
+    }
     return 0;
   }
   let height = c.heights.get(node.name);
