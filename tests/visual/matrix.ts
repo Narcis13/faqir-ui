@@ -244,6 +244,7 @@ const TOKEN_ORDER = [
   "aliases",
   "document",
   "doc-aliases",
+  "accent",
   "density",
 ];
 const BASE_ORDER = ["reset", "prose", "rhythm", "motion-presets"];

@@ -105,6 +105,19 @@
   --doc-table-footer-bg:    var(--color-bg-muted);
   --doc-table-footer-weight: var(--weight-bold);
   --doc-table-stripe-bg:    var(--color-bg-subtle);
+  /* The table's voice, which is how one print theme sounds unlike another
+     (forecraft #48). Multipliers, so each is applied where the table draws
+     and follows whatever edge, size or inset that element already has; the
+     defaults draw exactly what a document table drew before. Rule scale
+     weighs the row rules (× --border-width), rule-strong scale the rule under
+     the head and over the totals (× --border-width-strong), num scale sets
+     number, currency and percent cells (× --doc-table-font-size), and flush
+     takes a row's first and last cell inset away: 1 sets the rules flush
+     with the text column. */
+  --doc-rule-scale:         1;
+  --doc-rule-strong-scale:  1;
+  --doc-table-num-scale:    1;
+  --doc-table-flush:        0;
 
   /* ── Signature Tokens ──
      Physical signature area dimensions for printed documents.

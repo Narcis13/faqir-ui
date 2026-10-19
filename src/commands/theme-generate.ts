@@ -613,6 +613,96 @@ ${renderRootBlocks(root)}${darkBlocks}`;
 }
 
 /**
+ * A print companion's typographic identity (forecraft #48).
+ *
+ * Until this, the companions differed on the accent alone: `renderDocumentCss`
+ * wrote one fixed block of `--doc-*` tokens whatever the parent seed said, so
+ * an editorial invoice, a Swiss one and a letterpress one printed the same page
+ * in three inks. The voice is read off the one axis a printed page can carry
+ * without a single family `axisDeclarations` emits — `type.pairing` — and it is
+ * stated in document tokens only, so it moves none of the axes a companion's
+ * stylesheet derives (the reason a companion is not a peer is unchanged).
+ *
+ * - `editorial` (serif pairings): headings in the project's serif role, a
+ *   wider measure (narrower inline page margins) with the leading it needs,
+ *   and soft rules — lighter, and a hairline under the head.
+ * - `swiss` (`sans-grotesque`): a tight setting, rules flush with the text
+ *   column and no tinted bands, black rules, and larger tabular numerals.
+ * - `letterpress` (`slab`): heavier rules in the deepest ink, and a table head
+ *   set apart by a deeper tinted band, its darkest step and a bold weight.
+ *
+ * Every other pairing keeps the neutral block, byte for byte. Faces stay on the
+ * role tokens (forecraft #38): the editorial heading is `--doc-serif`, which is
+ * `--font-serif`, so an installed serif reaches the paper.
+ */
+type PrintVoice = "editorial" | "swiss" | "letterpress";
+
+const PRINT_VOICES: Readonly<Record<string, PrintVoice>> = {
+  "serif-editorial": "editorial",
+  "serif-modern": "editorial",
+  "sans-grotesque": "swiss",
+  slab: "letterpress",
+};
+
+export function printVoiceFor(pairing: string): PrintVoice | null {
+  return PRINT_VOICES[pairing] ?? null;
+}
+
+function printVoiceDeclarations(voice: PrintVoice, sourceName: string): Declaration[] {
+  const palette = (step: number) => `var(--palette-${sourceName}-${step})`;
+  switch (voice) {
+    case "editorial":
+      return [
+        ["doc-line-height", "1.5"],
+        ["doc-heading-font", "var(--doc-serif)"],
+        ["doc-table-border", "var(--color-border)"],
+        ["doc-rule-strong-scale", "0.5"],
+        ["doc-print-border-color", "var(--color-border)"],
+        ["page-margin-left", "11mm"],
+        ["page-margin-right", "11mm"],
+      ];
+    case "swiss":
+      return [
+        ["doc-line-height", "1.3"],
+        ["doc-table-cell-pad-y", "var(--space-1h)"],
+        ["doc-table-header-bg", "var(--color-bg)"],
+        ["doc-table-border", "var(--color-fg)"],
+        ["doc-table-footer-bg", "var(--color-bg)"],
+        ["doc-table-num-scale", "1.2"],
+        ["doc-table-flush", "1"],
+        ["doc-print-border-color", "var(--color-fg)"],
+      ];
+    case "letterpress":
+      return [
+        ["doc-table-header-bg", palette(100)],
+        ["doc-table-header-fg", palette(950)],
+        ["doc-table-header-weight", "var(--weight-bold)"],
+        ["doc-table-border", palette(900)],
+        ["doc-rule-scale", "2"],
+        ["doc-rule-strong-scale", "1.5"],
+        ["doc-print-border-color", palette(900)],
+      ];
+  }
+}
+
+/**
+ * The neutral block with a voice laid over it: a token the block already
+ * states keeps its place and takes the voice's value, and a token it does not
+ * is added after the block's last document token, so the stylesheet reads as
+ * one list rather than a list and a patch.
+ */
+function withPrintVoice(root: Declaration[], voice: PrintVoice | null, sourceName: string): Declaration[] {
+  if (!voice) return root;
+  const overrides = new Map(printVoiceDeclarations(voice, sourceName));
+  const stated = new Set(root.map(([token]) => token));
+  const added = [...overrides].filter(([token]) => !stated.has(token));
+  return root.flatMap(([token, value]): Declaration[] => {
+    const own: Declaration = [token, overrides.get(token) ?? value];
+    return token === "doc-max-width" ? [own, ...added] : [own];
+  });
+}
+
+/**
  * The print companion's stylesheet.
  *
  * It states tokens and two at-rules — `@page`, and a `@media print` block that
@@ -635,6 +725,7 @@ function renderDocumentCss(
   accent: string,
   ramp: AccentStep[],
   declarations: Declaration[],
+  pairing: string,
 ): string {
   // The companion's one accent is `--doc-accent`, and its primary reads it, so
   // `:root { --doc-accent: … }` re-inks a printed document without a
@@ -644,7 +735,8 @@ function renderDocumentCss(
       ? [["doc-accent", value], ["color-primary", "var(--doc-accent)"]]
       : [[name, value]],
   );
-  const root: Declaration[] = [
+  const voice = printVoiceFor(pairing);
+  const root: Declaration[] = withPrintVoice([
     ...paletteDeclarations(sourceName, ramp),
     ...accented,
     ["radius-sm", "0"],
@@ -678,12 +770,15 @@ function renderDocumentCss(
     ["doc-max-width", "210mm"],
     ["font-sans", "'Arial', 'Helvetica Neue', system-ui, sans-serif"],
     ["font-mono", "'Courier New', ui-monospace, monospace"],
-  ];
+  ], voice, sourceName);
+  const voiceNote = voice
+    ? `/* Print voice: ${voice}, from the parent's type pairing (${pairing}). */\n`
+    : "";
 
   return `/* @ui:theme ${name} — brand-matched, print-optimized document theme */
 /* @ui:schemes light */
 /* Generated from ${accent}; white paper, flat surfaces, crisp edges, and ink-safe contrast. */
-
+${voiceNote}
 ${renderRootBlocks(root)}
 @page {
   size: var(--page-format) var(--page-orientation);
@@ -965,6 +1060,7 @@ export function generateThemeBundle(
       seed.accent,
       ramp,
       documentDeclarations(seed, tint, ramp, lightPrimary),
+      seed.type.pairing,
     );
     const documentManifest = manifestFor(
       documentName,

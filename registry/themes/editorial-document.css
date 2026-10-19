@@ -1,6 +1,7 @@
 /* @ui:theme editorial-document — brand-matched, print-optimized document theme */
 /* @ui:schemes light */
 /* Generated from #1e3a5f; white paper, flat surfaces, crisp edges, and ink-safe contrast. */
+/* Print voice: editorial, from the parent's type pairing (serif-editorial). */
 
 :root {
   --palette-editorial-50    : oklch(0.942 0.0132 256.04);
@@ -65,8 +66,8 @@
   --badge-radius            : 0.125rem;
   --doc-font                : var(--font-body);
   --doc-font-size           : 10pt;
-  --doc-line-height         : 1.4;
-  --doc-heading-font        : var(--font-heading);
+  --doc-line-height         : 1.5;
+  --doc-heading-font        : var(--doc-serif);
   --doc-heading-weight      : var(--weight-bold);
   --doc-heading-size        : 14pt;
   --doc-subheading-size     : 12pt;
@@ -75,10 +76,14 @@
   --doc-component-gap       : var(--space-3);
   --doc-table-font-size     : 9pt;
   --doc-table-header-bg     : var(--color-bg-muted);
-  --doc-table-border        : var(--color-border-strong);
+  --doc-table-border        : var(--color-border);
   --doc-table-footer-bg     : var(--color-bg-muted);
   --doc-table-stripe-bg     : var(--color-bg-subtle);
   --doc-max-width           : 210mm;
+  --doc-rule-strong-scale   : 0.5;
+  --doc-print-border-color  : var(--color-border);
+  --page-margin-left        : 11mm;
+  --page-margin-right       : 11mm;
   --font-sans               : 'Arial', 'Helvetica Neue', system-ui, sans-serif;
   --font-mono               : 'Courier New', ui-monospace, monospace;
 }

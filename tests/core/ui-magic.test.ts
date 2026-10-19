@@ -10,8 +10,9 @@
 // unchanged, and both are asserted here so the second cannot cost the first.
 
 import { describe, it, expect, beforeEach } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 function tick(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));

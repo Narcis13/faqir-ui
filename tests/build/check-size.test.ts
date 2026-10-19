@@ -169,8 +169,11 @@ describe("BUDGETS", () => {
   // async validators (and a second for `faqir:valid-submit`), and 1.1B-04
   // bought faqir-rules nine for the evaluator it
   // bundles (raised to 13 in the 1.1 release hardening, and to 14 for `Faqir.rules.data`). Both are enforced from both sides below — not holes in the gate.
-  test("the per-plugin exceptions are exactly these three", () => {
+  // faqir-chart's 4 KB (forecraft #36) is enforced from both sides in
+  // tests/build/forecraft-chart-size.test.ts.
+  test("the per-plugin exceptions are exactly these four", () => {
     expect(Object.keys(mod.PLUGIN_BUDGETS).sort()).toEqual([
+      "faqir-chart.js",
       "faqir-rules.js",
       "faqir-tweak.js",
       "faqir-validate.js",

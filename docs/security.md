@@ -13,9 +13,10 @@ The short version:
 | | Requirement |
 |---|---|
 | Content-Security-Policy | `script-src` must include **`'unsafe-eval'`**; `style-src 'self'` is enough — Faqir needs no `'unsafe-inline'` and no hash (§2) |
+| No `'unsafe-eval'` allowed | Load the strict-CSP build, `faqir-core.csp.js` — expressions interpreted, never compiled (§1) |
 | Untrusted markup | Never let it reach the page Faqir initializes — `l-*` attribute values are code |
 | Untrusted **data** | Safe in `l-text`, `l-model`, `data-prop-*` and `l-source` responses; **never** in `l-html` |
-| CSP-restricted environments | Load Faqir's CSS and components, skip the engine — see [Running without the engine](#running-without-the-engine) |
+| CSP-restricted environments | The strict-CSP build (§1); or Faqir's CSS and components with no engine — see [Running without the engine](#running-without-the-engine) |
 | Third-party registries | Component **bytes** are hash-checked, never authenticated; component **text** reaching an agent is untrusted data — §7, §9 |
 | `faqir dev` | Localhost development server, unauthenticated. Never expose it — §8 |
 
@@ -67,7 +68,7 @@ Granting it re-enables `eval()` and `new Function` for **every** script on the
 origin, not just Faqir's. That is the price, and §5 is about deciding whether to
 pay it.
 
-### Why not a CSP-safe evaluator
+### Why the default build compiles
 
 Alpine, Vue's runtime compiler and Faqir all make the same trade. Avoiding
 `new Function` means shipping an expression parser and interpreter — a
@@ -77,8 +78,85 @@ budget. It also changes the language: an interpreter that supports "some
 JavaScript" makes every gap a bug report.
 
 Faqir's target is generated, trusted markup (§5), where `'unsafe-eval'` costs
-little. **A CSP-safe evaluator is deliberately out of scope for 1.0.** If the
-constraint is hard, the engine is the optional part — see §6.
+little. **A CSP-safe evaluator was deliberately out of scope for 1.0**, and the
+default engine still compiles. Where the constraint is hard there are now two
+answers: the strict-CSP build below, or no engine at all (§6).
+
+### The strict-CSP build
+
+`faqir-core.csp.js` is the same engine — every directive, magic, controller and
+API member — assembled from the same source by `bun run build:core`, with one
+region swapped: the two functions that compile expressions are replaced by
+`src/core-src/csp-evaluator.js`, a lazy tokenizer, a Pratt parser and a
+tree-walking evaluator. No string ever becomes code, so a page needs no
+`'unsafe-eval'`:
+
+```
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self';
+  style-src 'self';
+  img-src 'self' data:;
+  object-src 'none';
+  base-uri 'self';
+  frame-ancestors 'self'
+```
+
+| Where | File |
+|---|---|
+| `faqir init` | `core/faqir-core.csp.js` (and `core/faqir-core.csp.dev.js` for development), beside `faqir-core.js` |
+| CDN | `dist/faqir-core.csp.min.js` of `@faqir-ui/core` — its SRI hash is `integrity["faqir-core.csp.min.js"]` in `packages/core/cdn.json` |
+| npm | `import Faqir from "@faqir-ui/core/csp"` (ESM), or `@faqir-ui/core/faqir-core.csp.js` (UMD) |
+
+Load one engine or the other, never both. The official plugins work unchanged
+on either: the values `faqir-mask` and `faqir-persist` write back are spliced
+in as JSON literals, which the interpreter reads.
+
+**The language is a subset**, taken from what directive expressions in the
+registry, the docs site and the docs actually use — every one of them parses
+(`tests/core/forecraft-csp-interpreter.test.ts` keeps it that way):
+
+| Supported | Not supported |
+|---|---|
+| member, computed and optional access (`a.b`, `a[b]`, `a?.b`, `a?.()`), calls, `new`, spread arguments | classes, generators, `async`/`await`, `import()` |
+| number, string, template and regex literals; `true`/`false`/`null`; arrays and objects with spread, shorthand, computed keys, methods and `get`/`set` | destructuring, default parameters, tagged templates, labels |
+| every unary, binary and logical operator, `??`, `typeof`, `delete`, `in`, `instanceof`, the ternary and the comma | `switch`, `try`/`catch`, `throw`, `while`, `do`, classic `for (;;)` |
+| `=` and every compound assignment (`+=`, `**=`, `&&=`, `??=` …), `++` and `--` | function declarations (`function f() {}` as a statement) |
+| `;`-separated statements, blocks, `if`/`else`, `return`, `var`/`let`/`const`, `for…of`, `for…in`, `break`, `continue` | |
+| arrow and `function` expressions, with expression or block bodies, plain and rest parameters | |
+
+Names resolve as `with ($scope)` resolves them in the default build: the locals
+of enclosing interpreted functions, then the scope (through `in`, so `l-for`'s
+row scopes and the magics on the scope's prototype behave identically), then
+`$scope`, `$el` and `$this`, then globals. A function found on the scope is
+called with the scope as `this`; reading an undeclared name throws
+`ReferenceError`, `typeof` of one is `"undefined"`, and assigning one creates a
+global, as sloppy-mode code does. Interpreted functions are real functions, so
+`forEach`, `setTimeout`, `$watch` and getters call them normally. What differs:
+declarations are not hoisted and `const` is not enforced read-only, there is no
+`arguments`, `Symbol.unscopables` is not consulted, a plain function called
+without a receiver sees `this` as `undefined` rather than the global object,
+and error messages are the interpreter's own.
+
+**Outside the subset, it fails like any other expression error** — the console
+warning names the expression and the construct (`Unsupported syntax "switch"`),
+at the moment the expression is first evaluated, even on a branch that never
+runs, exactly as `new Function` raises a `SyntaxError`. The development twin,
+`faqir-core.csp.dev.js`, records it in `window.__FAQIR_DEVTOOLS__.warnings()`
+with the element's markup and says the strict-CSP subset is the reason.
+
+**`constructor`, `__proto__` and `prototype` are not reachable**: as a static
+member (`s.constructor`) the expression is refused at parse time; as a computed
+one (`s[k]`) the access throws `TypeError` when it runs; `__proto__` is also
+refused as an object-literal key. That closes the classic reach from any value
+to `Function` and to shared prototypes. It does not make expressions a sandbox:
+they still call whatever the scope and the global object hand them, so §5's
+threat model is unchanged — an `l-*` value is code, in either build.
+
+It costs about 4.7 KB gzip over the default build (52 KB budget, enforced by
+`bun run size`), and an interpreted expression is slower than a compiled one —
+immaterial for event handlers and bindings, measurable in a hot loop over
+thousands of rows.
 
 ## 2. `style-src` and `l-cloak`
 
@@ -266,11 +344,14 @@ That is the answer for a CSP-restricted environment:
   the whole engine plus the official plugins, so reach for the per-recipe files
   when you want the smaller surface.)
 - **Reactivity** (`l-data`, `l-text`, `l-for`, `l-model`, …) — this is the part
-  that needs `'unsafe-eval'`. There is no subset of it that does not.
+  that needs `'unsafe-eval'` in the default build. The strict-CSP build runs
+  all of it under `script-src 'self'`, as long as the expressions stay inside
+  its subset (§1, [The strict-CSP build](#the-strict-csp-build)).
 
-If the policy is fixed and the page needs reactivity, the honest answer is that
-Faqir's engine is not the right runtime for that page. Nothing else in the
-framework is affected by the decision.
+If the policy is fixed and the page needs reactivity, load `faqir-core.csp.js`.
+If its subset is too narrow for the page, the honest answer is that Faqir's
+engine is not the right runtime for it. Nothing else in the framework is
+affected by the decision.
 
 ## 7. Supply chain
 

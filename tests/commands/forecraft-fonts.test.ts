@@ -269,7 +269,8 @@ describe("--italic (note 37)", () => {
 
   it("refuses a family with no pinned italics before downloading anything", async () => {
     await quiet(() => init([]));
-    const message = await failure(() => fonts(["add", FAMILY, "--italic"]));
+    // Manrope's upstream package ships upright only, so it has no italic row.
+    const message = await failure(() => fonts(["add", "manrope", "--italic"]));
     expect(message).toContain("no italic faces pinned");
     expect(requested).toEqual([]);
     expect(existsSync(uiPath("fonts"))).toBe(false);
@@ -277,7 +278,7 @@ describe("--italic (note 37)", () => {
   });
 
   describe("with a pinned italic row", () => {
-    // A test-only row standing in for a real pin: the upright Latin fixture's
+    // A test-only row in place of the family's real pins: the upright Latin fixture's
     // bytes under an italic name, hashed here, so the installer's real
     // download → verify → write path runs end to end.
     const entry = findFamily(FAMILY)! as { italics?: readonly CatalogFile[] };
@@ -291,12 +292,15 @@ describe("--italic (note 37)", () => {
       url: upright.url.replace(upright.file, italicName),
     };
 
+    // The family's real italic pins, put back after each test.
+    const pinned = entry.italics;
+
     beforeEach(() => {
       entry.italics = [row];
       aliases.set(italicName, upright.file);
     });
     afterEach(() => {
-      delete entry.italics;
+      entry.italics = pinned;
     });
 
     it("downloads, verifies and declares the italic faces", async () => {

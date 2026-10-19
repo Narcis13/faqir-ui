@@ -926,6 +926,13 @@ function renderAuthoringPage(ctx: PageContext, themes: ThemeEntry[]): SiteFile {
         )}); omit ${code("--role")} for the family's first catalogued role. The bundle is regenerated when ${code(
           "faqir.bundle.css",
         )} exists, and ${code("fonts.css")} is linked after the theme so the role tokens win.</p>\n` +
+        `      <p>${code("--italic")} also installs the family's true-italic faces as ${code(
+          "font-style: italic",
+        )} rules, pinned and verified like the upright files, at the same version, subsets and weights. Every family below has them except ${esc(
+          FONT_CATALOG.filter((entry) => !entry.italics?.length)
+            .map((entry) => entry.family)
+            .join(", "),
+        )}, whose upstream packages ship upright only.</p>\n` +
         table(["Id", "Family", "Class", "Roles", "Weights", "Licence", "Size"], fontRows, "No families."),
     ),
     section(

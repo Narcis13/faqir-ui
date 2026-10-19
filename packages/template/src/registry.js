@@ -28,6 +28,9 @@ export const components = {
   "carousel": [
    "carousel.js"
   ],
+  "chart": [
+   "faqir-chart.js"
+  ],
   "combobox": [
    "combobox.js"
   ],
@@ -2160,6 +2163,176 @@ export const components = {
       "children": [],
       "slot": "status"
      }
+    ]
+   }
+  },
+  "chart": {
+   "defaultSlot": false,
+   "slots": {
+    "caption": {
+     "required": false
+    },
+    "plot": {
+     "required": false
+    },
+    "data": {
+     "required": false
+    }
+   },
+   "variants": {
+    "variant": {
+     "attr": "data-variant",
+     "values": [
+      "column",
+      "bar",
+      "line"
+     ],
+     "default": "column"
+    }
+   },
+   "states": {
+    "drawn": {
+     "attr": "data-state",
+     "value": "drawn",
+     "kind": "value"
+    }
+   },
+   "props": {
+    "value": {
+     "default": ""
+    }
+   },
+   "bools": [],
+   "tree": {
+    "tag": "figure",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "chart"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "figcaption",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "caption"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "caption",
+      "sample": true
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "plot"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "plot"
+     },
+     {
+      "tag": "table",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "data"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "thead",
+        "attrs": [],
+        "children": [
+         {
+          "tag": "tr",
+          "attrs": [],
+          "children": [
+           {
+            "tag": "th",
+            "attrs": [
+             [
+              "scope",
+              [
+               "col"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           },
+           {
+            "tag": "th",
+            "attrs": [
+             [
+              "scope",
+              [
+               "col"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "tag": "tbody",
+        "attrs": [],
+        "children": [
+         {
+          "tag": "tr",
+          "attrs": [],
+          "children": [
+           {
+            "tag": "th",
+            "attrs": [
+             [
+              "scope",
+              [
+               "row"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           },
+           {
+            "tag": "td",
+            "attrs": [],
+            "children": [
+             {
+              "p": "value"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "slot": "data"
+     }
+    ],
+    "dyn": [
+     [
+      "variant",
+      "data-variant"
+     ]
     ]
    }
   },

@@ -7,10 +7,11 @@ reference for all three.
 |---|---|---|
 | `core/faqir-core.js` | Production engine. Terse warnings only. | yes |
 | `core/faqir-core.dev.js` | Development engine. Same behaviour + four diagnostic classes. | yes, but never referenced by default |
+| `core/faqir-core.csp.js` · `core/faqir-core.csp.dev.js` | The same two builds for a page without `'unsafe-eval'`: expressions interpreted instead of compiled ([below](#the-strict-csp-builds)). | yes, but never referenced by default |
 | the inspector overlay | A panel injected by `faqir dev`. | **no** — it lives in the CLI |
 
-Both engines install `window.__FAQIR_DEVTOOLS__`, so anything below works on a
-page regardless of which one it loaded.
+Every engine build installs `window.__FAQIR_DEVTOOLS__`, so anything below works
+on a page regardless of which one it loaded.
 
 ---
 
@@ -112,6 +113,37 @@ The production engine is byte-free of all of this: the messages exist only in
 still warns tersely on a failed expression (a real runtime fault), but records
 nothing and emits no advisories. The dev build has no size budget; `bun run
 size` reports its gzip number without enforcing one.
+
+## The strict-CSP builds
+
+`core/faqir-core.csp.js` and `core/faqir-core.csp.dev.js` are the same pair
+assembled once more by `bun run build:core`, with the engine's expression
+compilers (the region between `// @faqir:evaluator-start` and
+`// @faqir:evaluator-end` in `src/core-src/engine.js`) replaced by the
+interpreter in `src/core-src/csp-evaluator.js`. They are for pages served
+without `'unsafe-eval'`; [docs/security.md §1](security.md#the-strict-csp-build)
+has the policy and the language the interpreter accepts. Develop against the
+dev twin exactly as above:
+
+```html
+<script src="ui/core/faqir-core.csp.dev.js"></script>
+```
+
+Everything on this page holds for both, with one addition to the `expression`
+class. An expression outside the interpreter's subset — `async`, `class`,
+destructuring, `switch` — is a `SyntaxError` raised when the expression is
+first evaluated, and a `constructor` / `__proto__` / `prototype` member is
+refused. Both are recorded as `expression` entries whose `message` names the
+expression and the construct and, in the dev build only, adds that the
+strict-CSP build interprets a subset of JavaScript:
+
+```
+[Faqir dev] Expression error in "async () => n": Unexpected "=>" at 9 (the strict-CSP build interprets a subset of JavaScript; see docs/security.md)
+```
+
+The production CSP build warns tersely, as the production engine does, still
+naming the expression. `bun run size` enforces the CSP build's own budget and
+reports its dev twin without one.
 
 ## The `faqir dev` overlay
 

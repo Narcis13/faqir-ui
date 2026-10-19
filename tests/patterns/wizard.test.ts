@@ -7,6 +7,7 @@
 // excluded from validation, and the completion event fired on the final step.
 
 import { describe, it, expect, beforeEach, afterAll } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -14,7 +15,7 @@ import { join } from "node:path";
 // evaluated from source (not require()d) so this file never consumes the
 // first-require self-registration that tests/core/faqir-validate.test.ts
 // asserts on. Re-registering the directive is idempotent.
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 {
   const source = readFileSync(
     join(import.meta.dir, "../../registry/core/plugins/faqir-validate.js"),

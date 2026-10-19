@@ -50,6 +50,10 @@ export const BUDGETS = {
   // @faqir-ui/template's core entry: the runtime that renders a compiled AST
   // (docs/template.md §15.1). The compiler is its own entry, run at save time.
   template: 8 * KB,
+  // The strict-CSP engine (forecraft #50): engine + controllers with the
+  // expression interpreter in place of `new Function` — measured at 51.01 KB,
+  // about 4.7 KB of it the interpreter. Its own artifact, its own budget.
+  engineCsp: 52 * KB,
 };
 
 // Per-plugin exceptions to BUDGETS.plugin, by file name. Each is named for the
@@ -87,7 +91,15 @@ export const BUDGETS = {
 //   function the panel, the export and the restore share, and the localStorage
 //   round trip. The dials are the point: every token family a theme axis
 //   moves gets a control, and that list is what the kilobytes buy.
+//
+// · faqir-chart, 2 → 4 KB, measured at 3.66 KB: the `chart` primitive's
+//   drawing (forecraft #36) — reading the data table in the page's locale,
+//   nice ticks, the bar, column and line layouts with their direct labels and
+//   the legend they fall back to, the aria-label that reads every number, and
+//   the SVG writer. It ships as its own opt-in file precisely so that none of
+//   it lands in faqir-core.js, whose budget has no room.
 export const PLUGIN_BUDGETS = {
+  "faqir-chart.js": 4 * KB,
   "faqir-tweak.js": 4 * KB,
   "faqir-validate.js": 4 * KB,
   "faqir-rules.js": 14 * KB,
@@ -229,6 +241,8 @@ export function collectDefaultTargets(root = ROOT) {
       budgetBytes: null,
     },
     { label: "@faqir-ui/template", entry: "packages/template/src/index.js", budgetBytes: BUDGETS.template },
+    { label: "engine + controllers (strict CSP)", entry: "registry/core/faqir-core.csp.js", budgetBytes: BUDGETS.engineCsp },
+    { label: "strict-CSP dev engine (report only)", entry: "registry/core/faqir-core.csp.dev.js", budgetBytes: null },
   ];
 
   const pluginsDir = join(root, "registry", "core", "plugins");

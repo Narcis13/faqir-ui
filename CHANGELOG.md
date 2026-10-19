@@ -89,8 +89,8 @@ attribute). The packaged `faqir-core.min.js` gzip budget is 47 KB (was 46);
 - **Added** — `@faqir-ui/mcp/audit`: `auditHtml(html, opts)` returns the
   `faqir audit --stdin --json` report in process, on Node 18+.
 - **Added** — `faqir fonts add --role none` (faces without a role) and
-  `--italic` (pinned true italics where the catalog has them; none are pinned
-  yet); a single-weight heading family gets `font-synthesis-weight: none` and a
+  `--italic` (pinned true italics where the catalog has them; see below); a
+  single-weight heading family gets `font-synthesis-weight: none` and a
   warning when the theme asks for a heavier heading weight.
 - **Added** — `skip-link` primitive (site-header opens with one; give `main`
   `id="main"`) and base-layer `data-ui="visually-hidden"` (`.sr-only` stays).
@@ -128,6 +128,58 @@ attribute). The packaged `faqir-core.min.js` gzip budget is 47 KB (was 46);
   hidden from md up; print themes set documents in the project's role fonts.
 - **Fixed** — manifest templates of auth-form, wizard, crud-table,
   settings-page, search-results, inbox and dashboard-shell audit clean.
+
+The five forecraft notes deferred from that round: a runtime accent, a chart,
+print-theme identities, true italics and a strict-CSP engine.
+
+**Upgrading:** `editorial-document`, `ink-document` and `swiss-document` print
+differently — editorial in a serif heading voice on 11mm side margins, swiss
+tight and flush with black rules and 1.2× numerals, ink with 2px/3px rules and
+a deeper bold table head; `document` and `document-serif` print as before.
+Projects that copy token files one by one should copy `tokens/accent.css` and
+import it before `density.css` (bundled and `faqir init` projects get it). Under
+a CSP without `'unsafe-eval'`, swap `faqir-core.js` for `faqir-core.csp.js`;
+expressions that use classes, `async`/`await`, destructuring, default
+parameters, `switch`, `try` or `while` must be rewritten for it. The default
+engine is byte-identical.
+
+- **Added** — `data-accent`, the fifth sanctioned token modifier (SPEC-1.0 §4,
+  additive under §8.2): `violet | purple | fuchsia | pink` re-hue
+  `--color-primary`, `-hover`, `-active`, `-subtle` and `--color-ring` for a
+  subtree, keeping the active theme's own lightness and chroma; `custom` reads
+  `--accent-hue`. Each named hue clears every `contrast-tokens` pair in all 31
+  themes, light and dark. `--doc-accent` follows it; without relative colour
+  syntax it is a no-op. New `registry/tokens/accent.css`, `docs/accent.md`, an
+  `l-tweak` "Named accent" dial, and `checkAccentContrast` / `accentLookups` /
+  `rehueColor` in `contrast-tokens`.
+- **Added** — `chart` primitive (`data-variant="column|bar|line"`): its
+  `<table data-part="data">` is the chart without JavaScript and prints under
+  the drawn one; `faqir-chart.js`, an opt-in plugin (4 KB budget), draws an
+  inline SVG from it — zero baseline for bars and columns, direct labels where
+  they fit, series apart by lightness and (lines) dash pattern, `role="img"`
+  with an `aria-label` that reads the numbers, colours from custom properties
+  only (`--chart-accent`). `data-table="auto|visible|hidden"`, `data-value` on a
+  cell, `$ui.redraw()`. A plugin header can now carry a component's controller
+  (`// @ui:controller <name>`): `build:manifest-api` writes its `api` and the
+  template table puts the plugin in `@ui:requires` (`+chart`).
+- **Added** — `faqir-core.csp.js` (dev twin `faqir-core.csp.dev.js`, CDN
+  `dist/faqir-core.csp.min.js`, `import "@faqir-ui/core/csp"`): directive
+  expressions are interpreted by a tokenizer, Pratt parser and evaluator, never
+  compiled, so pages need no `'unsafe-eval'`. It refuses `constructor`,
+  `__proto__` and `prototype` and names any unsupported construct. Own 52 KB
+  gzip budget.
+- **Added** — true italics for 13 catalog families (Inter, Geist, DM Sans, IBM
+  Plex Sans/Serif/Mono, Source Serif 4, Fraunces, Instrument Serif, Newsreader,
+  Lora, Nunito, JetBrains Mono): 30 WOFF2 files pinned by SHA-256 at the
+  upright rows' Fontsource 5.3.0 versions, subsets and weights, installed with
+  `faqir fonts add <family> --italic`.
+- **Added** — document tokens `--doc-rule-scale`, `--doc-rule-strong-scale`,
+  `--doc-table-num-scale` and `--doc-table-flush` (defaults draw as before);
+  `faqir theme generate … document: true` gives the companion a print voice
+  from the seed's `type.pairing` (serif, `sans-grotesque`, `slab`).
+- **Fixed** — the three generated print companions no longer differ only in hue.
+- **Fixed** — `fonts add --italic` no longer refuses every family; for Manrope,
+  Space Grotesk and Bricolage Grotesque it says their package ships upright only.
 
 ## 1.2.5
 

@@ -21,6 +21,8 @@ export { LCallout } from "./components/callout.js";
 export type { LCalloutProps, LCalloutVariant } from "./components/callout.js";
 export { LCard } from "./components/card.js";
 export type { LCardProps, LCardVariant, LCardSize } from "./components/card.js";
+export { LChart } from "./components/chart.js";
+export type { LChartProps, LChartVariant } from "./components/chart.js";
 export { LCheckbox } from "./components/checkbox.js";
 export type { LCheckboxProps, LCheckboxSize } from "./components/checkbox.js";
 export { LChip } from "./components/chip.js";

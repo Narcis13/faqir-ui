@@ -582,6 +582,7 @@ export function composeContextData(input: ContextComposition): ContextData {
         "Put untrusted values in the SCOPE (l-data, data-prop-*, l-source) and render them with l-text; never build markup or an l-* value out of them.",
         "HTML-escaping is not enough: &#39; is decoded back to ' before the evaluator sees the attribute.",
         "Without 'unsafe-eval' the engine still loads and mounts controllers — expressions just silently yield undefined, so l-text writes empty strings.",
+        "Where 'unsafe-eval' is not allowed, load core/faqir-core.csp.js instead (dev twin core/faqir-core.csp.dev.js; CDN dist/faqir-core.csp.min.js): the same engine with expressions interpreted, never compiled. It accepts a JavaScript subset — no classes, async/await, destructuring, default parameters, switch, try or while — and refuses constructor, __proto__ and prototype members.",
         "Primitives and patterns are markup and CSS only (inbox and wizard excepted); a page that uses no l-* attributes needs no 'unsafe-eval'.",
         "A rules definition is data, not code — l-rules never evaluates it as JavaScript — but a remote rule sends the whole coerced form to the URL inside the definition, so a definition you did not author is an exfiltration channel; re-check every verdict on the server, because the page's is advisory.",
       ],

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 import { createTabs } from "../../registry/recipes/tabs/tabs.js";
 import { createAccordion } from "../../registry/recipes/accordion/accordion.js";
 import { createDialog } from "../../registry/recipes/dialog/dialog.js";
@@ -12,7 +13,7 @@ import { createCarousel } from "../../registry/recipes/carousel/carousel.js";
 import { createTooltip } from "../../registry/recipes/tooltip/tooltip.js";
 import { createTable } from "../../registry/recipes/table/table.js";
 
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 // Nesting matrix (1.1F-12, 1.1F-13): one row per outer × inner pair. In every row the
 // inner component keeps its own state, ARIA and tabindex, and the outer ignores

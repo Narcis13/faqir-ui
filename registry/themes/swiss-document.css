@@ -1,6 +1,7 @@
 /* @ui:theme swiss-document — brand-matched, print-optimized document theme */
 /* @ui:schemes light */
 /* Generated from #da291c; white paper, flat surfaces, crisp edges, and ink-safe contrast. */
+/* Print voice: swiss, from the parent's type pairing (sans-grotesque). */
 
 :root {
   --palette-swiss-50        : oklch(0.9575 0.0383 29.55);
@@ -65,7 +66,7 @@
   --badge-radius            : 0.125rem;
   --doc-font                : var(--font-body);
   --doc-font-size           : 10pt;
-  --doc-line-height         : 1.4;
+  --doc-line-height         : 1.3;
   --doc-heading-font        : var(--font-heading);
   --doc-heading-weight      : var(--weight-bold);
   --doc-heading-size        : 14pt;
@@ -74,11 +75,15 @@
   --doc-section-gap         : var(--space-6);
   --doc-component-gap       : var(--space-3);
   --doc-table-font-size     : 9pt;
-  --doc-table-header-bg     : var(--color-bg-muted);
-  --doc-table-border        : var(--color-border-strong);
-  --doc-table-footer-bg     : var(--color-bg-muted);
+  --doc-table-header-bg     : var(--color-bg);
+  --doc-table-border        : var(--color-fg);
+  --doc-table-footer-bg     : var(--color-bg);
   --doc-table-stripe-bg     : var(--color-bg-subtle);
   --doc-max-width           : 210mm;
+  --doc-table-cell-pad-y    : var(--space-1h);
+  --doc-table-num-scale     : 1.2;
+  --doc-table-flush         : 1;
+  --doc-print-border-color  : var(--color-fg);
   --font-sans               : 'Arial', 'Helvetica Neue', system-ui, sans-serif;
   --font-mono               : 'Courier New', ui-monospace, monospace;
 }

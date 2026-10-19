@@ -218,6 +218,17 @@ with no shell, [`@faqir-ui/core`](packages/core/README.md) publishes a prebuilt 
 Swap the stylesheet to change theme; every theme ships a bundle. Every `dist/`
 file has a SHA-384 hash in `dist/sri.json` for `integrity=` pinning.
 
+A page whose Content-Security-Policy has no `'unsafe-eval'` swaps the engine
+tag for the [strict-CSP build](#strict-csp-build), pinned to an exact version
+with its hash:
+
+```html
+<!-- The strict-CSP engine: l-* expressions interpreted, never compiled -->
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@<version>/dist/faqir-core.csp.min.js"
+        integrity="sha384-<integrity["faqir-core.csp.min.js"] in packages/core/cdn.json>"
+        crossorigin="anonymous" defer></script>
+```
+
 ---
 
 ## Why Faqir
@@ -305,15 +316,15 @@ No specificity wars. No naming conventions to memorize. The selector is the docu
 
 ## Component Library
 
-Faqir ships 105 components across three layers. Every one has a page on the
+Faqir ships 107 components across three layers. Every one has a page on the
 [docs site](https://faqir-ui.pages.dev), generated from its manifest.
 
-**Primitives (53, CSS only).** `aspect-ratio` `avatar` `backdrop` `badge`
-`breadcrumb` `button` `callout` `card` `checkbox` `chip` `cluster` `collapsible`
+**Primitives (55, CSS only).** `aspect-ratio` `avatar` `backdrop` `badge`
+`breadcrumb` `button` `callout` `card` `chart` `checkbox` `chip` `cluster` `collapsible`
 `container` `description-list` `empty-state` `field-group` `glow` `grid`
 `highlight` `icon` `image` `input` `kbd` `key-value` `label` `link` `marquee`
 `nav` `page-break` `progress` `quote` `radio` `rating` `reveal` `scroll-progress`
-`select` `separator` `signature` `skeleton` `spinner` `spotlight` `stack`
+`select` `separator` `signature` `skeleton` `skip-link` `spinner` `spotlight` `stack`
 `stamp` `stat` `stepper`
 `surface` `switch` `switcher` `text` `textarea` `timeline` `toggle` `watermark`
 
@@ -602,6 +613,7 @@ size from one ramp, `--control-height-sm|md|lg`, so they line up in a row.
 | `textures.css` | Six SVG surface materials (grain, paper, dots, grid, stripes, mesh), applied through `--texture-page` and `--texture-surface` |
 | `aliases.css` | Component aliases, `--control-height-*`, `--measure-narrow/-content/-wide/-prose` |
 | `density.css` | `[data-density]` subtree remap of `--space-*` and `--control-height-*` |
+| `accent.css` | `[data-accent]` subtree re-hue of `--color-primary/-hover/-active/-subtle` and `--color-ring` |
 | `document.css` | `--page-format`, `--page-margin`, `--doc-*` paged-media tokens |
 | `doc-aliases.css` | `--kv-*`, `--callout-*`, `--image-*`, `--field-*`, `--stat-*` document aliases |
 
@@ -736,8 +748,12 @@ your own `font-family`. A static family with a single weight (Instrument Serif)
 holding the heading role gets `font-synthesis-weight: none`, so headings are drawn
 at its one weight instead of a browser-faked bold, and `add` warns when the active
 theme's heading voice asks for a heavier one. `--italic` also installs a family's
-true-italic faces, hash-pinned like the upright ones, for the families whose italic
-pins the catalog carries (`fonts list` shows them); the catalog has none yet.
+true-italic faces, hash-pinned like the upright ones and written as
+`font-style: italic` faces beside them, so `<em>` is drawn rather than slanted by
+the browser (`faqir fonts add source-serif-4 --role body --italic`). Thirteen
+families carry them, at the same version, subsets and weights as their upright
+files; Manrope, Space Grotesk and Bricolage Grotesque ship upright only upstream,
+and `--italic` refuses them by name.
 
 **From an agent.** The MCP server exposes the same surface: `faqir_theme_list`
 returns every theme with its axes, `faqir_theme_info` one theme's manifest, and
@@ -746,6 +762,24 @@ returns every theme with its axes, `faqir_theme_info` one theme's manifest, and
 **Scoped themes.** `faqir theme bundle <name> --scope` rewrites every `:root`
 onto `[data-skin="<name>"]` and scopes every `[data-theme]` block beneath it, so
 a `data-theme` inside the island switches the island, not the page.
+
+**Runtime accent.** A brand hue without the CLI: `data-accent` on any element
+re-hues the five tokens a theme draws its accent with (`--color-primary`,
+`-hover`, `-active`, `-subtle` and `--color-ring`) for that subtree, keeping the
+active theme's own lightness and chroma, so every theme keeps its character and
+only the hue moves. `--doc-accent`, the print ink, follows it.
+
+```html
+<html data-theme="auto" data-accent="violet">      <!-- violet · purple · fuchsia · pink -->
+<section data-accent="custom" style="--accent-hue: 200">…any other hue…</section>
+```
+
+The named hues are the ones that clear every pair the `contrast-tokens` gate
+checks in every shipped theme, light and dark; the measurement that chose them is
+in [`docs/accent.md`](docs/accent.md). A `custom` hue is not measured — its
+contrast is yours to check. Browsers without relative colour syntax render the
+theme's own accent. `data-accent` is the fifth sanctioned token modifier
+(SPEC-1.0 §4), and `l-tweak`'s studio has a dial for it.
 
 Authoring rules, the deliberate-override list, the seed workflow and the drift
 gate are in [`CONTRIBUTING.md` § Theme Manifests](CONTRIBUTING.md#theme-manifests).
@@ -843,6 +877,7 @@ plugin; or load them individually from `ui/core/plugins/` after the core script.
 
 | Plugin | Provides | What it does |
 |---|---|---|
+| `faqir-chart` | the `chart` controller (`$ui.redraw()`) | Draws a `chart` primitive's data table as an inline SVG bar, column or line chart; without it the table is the chart |
 | `faqir-collapse` | `l-collapse` | Height auto-animation for a boolean; honours `prefers-reduced-motion` |
 | `faqir-intersect` | `l-intersect` | Enter, `.leave` and `.once` IntersectionObserver hooks |
 | `faqir-mask` | `l-mask` | Caret-safe input masking; `l-model` still receives the raw characters |
@@ -1084,7 +1119,7 @@ faqir inspect <component> [--json]
 faqir theme set|list|create|generate|bundle <name>
 faqir theme generate <name> --accent <color> [--<axis> <value>...] [--seed <file>] [--out <dir>] [--document] [--legacy-blocks] [--allow-similar] [--json]
 faqir theme bundle <name> --scope[=<selector>] [--out <dir>] [--json]
-faqir fonts list|add|remove <family> [--role heading|body|ui|mono]
+faqir fonts list|add|remove <family> [--role heading|body|ui|mono|none] [--italic]
 faqir variant add|remove <component> <group>=<value>
 faqir scaffold landing-page|admin-dashboard|internal-tool|invoice|report [--output <path>] [--theme <name>] [--no-add]
 faqir bundle [--minify] [--watch] [--js] [--output <path>] [--dry-run]
@@ -1211,7 +1246,8 @@ Two engine behaviours are deliberate and worth knowing before you deploy:
 
 - **`l-*` expressions are compiled with `new Function`**, so a page that uses
   them needs `script-src 'unsafe-eval'`. Without it the engine still mounts
-  controllers; expressions silently yield `undefined`.
+  controllers; expressions silently yield `undefined`. The
+  [strict-CSP build](#strict-csp-build) below needs no `'unsafe-eval'`.
 - **`l-html` writes `innerHTML` unsanitized**, exactly like Alpine's `x-html`.
   Use `l-text` for anything you did not author.
 
@@ -1223,6 +1259,29 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval';
 
 The engine injects no inline style, so `style-src 'self'` is enough; the
 `l-cloak` rule ships in Faqir's CSS.
+
+### Strict-CSP build
+
+Where `'unsafe-eval'` is not an option, load `faqir-core.csp.js` instead of
+`faqir-core.js` — `core/faqir-core.csp.js` after `faqir init`,
+`dist/faqir-core.csp.min.js` on the CDN (snippet above), or
+`import Faqir from "@faqir-ui/core/csp"`. It is the same engine, controllers
+and API with one difference: expressions go through a small interpreter (a
+tokenizer, a Pratt parser and an evaluator) instead of `new Function`, so the
+policy drops `'unsafe-eval'` and keeps `script-src 'self'`.
+
+The interpreter takes the JavaScript subset directive expressions use — member,
+optional and computed access, calls and `new`, every operator, ternaries,
+assignment including compound forms and `++`/`--`, template and regex
+literals, arrays and objects with spread, methods and getters, arrow and
+`function` expressions with block bodies (`if`, `return`, `let`/`const`/`var`,
+`for…of`/`for…in`) — and scope lookup works as `with ($scope)` does in the
+default build. Anything else (classes, `async`/`await`, destructuring,
+`switch`, `try`, `while`) fails like any expression error, naming the
+expression; `faqir-core.csp.dev.js` adds why. `constructor`, `__proto__` and
+`prototype` are not reachable from an expression. It weighs about 4.7 KB gzip
+more than the default build, under a budget of its own. Details:
+[docs/security.md §1](docs/security.md#the-strict-csp-build).
 
 The threat model is *generated, trusted markup*: an `l-*` attribute value is
 JavaScript, so interpolating user input into one is remote code execution. Put

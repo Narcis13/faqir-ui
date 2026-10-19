@@ -94,6 +94,7 @@ export const PROTOCOL_ATTRIBUTES = Object.freeze([
  * `tests/audit/vocabulary.test.ts` holds the two lists equal.
  */
 export const TOKEN_MODIFIER_ATTRIBUTES: ReadonlySet<string> = new Set([
+  "data-accent",
   "data-density",
   "data-motion",
   "data-skin",

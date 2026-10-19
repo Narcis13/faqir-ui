@@ -280,13 +280,37 @@ export function pluginTable(pluginDir: string): Record<string, string> {
   return plugins;
 }
 
+/**
+ * Component → plugin file, for a component whose controller ships as an opt-in
+ * plugin rather than in the engine: the plugin's header names it with
+ * `@ui:controller <name>` (faqir-chart draws the `chart` primitive). A page
+ * that uses the component needs that file as it needs a recipe's (§11.6).
+ */
+export function pluginControllerTable(pluginDir: string): Record<string, string> {
+  const controllers: Record<string, string> = {};
+  if (!existsSync(pluginDir)) return controllers;
+  for (const file of readdirSync(pluginDir).filter((f) => f.endsWith(".js")).sort()) {
+    const name = /^\/\/ @ui:controller\s+([a-z0-9-]+)\s*$/m.exec(readFileSync(join(pluginDir, file), "utf8"))?.[1];
+    if (name) controllers[name] = file;
+  }
+  return controllers;
+}
+
 /** Assemble a table from components (sorted by name) and plugins. */
-export function buildTemplateTable(sources: TableSource[], plugins: Record<string, string>): TemplateTable {
+export function buildTemplateTable(
+  sources: TableSource[],
+  plugins: Record<string, string>,
+  pluginControllers: Record<string, string> = {},
+): TemplateTable {
   const components: Record<string, TableEntry> = {};
   const unavailable: Record<string, string> = {};
   const controllers: Record<string, string[]> = {};
   for (const source of [...sources].sort((a, b) => a.manifest.name.localeCompare(b.manifest.name))) {
     const files = requiresOf(source);
+    const plugin = Object.prototype.hasOwnProperty.call(pluginControllers, source.manifest.name)
+      ? pluginControllers[source.manifest.name]
+      : undefined;
+    if (files.length === 0 && plugin) files.push(plugin);
     if (files.length > 0) controllers[source.manifest.name] = files;
     // A manifest the IR refuses cannot be called; the table says why, so the
     // engine's `unknown-component` diagnostic can name the manifest gap.
@@ -314,7 +338,8 @@ export async function registryTemplateTable(registryPath: string): Promise<Templ
       sources.push(await readSource(join(registryPath, layer, name), name, `registry/${layer}/${name}`));
     }
   }
-  return buildTemplateTable(sources, pluginTable(join(registryPath, "core", "plugins")));
+  const pluginDir = join(registryPath, "core", "plugins");
+  return buildTemplateTable(sources, pluginTable(pluginDir), pluginControllerTable(pluginDir));
 }
 
 /** The JavaScript module a table is shipped as: deterministic, with a header. */
@@ -357,7 +382,8 @@ export async function projectTemplateTable(config: Pick<FaqirConfig, "installed"
     }
   }
   const own = join(outputDir, "core", "plugins");
-  return buildTemplateTable(sources, pluginTable(existsSync(own) ? own : join(getRegistryPath(), "core", "plugins")));
+  const pluginDir = existsSync(own) ? own : join(getRegistryPath(), "core", "plugins");
+  return buildTemplateTable(sources, pluginTable(pluginDir), pluginControllerTable(pluginDir));
 }
 
 function printHelp(): void {

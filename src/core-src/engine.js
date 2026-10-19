@@ -254,6 +254,7 @@
   // reaches this parameter where nothing shadows it: a top-level `l-data`,
   // evaluated against `{}`. `$this` is never a scope key, so it always reaches
   // it. [1.1F-06]
+  // @faqir:evaluator-start — faqir-core.csp.js swaps in src/core-src/csp-evaluator.js (no new Function)
   function compileExpression(expr) {
     var key = 'expr:' + expr;
     if (expressionCache.has(key)) return expressionCache.get(key);
@@ -277,6 +278,7 @@
     expressionCache.set(key, fn);
     return fn;
   }
+  // @faqir:evaluator-end
 
   // ═══════════════════════════════════════════════════════
   // Section 3: Directive System
