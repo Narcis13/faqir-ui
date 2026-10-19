@@ -28,6 +28,7 @@ const DEFAULT_I18N = Object.freeze({
   calendarLabel: "Calendar",
   addRowLabel: "Add {title}",
   removeRowLabel: "Remove {title}",
+  submitLabel: "Submit",
 });
 
 /** The fixed text `renderForm` leaves where a schema says `additionalProperties: false`. */
@@ -502,18 +503,21 @@ export function buildForm(jsonSchema, document, uiSchema = {}, opts = {}) {
     nextId: () => `${prefix}-field-${++counter}`,
   };
 
+  const heading = options.heading !== false;
+  const labelledBy = typeof options.labelledBy === "string" ? options.labelledBy.trim() : undefined;
   const form = /** @type {HTMLFormElement} */ (el(document, "form", {
     id: `${prefix}-form`,
     "l-data": true,
     "l-validate": true,
-    "aria-label": schema.title,
-    "aria-describedby": schema.description === undefined ? undefined : `${prefix}-form-description`,
+    "aria-labelledby": labelledBy,
+    "aria-label": labelledBy === undefined ? schema.title : undefined,
+    "aria-describedby": !heading || schema.description === undefined ? undefined : `${prefix}-form-description`,
     "data-theme": options.theme,
     "data-density": options.density,
   }));
   if (schema.additionalProperties === false) form.append(document.createComment(CLOSED_NOTE));
-  if (schema.title !== undefined) form.append(el(document, "h1", {}, schema.title));
-  if (schema.description !== undefined) {
+  if (heading && schema.title !== undefined) form.append(el(document, "h1", {}, schema.title));
+  if (heading && schema.description !== undefined) {
     form.append(el(document, "p", { id: `${prefix}-form-description` }, schema.description));
   }
 
@@ -531,6 +535,11 @@ export function buildForm(jsonSchema, document, uiSchema = {}, opts = {}) {
     }
   } else {
     for (const name of Object.keys(schema.properties)) append(form, name);
+  }
+  if (options.submit !== false) {
+    const footer = el(document, "div", {});
+    footer.append(el(document, "button", { type: "submit", "data-ui": "button", "data-variant": "primary" }, state.i18n.submitLabel));
+    form.append(footer);
   }
   return form;
 }

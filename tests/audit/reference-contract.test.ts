@@ -114,6 +114,9 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "primitives/highlight/highlight.html": "6 added highlights in display headings: foil, outline and echo",
   "primitives/separator/separator.html": "4 added separators: the ornament style, bare and labelled",
   "recipes/toggle-group/toggle-group.html": "2 added groups: the segmented variant, with two and with three options",
+  // A single-page form renders its submit button (forecraft #2), and the
+  // pattern is that render byte for byte. Nothing existing was recomposed.
+  "patterns/form-page/form-page.html": "1 added button: the form's submit, in its footer",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

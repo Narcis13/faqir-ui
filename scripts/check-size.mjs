@@ -60,6 +60,9 @@ export const BUDGETS = {
 //   (`Faqir.validate.register/unregister/run`) and async validators — the
 //   debounce, the last-wins token, the `validating` state and the submit that
 //   waits on an in-flight check.
+//   3 → 4 KB, measured at 3.20 KB: `faqir:valid-submit` — the one event a
+//   finished submit fires, single page or wizard, and the control reader that
+//   gives it its detail when faqir-rules is not loaded.
 //
 // · faqir-rules, 2 → 11 KB: the plugin IS `@faqir-ui/rules`, bundled. 1.1B-04's
 //   plan budgeted 6 KB, written before the evaluator existed; the evaluator
@@ -75,6 +78,9 @@ export const BUDGETS = {
 //   that still reads a wizard's disabled steps, the observer that holds
 //   rule-hidden controls disabled, reset and teardown, and the pattern check
 //   for controls whose markup carries no `pattern` attribute.
+//   13 → 14 KB, measured at 12.99 KB here and 13.09 KB by the test: that
+//   control reader made public as `Faqir.rules.data(form)` — the detail of
+//   `faqir:valid-submit` — when the bundle had 22 bytes of the 13 left.
 //
 // · faqir-tweak, 2 → 4 KB: the plugin is a whole panel — six sections of
 //   labelled dials built from the registry's own primitives, the override
@@ -83,8 +89,8 @@ export const BUDGETS = {
 //   moves gets a control, and that list is what the kilobytes buy.
 export const PLUGIN_BUDGETS = {
   "faqir-tweak.js": 4 * KB,
-  "faqir-validate.js": 3 * KB,
-  "faqir-rules.js": 13 * KB,
+  "faqir-validate.js": 4 * KB,
+  "faqir-rules.js": 14 * KB,
 };
 
 // ── Pure budget logic (no I/O, no Bun) ───────────────────────────────────────

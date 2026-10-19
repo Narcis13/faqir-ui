@@ -165,8 +165,9 @@ describe("BUDGETS", () => {
 
   // Two plugins are over the 2 KB default, each for a named feature: 1.1B-03
   // bought faqir-validate a kilobyte for the programmatic registry and the
-  // async validators, and 1.1B-04 bought faqir-rules nine for the evaluator it
-  // bundles (raised to 13 in the 1.1 release hardening). Both are enforced from both sides below — not holes in the gate.
+  // async validators (and a second for `faqir:valid-submit`), and 1.1B-04
+  // bought faqir-rules nine for the evaluator it
+  // bundles (raised to 13 in the 1.1 release hardening, and to 14 for `Faqir.rules.data`). Both are enforced from both sides below — not holes in the gate.
   test("the per-plugin exceptions are exactly these three", () => {
     expect(Object.keys(mod.PLUGIN_BUDGETS).sort()).toEqual([
       "faqir-rules.js",
@@ -174,8 +175,8 @@ describe("BUDGETS", () => {
       "faqir-validate.js",
     ]);
     expect(mod.PLUGIN_BUDGETS["faqir-tweak.js"]).toBe(4 * KB);
-    expect(mod.PLUGIN_BUDGETS["faqir-validate.js"]).toBe(3 * KB);
-    expect(mod.PLUGIN_BUDGETS["faqir-rules.js"]).toBe(13 * KB);
+    expect(mod.PLUGIN_BUDGETS["faqir-validate.js"]).toBe(4 * KB);
+    expect(mod.PLUGIN_BUDGETS["faqir-rules.js"]).toBe(14 * KB);
     const targets = mod.collectDefaultTargets();
     for (const t of targets) {
       if (!t.label.startsWith("plugin: ")) continue;
@@ -184,27 +185,27 @@ describe("BUDGETS", () => {
     }
   });
 
-  test("faqir-validate is really inside its 3 KB", () => {
+  test("faqir-validate is really inside its 4 KB", () => {
     const measured = mod.measureGzip({
       label: "plugin: faqir-validate.js",
       entry: join(ROOT, "registry", "core", "plugins", "faqir-validate.js"),
     });
-    expect(measured).toBeLessThanOrEqual(3 * KB);
-    // …and the exception is not idle headroom: it does not fit in 2 KB either,
+    expect(measured).toBeLessThanOrEqual(4 * KB);
+    // …and the exception is not idle headroom: it does not fit in 3 KB either,
     // so deleting the entry would go red rather than pass unnoticed.
-    expect(measured).toBeGreaterThan(2 * KB);
+    expect(measured).toBeGreaterThan(3 * KB);
   });
 
-  test("faqir-rules is really inside its 13 KB, and really needs 13", () => {
+  test("faqir-rules is really inside its 14 KB, and really needs 14", () => {
     const measured = mod.measureGzip({
       label: "plugin: faqir-rules.js",
       entry: join(ROOT, "registry", "core", "plugins", "faqir-rules.js"),
     });
-    expect(measured).toBeLessThanOrEqual(13 * KB);
+    expect(measured).toBeLessThanOrEqual(14 * KB);
     // The same both-sides rule: the entry is not headroom to grow into. If the
-    // bundle ever drops under 12 KB the budget should come down with it, and
+    // bundle ever drops under 13 KB the budget should come down with it, and
     // this test is what says so.
-    expect(measured).toBeGreaterThan(12 * KB);
+    expect(measured).toBeGreaterThan(13 * KB);
   });
 });
 

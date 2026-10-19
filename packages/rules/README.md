@@ -399,6 +399,22 @@ anything else) enables it, the plugin disables it again and remembers what the
 other party wanted, which is what it goes back to when the rule shows it. A
 hidden field therefore never blocks a step with an error nobody can see.
 
+That reader is public. `Faqir.rules.data(form)` — an element or a selector —
+returns the form's data as a server's `coerce(definition, fromFormData(body))`
+makes it: typed, nested, a wizard's other steps included and a rule-hidden
+field left out. On a form with no bound `l-rules` it is the same read,
+uncoerced (`fromFormData`'s record). It is also the `detail` of the
+`faqir:valid-submit` event `faqir-validate` fires once per finished submit —
+a clean single-page submit, or a wizard's last step — which is the hook for a
+page that posts the form itself:
+
+```js
+form.addEventListener("faqir:valid-submit", (event) => {
+  event.preventDefault(); // a single-page form: no native post
+  fetch("/api/signup", { method: "POST", body: JSON.stringify(event.detail) });
+});
+```
+
 `$rules` is the live verdict — `{ visible, required, computed, next }`, reactive
 and never undefined, so `$rules.next[page]` is safe to read in any expression.
 Everything else the plugin touches is `hidden`, `disabled`, `required`,

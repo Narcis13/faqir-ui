@@ -179,6 +179,22 @@ export interface RulesState {
   readonly next: Readonly<Record<string, string>>;
 }
 
+/**
+ * `Faqir.rules`, installed by `plugins/faqir-rules.js` beside `$rules`. Optional
+ * on {@link FaqirGlobal} for the same reason `validate` is.
+ */
+export interface RulesApi {
+  /**
+   * The form's data as a server's `coerce(definition, fromFormData(body))`
+   * would make it — every named control read the way `FormData` reads it,
+   * except that a control someone else disabled (a wizard's other steps) still
+   * answers and one a `show` rule hides does not. On a form with no bound
+   * `l-rules` it is the same read, uncoerced. `form` is an element or a
+   * selector. This is the `detail` of `faqir:valid-submit`.
+   */
+  data(form: Element | string): Record<string, unknown>;
+}
+
 /** What one programmatic validator answers: pass, fail, or a message. */
 export type ValidatorResult = boolean | string;
 
@@ -936,6 +952,8 @@ export interface FaqirGlobal {
    * the engine for exactly this reason.  [1.1B-03]
    */
   readonly validate?: ValidateApi;
+  /** The form reader `plugins/faqir-rules.js` installs; absent until that file loads. */
+  readonly rules?: RulesApi;
   /** The theme studio `plugins/faqir-tweak.js` installs; absent until that file loads. */
   readonly tweak?: TweakApi;
 }
@@ -959,7 +977,7 @@ declare namespace Faqir {
     ToggleGroupApi, TooltipApi, TreeViewApi, ControllerApis, ProtocolState,
     Inspection, DevtoolsScope, DevtoolsComponent, DevtoolsWarning, Devtools,
     ValidatorResult, ValidatorContext, FieldValidator, ValidateApi,
-    RulesState, FaqirGlobal };
+    RulesState, RulesApi, FaqirGlobal };
 }
 
 export default Faqir;

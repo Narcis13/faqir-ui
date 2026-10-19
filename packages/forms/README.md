@@ -19,6 +19,61 @@ and a form that carries rules adds `faqir-rules.js`. The HTML contains a
 machine-readable `@ui:requires` comment so page assemblers can retain those
 runtime requirements.
 
+A single-page form ends in a footer holding its submit button,
+`<div><button type="submit" data-ui="button" data-variant="primary">`, labelled
+`i18n.submitLabel` ("Submit"); `opts.submit: false` leaves it out for a page
+that places its own. A wizard's navigation already ends in one and is not
+affected.
+
+### Options
+
+| Option | Effect |
+| --- | --- |
+| `idPrefix` | prefix of every id (`<prefix>-form`, `<prefix>-rules`, …); default `"faqir"` |
+| `radioThreshold` | enum cardinality rendered as radios / checkbox groups; default `4` |
+| `theme`, `density` | `data-theme` / `data-density` on the form |
+| `i18n` | the fixed strings: `submitLabel`, `backLabel`, `nextLabel`, `selectPlaceholder`, … |
+| `rules` | a [rules definition](#rules) the form carries |
+| `submit` | `false` drops the single-page submit button |
+| `heading` | `false` drops the `<h1>` and description paragraph a root `title` / `description` render; the form keeps `aria-label` |
+| `labelledBy` | an id (or ids): the form gets `aria-labelledby` instead of `aria-label` |
+
+`heading` and `labelledBy` are for a page that draws its own hero above the
+form: `{ heading: false, labelledBy: "hero-title" }` keeps the schema's `title`
+and `description` (the rules and the accessible name still come from it)
+without a second heading inside the card.
+
+## Submitting: `faqir:valid-submit`
+
+Both shapes announce a finished submit the same way. `faqir-validate` fires
+`faqir:valid-submit` on the form — bubbling, cancelable, once per submit:
+
+- a **single-page** form, on every clean submit, just before the browser
+  submits natively. Cancel the event (`preventDefault()`) and there is no
+  native post — that is the SPA hook. A submit that had to wait on an async
+  check fires it when the check answers.
+- a **wizard**, on the clean submit of its last step: the submit whose
+  `l-validate` hook sets the form's `data-state="submitted"`. Next on an
+  earlier step fires nothing.
+
+`event.detail` is the form's data: `Faqir.rules.data(form)` when `faqir-rules`
+is loaded — coerced through the form's definition, with a field a rule hid left
+out, exactly what a server's `coerce(definition, fromFormData(body))` makes of
+the post (see [`@faqir-ui/rules`](../rules#in-the-browser--l-rules)) — and
+otherwise the same read uncoerced (name → value, a list where a name repeats).
+Either way a control the wizard disabled still answers, so every step's answers
+are there, which `new FormData(form)` on the last step does not give you.
+
+```js
+document.addEventListener("faqir:valid-submit", async (event) => {
+  event.preventDefault();
+  await fetch("/api/forms/signup", { method: "POST", body: JSON.stringify(event.detail) });
+});
+```
+
+The page's verdict is advisory: re-run the definition on the server
+(`validate(rulesFor(schema, ui, opts), body)`).
+
 ## `buildForm`: the same form as DOM nodes
 
 ```js
@@ -136,7 +191,9 @@ one `card` panel per step, and Back/Next/Submit buttons, driven by an `l-data`
 (`:hidden`, `:data-state`); inactive steps' controls are `:disabled`-gated, so
 `faqir-validate` validates exactly the active step before each advance — the
 Next button is a submit, and the `l-validate` on-valid hook advances or, on the
-final step, marks the form `data-state="submitted"`. Zero custom JS.
+final step, marks the form `data-state="submitted"` — which is what makes
+`faqir-validate` fire [`faqir:valid-submit`](#submitting-faqirvalid-submit).
+Zero custom JS.
 
 ## Rules
 
@@ -189,6 +246,23 @@ condition under which the step applies; the first and last steps cannot carry
 one, and neither can two steps in a row, because one jump steps over one page.
 When the definition contains any `jump`, the wizard's Next and Back read
 `$rules.next` instead of counting by one.
+
+### `rulesFor`: the definition as data
+
+A server that re-checks a submission needs the definition the page enforces,
+without rendering HTML and parsing the script back out of it:
+
+```js
+import { renderForm, rulesFor } from "@faqir-ui/forms";
+import { coerce, fromFormData, validate } from "@faqir-ui/rules";
+
+const definition = rulesFor(jsonSchema, uiSchema, opts); // null: this form carries none
+const verdict = validate(definition, coerce(definition, fromFormData(body)));
+```
+
+`rulesFor` takes `renderForm`'s arguments and returns exactly the object the
+form's `<idPrefix>-rules` script holds — the same render, so the two cannot
+drift, and the same errors — or `null` when that form carries no definition.
 
 Everything emitted is lint-clean by construction: `faqir rules lint` (and
 `lintDefinition`, the same function) reports nothing for a definition this
