@@ -11,7 +11,7 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { isVoidTag, manifestToIR } from "../bindings/ir";
+import { isVoidTag, manifestToIR, parseStateAttr } from "../bindings/ir";
 import { manifestTreeIR, scanController, type RecipeNode, type RecipeSeg } from "../bindings/recipe-ir";
 import { loadManifest, type Manifest } from "../manifest";
 import { listRegistryComponents } from "../utils/components";
@@ -38,17 +38,34 @@ import * as linesJs from "../../packages/template/src/lines.js" with { type: "te
 import * as nodeJs from "../../packages/template/src/node.js" with { type: "text" };
 import * as parseJs from "../../packages/template/src/parse.js" with { type: "text" };
 import * as renderJs from "../../packages/template/src/render.js" with { type: "text" };
+import * as tagsJs from "../../packages/template/src/tags.js" with { type: "text" };
 import * as textJs from "../../packages/template/src/text.js" with { type: "text" };
 
 export const TEMPLATE_TABLE_VERSION = 1;
 
+/** A fillable slot (docs/template.md §11.4, §16.3). */
+export interface TableSlot {
+  required: boolean;
+  /** The string prop the call may set instead of filling the slot. */
+  prop?: string;
+  /**
+   * The repeating slot this one sits in (accordion's `content` in `item`): it
+   * is filled inside that slot's fills, never directly under the call.
+   */
+  within?: string;
+  /** States the manifest applies to this part, set as fill arguments. */
+  states?: Record<string, { attr: string; value: string | null; kind: string }>;
+}
+
 export interface TableEntry {
   defaultSlot: boolean;
-  slots: Record<string, { required: boolean; prop?: string }>;
+  slots: Record<string, TableSlot>;
   variants: Record<string, { attr: string; values: string[]; default: string }>;
   states: Record<string, { attr: string; value: string | null; kind: string }>;
   props: Record<string, { default: string }>;
   bools: string[];
+  /** The tag of the reference tree's headings, which `heading=` changes. */
+  heading?: string;
   tree: RecipeNode;
 }
 
@@ -93,27 +110,65 @@ function renameTree(node: RecipeNode, names: Map<string, string>): RecipeNode {
   const out: RecipeNode = { tag: node.tag, attrs: node.attrs, children: [] };
   if (node.slot) out.slot = node.slot;
   if (node.dyn) out.dyn = node.dyn.map(([prop, attr]) => [names.get(prop) ?? prop, attr]);
+  if (node.sample) out.sample = true;
+  if (node.self) out.self = true;
   out.children = node.children.map((c) => (typeof c === "object" && "tag" in c ? renameTree(c, names) : c));
   return out;
 }
 
-/** The node carrying a slot's part in a tree, if any. */
-function slotNode(node: RecipeNode, slot: string): RecipeNode | undefined {
-  if (node.slot === slot) return node;
-  for (const c of node.children) {
-    if (typeof c === "object" && "tag" in c) {
-      const hit = slotNode(c, slot);
-      if (hit) return hit;
-    }
-  }
-  return undefined;
+/** A tree node's element children. */
+function elements(node: RecipeNode): RecipeNode[] {
+  return node.children.filter((c): c is RecipeNode => typeof c === "object" && "tag" in c);
+}
+
+/** A tree node's literal `data-part`, if any. */
+function partName(node: RecipeNode): string | undefined {
+  const value = node.attrs.find(([name]) => name === "data-part")?.[1];
+  return Array.isArray(value) && value.length === 1 && typeof value[0] === "string" ? value[0] : undefined;
+}
+
+/** Every element carrying `part`, with its ancestors (root first), in document order. */
+function occurrences(node: RecipeNode, part: string, path: RecipeNode[] = []): { node: RecipeNode; path: RecipeNode[] }[] {
+  const own = partName(node) === part ? [{ node, path }] : [];
+  return own.concat(elements(node).flatMap((c) => occurrences(c, part, [...path, node])));
+}
+
+/**
+ * The element a fill of `node` writes into (docs/template.md §11.4): the part
+ * itself when its reference content was a sample, or the one part-less
+ * sample element it holds — accordion's trigger keeps its icon and fills its
+ * label — or nothing when the part holds no sample.
+ */
+function sampleTarget(node: RecipeNode): RecipeNode | undefined {
+  if (node.sample) return node;
+  if (node.children.some((c) => typeof c !== "object" || !("tag" in c))) return undefined;
+  const kids = elements(node);
+  const held = kids.filter((c) => c.sample && partName(c) === undefined);
+  // Only beside structure the fill would otherwise wipe out: a part holding
+  // nothing but one sample element (quote's `<p>`) takes the whole fill.
+  return held.length === 1 && kids.length > 1 ? held[0] : undefined;
 }
 
 /** The prop a slot's reference content is, when it is exactly one prop placeholder. */
-function slotProp(tree: RecipeNode, slot: string): string | undefined {
-  const children = slotNode(tree, slot)?.children ?? [];
+function slotProp(node: RecipeNode | undefined): string | undefined {
+  const children = node?.children ?? [];
   const only = children.length === 1 ? (children[0] as RecipeSeg) : undefined;
   return typeof only === "object" && only !== null && "p" in only && only.p !== "id" ? only.p : undefined;
+}
+
+/** True when the tree wraps the component's own element (a `self` node). */
+function hasSelf(node: RecipeNode): boolean {
+  return node.self === true || elements(node).some(hasSelf);
+}
+
+/** The tag of the first heading in a tree, if any. */
+function headingTag(node: RecipeNode): string | undefined {
+  if (/^h[1-6]$/.test(node.tag)) return node.tag;
+  for (const c of elements(node)) {
+    const hit = headingTag(c);
+    if (hit) return hit;
+  }
+  return undefined;
 }
 
 /** Controller files a component needs: its own, then the recipe controllers it imports. */
@@ -128,31 +183,55 @@ function requiresOf(source: TableSource): string[] {
 export function tableEntry(source: TableSource): TableEntry {
   const { manifest, label } = source;
   const base = manifestToIR(manifest, label);
-  const ir = manifestTreeIR(manifest, label, { keepDirectives: true, markSamples: true });
-  const rootUi = ir.tree.attrs.find(([name]) => name === "data-ui")?.[1];
-  const rootName = Array.isArray(rootUi) ? rootUi.join("") : "";
-  if (rootName !== manifest.name && !(manifest.aliases ?? []).includes(rootName)) {
-    throw new Error(`templates.html has data-ui="${rootName}" at its root, not "${manifest.name}": the reference is a group of samples, not one component`);
-  }
+  const ir = manifestTreeIR(manifest, label, { keepDirectives: true, markSamples: true, focus: [manifest.name, ...(manifest.aliases ?? [])] });
   const names = variantArgNames(ir.variantProps);
+  const tree = renameTree(ir.tree, names);
   const entry: TableEntry = {
-    defaultSlot: base.defaultSlot,
+    // A wrapped sample (a checkbox in its label) has no one place for default
+    // content: the label part is filled by name instead.
+    defaultSlot: base.defaultSlot && !hasSelf(tree),
     slots: {},
     variants: {},
     states: {},
     props: {},
     bools: ir.boolProps.filter((b) => !base.states.some((s) => s.prop === b)),
-    tree: renameTree(ir.tree, names),
+    tree,
   };
-  for (const slot of ir.slots) {
-    // A void element (an `<input data-part>`) holds no content: not fillable.
-    if (isVoidTag(slotNode(ir.tree, slot)?.tag ?? "")) continue;
-    const prop = slotProp(ir.tree, slot);
-    // Required means "the caller must fill it" only where the reference holds
-    // a sample (or a prop) in that place; a required part whose reference
-    // content is structure or literal text is already there (§11.4).
-    const mustFill = slotNode(ir.tree, slot)?.sample === true || prop !== undefined;
-    entry.slots[slot] = { required: manifest.slots?.[slot]?.required === true && mustFill, ...(prop ? { prop } : {}) };
+  const heading = headingTag(tree);
+  if (heading) entry.heading = heading;
+  // Fillable: a manifest slot whose part is on an element of the reference
+  // tree other than the root (§11.4) and holds content — a void element (an
+  // `<input data-part>`) does not. A part may repeat (tabs' triggers).
+  const found = new Map<string, { node: RecipeNode; path: RecipeNode[] }[]>();
+  for (const slot of Object.keys(manifest.slots ?? {})) {
+    const occ = occurrences(tree, slot);
+    if (occ.length === 0 || occ.some((o) => o.path.length === 0 || o.node.self || isVoidTag(o.node.tag))) continue;
+    found.set(slot, occ);
+  }
+  // A slot inside a repeating part is filled within that part's fills.
+  const within = (slot: string) => {
+    const path = found.get(slot)![0].path;
+    for (let i = path.length - 1; i >= 0; i--) {
+      const outer = partName(path[i]);
+      if (outer && outer !== slot && (found.get(outer)?.length ?? 0) > 1) return outer;
+    }
+    return undefined;
+  };
+  // Required means "the caller must fill it" only where the reference holds
+  // a sample (or a prop) in that place; a required part whose reference
+  // content is structure or literal text is already there (§11.4). A repeating
+  // part is required when a required slot sits in it.
+  const mustFill = (slot: string) => {
+    const first = found.get(slot)![0].node;
+    return manifest.slots?.[slot]?.required === true && (sampleTarget(first) !== undefined || slotProp(first) !== undefined);
+  };
+  const outers = new Set([...found.keys()].filter((slot) => mustFill(slot)).map(within).filter((s) => s !== undefined));
+  for (const [slot, occ] of found) {
+    const prop = slotProp(occ[0].node);
+    const outer = within(slot);
+    const states = partStates(manifest, slot);
+    const required = mustFill(slot) || (outers.has(slot) && manifest.slots?.[slot]?.required === true);
+    entry.slots[slot] = { required, ...(prop ? { prop } : {}), ...(outer ? { within: outer } : {}), ...(states ? { states } : {}) };
   }
   for (const v of ir.variantProps) {
     entry.variants[names.get(v.prop)!] = { attr: v.attr, values: [...v.values], default: v.default };
@@ -165,9 +244,20 @@ export function tableEntry(source: TableSource): TableEntry {
   return entry;
 }
 
+/** The non-default states a manifest applies to one part, parsed as the IR parses root states. */
+function partStates(manifest: Manifest, part: string): TableSlot["states"] {
+  const states: NonNullable<TableSlot["states"]> = {};
+  for (const [name, s] of Object.entries(manifest.states ?? {})) {
+    if (s.default || s.transient || (s as { applied_to?: string }).applied_to !== part || !s.attr) continue;
+    const { attr, value, kind } = parseStateAttr(name, s.attr);
+    states[name] = { attr, value, kind };
+  }
+  return Object.keys(states).length > 0 ? states : undefined;
+}
+
 /** Every argument name must mean one thing. */
 function assertDistinctArgs(entry: TableEntry, label: string): void {
-  const all = [...Object.keys(entry.variants), ...Object.keys(entry.states), ...Object.keys(entry.props), ...entry.bools];
+  const all = [...Object.keys(entry.variants), ...Object.keys(entry.states), ...Object.keys(entry.props), ...entry.bools, ...(entry.heading ? ["heading"] : [])];
   const seen = new Set<string>();
   for (const name of all) {
     if (seen.has(name) || name === "id") throw new Error(`${label}: template argument "${name}" has two meanings`);
@@ -248,7 +338,7 @@ export function engineFiles(): Map<string, string> {
     ["attrs.js", attrsJs], ["checks.js", checksJs], ["compile.js", compileJs], ["components.js", componentsJs],
     ["compose.js", composeJs], ["diagnostics.js", diagnosticsJs], ["escape.js", escapeJs], ["evaluate.js", evaluateJs],
     ["expr.js", exprJs], ["index.js", indexJs], ["json.js", jsonJs], ["lines.js", linesJs],
-    ["node.js", nodeJs], ["parse.js", parseJs], ["render.js", renderJs], ["text.js", textJs],
+    ["node.js", nodeJs], ["parse.js", parseJs], ["render.js", renderJs], ["tags.js", tagsJs], ["text.js", textJs],
   ];
   return new Map(modules.map(([name, module]) => [name, text(module)]));
 }

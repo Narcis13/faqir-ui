@@ -1,1 +1,6 @@
-include "partials/components-accordion.faqir" (id="faq" items=faq)
++accordion(id="faq")
+  each item in faq
+    @item
+      @trigger {{ item.question }}
+      @content
+        p {{ item.answer }}

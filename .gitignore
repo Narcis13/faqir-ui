@@ -32,3 +32,7 @@ autoresearch-results.tsv
 # (task 1.1N-01). Local review artefacts — the queue, the seeds and `dreams.tsv`
 # ARE committed, the pictures are not. Regenerate with `scripts/dream/snapshot.mjs`.
 .faqir-dreams/out/
+
+# The template language spec, copied into @faqir-ui/template at pack time from
+# docs/template.md (scripts/pack-template-spec.mjs); the source is the doc.
+packages/template/template.md

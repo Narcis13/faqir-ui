@@ -6,7 +6,7 @@
 
 /**
  * @typedef {{ code: string, message: string, file: string, line: number, col: number }} Diagnostic
- * @typedef {{ files: string[], file: number, diagnostics: Diagnostic[] }} Context
+ * @typedef {{ files: string[], file: number, diagnostics: Diagnostic[], verbatim?: boolean }} Context
  */
 
 /**

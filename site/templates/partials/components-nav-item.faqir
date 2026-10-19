@@ -1,4 +1,6 @@
 //- One navigation link. A partial is rendered with a fresh scope that holds
-//- only its parameters: href, label and current.
+//- only its parameters, which it declares: href and label must be passed,
+//- current defaults to false.
+params href label current=false
 li
   a(href=href aria-current=current ? "page" : false) {{ label }}

@@ -83,6 +83,61 @@ describe("per-theme CSS bundles", () => {
   });
 });
 
+describe("bundle sections and @faqir-ui/core/subset", () => {
+  test("every bundle opens one marked section per stylesheet, in cascade order", async () => {
+    const { bundleSections } = await import("../../packages/core/subset.js");
+    const css = readFileSync(join(DIST, "faqir.default.css"), "utf8");
+    const labels = bundleSections(css).map((s: { label: string }) => s.label);
+    expect(labels[0]).toBe(""); // the header
+    expect(labels[1]).toMatch(/^tokens\//);
+    expect(labels).toContain("themes/default.css");
+    expect(labels).toContain("base/prose.css");
+    expect(labels).toContain("primitives/button.css");
+    expect(labels).toContain("recipes/tabs.css");
+    const kinds = labels.slice(1).map((l: string) => l.split("/")[0]);
+    const order = ["tokens", "themes", "base", "primitives", "recipes", "patterns"];
+    expect(kinds.map((k: string) => order.indexOf(k))).toEqual([...kinds.map((k: string) => order.indexOf(k))].sort((a, b) => a - b));
+  });
+
+  test("subsetBundle keeps tokens, theme and base, and only the named components", async () => {
+    const { subsetBundle, bundleSections } = await import("../../packages/core/subset.js");
+    const css = readFileSync(join(DIST, "faqir.slate.css"), "utf8");
+    const cut = subsetBundle(css, ["card", "button", "tabs"]);
+    const labels = bundleSections(cut).map((s: { label: string }) => s.label);
+    expect(labels.filter((l: string) => /^(primitives|recipes|patterns)\//.test(l))).toEqual([
+      "primitives/button.css",
+      "primitives/card.css",
+      "recipes/tabs.css",
+    ]);
+    expect(labels).toContain("themes/slate.css");
+    expect(labels).toContain("base/reset.css");
+    expect(cut.startsWith("/* @faqir-ui/core — faqir.slate.css */")).toBe(true);
+    expect(cut.length).toBeLessThan(css.length / 2);
+    // Nothing is cut out of a kept section.
+    const button = bundleSections(css).find((s: { label: string }) => s.label === "primitives/button.css")!;
+    expect(cut).toContain(button.text);
+    expect(subsetBundle(css, bundleSections(css).map((s: { component?: string }) => s.component).filter(Boolean) as string[])).toBe(css);
+  });
+});
+
+describe("theme density", () => {
+  test("themes.json lists every theme's bundle and the density it was designed at", () => {
+    const meta = JSON.parse(readFileSync(join(DIST, "themes.json"), "utf8"));
+    expect(Object.keys(meta.themes).sort()).toEqual(themeNames);
+    for (const theme of themeNames) {
+      const declared = /@ui:density\s+([a-z]+)/.exec(readFileSync(join(REGISTRY, "themes", `${theme}.css`), "utf8"))?.[1] ?? "comfortable";
+      expect(meta.themes[theme]).toEqual({ css: `faqir.${theme}.css`, density: declared });
+    }
+    expect(meta.themes.slate.density).toBe("compact");
+  });
+
+  test("a bundle drawn at another density says so in its header", () => {
+    const slate = readFileSync(join(DIST, "faqir.slate.css"), "utf8");
+    expect(slate.slice(0, 400)).toContain('set data-density="compact" on <html>');
+    expect(readFileSync(join(DIST, "faqir.default.css"), "utf8").slice(0, 400)).not.toContain("data-density");
+  });
+});
+
 describe("minified engine artifact", () => {
   test("the package report uses the assembled runtime budget", () => {
     const build = readFileSync(join(ROOT, "scripts", "build-core-package.mjs"), "utf8");

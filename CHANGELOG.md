@@ -5,6 +5,53 @@ All eight packages (`faqir-ui-cli`, `@faqir-ui/core`, `@faqir-ui/react`,
 `@faqir-ui/mcp`) are versioned in lockstep. The protocol is frozen at [`SPEC-1.0.md`](SPEC-1.0.md);
 every release below is additive under its §8 unless it says otherwise.
 
+## Unreleased
+
+What building a 20-page manual with `@faqir-ui/template` 1.2.5 asked for.
+
+**Upgrading:** templates that compiled before keep compiling, with four
+exceptions, each now a compile error that names its fix: an element name that is
+no HTML, SVG or MathML element and has no hyphen (`unknown-tag`, usually a line
+of prose missing its `|`); an entity such as `&lt;` in literal text, which
+rendered as typed (`literal-entity`); a call to `+tabs`, `+accordion`,
+`+dropdown` and the other components with repeating parts that leaves those
+parts unfilled (`missing-slot` — they used to render empty sample items); and a
+slot filled twice whose part has no fixed id, which used to be `duplicate-slot`
+and now repeats the part. Server output changes in two ways: unfilled optional
+parts that rendered empty (card `description` and `footer`, callout `icon`) are
+left out, and text starting with closing punctuation joins the line before it.
+
+- **Added** — `@faqir-ui/template`: inline elements in text,
+  `p Run #[code npm ci], then continue.`; repeating fills — a slot filled more
+  than once or inside `each`/`if` repeats its part (tabs, accordion items,
+  timeline items, stepper steps, breadcrumb links with their separators,
+  description-list terms), with ids numbered per copy so tab N and panel N stay
+  paired; fills of fills (`@item` over `@title`); fill arguments, which set the
+  part's manifest states and attributes (`@step(completed)`,
+  `@item(href=page.url)`); `params` in a partial, with defaults and
+  `unknown-param`/`missing-param` at compile time; a `heading="h2"` argument on
+  components whose reference tree has headings; `ast.uses`, every component a
+  page draws. New diagnostics `unknown-tag`, `literal-entity`, `nested-slot`,
+  `fill-count`, `unknown-param` and `missing-param`.
+- **Added** — every registry component is callable: `+table` (its kebab-case
+  boolean props are camelCase arguments, `noResize`), and `+checkbox`, `+radio`,
+  `+switch` and `+toggle`, whose `templates.html` is a group of samples, through
+  one sample of the group. `name` and `value` pass through onto the root.
+- **Added** — `@faqir-ui/core/subset` (`subsetBundle(css, components)`) cuts a
+  theme bundle down to the components a page draws; the bundle's
+  `/* === path === */` section markers are documented as a stable contract and
+  the build refuses a stylesheet that would forge one. `dist/themes.json`
+  (`@faqir-ui/core/themes.json`) gives each theme's density, and a bundle drawn
+  at `compact` or `spacious` says so in its header.
+- **Added** — `faqir audit` rule `unknown-element` (warning): an element name
+  that is no HTML, SVG or MathML element and has no hyphen.
+- **Added** — the `prose` base styles definition lists, figures and captions,
+  and `details`/`summary`.
+- **Fixed** — `@faqir-ui/template` ships its specification as `template.md`
+  (copied from `docs/template.md` at pack time); its README and the CLI
+  README's package table link to absolute URLs; the CLI README counts
+  twenty-five commands and lists `faqir template`.
+
 ## 1.2.5
 
 The server template language. Full notes: [`docs/release-1.2.5.md`](docs/release-1.2.5.md).

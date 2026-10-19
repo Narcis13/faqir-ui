@@ -316,6 +316,19 @@ block content
     | and
     code aria-controls
     | attributes, and each panel names its trigger back, exactly as the accordion's reference markup does. This site's build reads the same list to decide which scripts to load for the page, which is why the accordion above opens and closes.
+  h3 What the page needs in its stylesheet
+  p
+    | The engine also lists, in
+    code ast.uses
+    | every component name the output draws through a literal
+    code data-ui
+    | attribute, sorted: calls, the components inside them and plain elements alike. A host that serves the prebuilt bundle from
+    code @faqir-ui/core
+    | can cut it down to those before the first request, with
+    code subsetBundle(bundle, ast.uses)
+    | from
+    code @faqir-ui/core/subset
+    | which keeps the tokens, the theme and the base layer and drops every other component's section.
 
   h2#entries The /node and /registry entries
   p
@@ -360,24 +373,24 @@ block content
     code @faqir-ui/template/registry
     | is the table of Faqir's registry primitives and recipes. It holds {{ facts.callable }} callable components, each with its reference markup, its fillable slots, its variants, states and props, which are what compile checks every call against. Beside them it records the controller files of {{ facts.controllers.length }} components, and the plugin file for each plugin directive.
   p
-    | A few registry components cannot be called, and the table says why. A call to one fails with
+    | Every registry primitive and recipe can be called. That includes the table, and the form controls whose reference markup is a group of samples, such as two checkboxes in a row: the table takes one sample of the group, and the arguments go to the control inside it. A component of a project's own that the table cannot describe, because its manifest has no element carrying its name or two of its arguments would share a name, is listed with the reason, and a call to it fails with
     code unknown-component
-    | and the message gives the reason. A reason is one of three gaps: the component's manifest cannot be described by the table, its reference markup is a group of samples rather than one component, or two of its arguments would share a name. Such a component is still available as a plain element with a literal
+    | naming that reason. Such a component is still available as a plain element with a literal
     code data-ui
     | attribute, and its controller, if it has one, is still listed.
-  div(data-docs-table tabindex="0")
-    table
-      thead
-        tr
-          th Component
-          th Why it cannot be called
-      tbody
-        each u in facts.unavailable
+  if facts.unavailable.length > 0
+    div(data-docs-table tabindex="0")
+      table
+        thead
           tr
-            td
-              code {{ u.name }}
-            td {{ u.reason }}
-  include "partials/failure.faqir" (failure=err.unavailable)
+            th Component
+            th Why it cannot be called
+        tbody
+          each u in facts.unavailable
+            tr
+              td
+                code {{ u.name }}
+              td {{ u.reason }}
   p
     | The plugin directives and the files that provide them are what the requires comment names when a page uses one:
   div(data-docs-table tabindex="0")

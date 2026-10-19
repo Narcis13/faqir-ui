@@ -16,11 +16,16 @@ export const VOID_TAGS = new Set(["area", "base", "br", "col", "embed", "hr", "i
 
 /** Elements whose content is written exactly, with nothing added (§12.1). */
 const VERBATIM = new Set(["pre", "textarea", "script", "style"]);
+/** Text starting with one of these joins the line before it (§12.1 rule 2). */
+const CLOSING = /^[.,;:!?)\]}%…»”’]/;
+/** Text ending with one of these joins the line after it. */
+const OPENING = /[(\[{«“‘]$/;
 
 /**
  * @typedef {{ ast: any, out: string[], size: number, steps: number, maxOutput: number,
  *   maxSteps: number, helpers: Record<string, unknown>, idPrefix: string, idCount: number,
- *   ids: Array<{ value: string | null }>, includes: number, loc?: number[] }} State
+ *   ids: Array<{ value: string | null, copies?: Map<string, number> }>, copy: number[],
+ *   includes: number, glue: boolean, loc?: number[] }} State
  * @typedef {{ scope: object[], depth: number, verbatim: boolean, raw?: boolean }} Frame
  */
 
@@ -61,7 +66,7 @@ function newState(ast, options) {
   }
   if (typeof idPrefix !== "string") throw new TypeError("render: idPrefix must be a string");
   if (typeof helpers !== "object" || helpers === null) throw new TypeError("render: helpers must be an object");
-  return { ast, out: [], size: 0, steps: 0, maxOutput, maxSteps, helpers, idPrefix, idCount: 0, ids: [], includes: 0 };
+  return { ast, out: [], size: 0, steps: 0, maxOutput, maxSteps, helpers, idPrefix, idCount: 0, ids: [], copy: [], includes: 0, glue: false };
 }
 
 /**
@@ -98,11 +103,16 @@ function put(state, text) {
 }
 
 /**
- * Start a new output line at `depth` (no break before the very first line).
+ * Start a new output line at `depth` (no break before the very first line),
+ * unless the next output is glued to the line it is on (§12.1).
  * @param {State} state
  * @param {number} depth
  */
 function line(state, depth) {
+  if (state.glue) {
+    state.glue = false;
+    return;
+  }
   put(state, (state.out.length > 0 ? "\n" : "") + "  ".repeat(depth));
 }
 
@@ -150,6 +160,7 @@ function renderNode(node, frame, state) {
   // The node being written, for an output-limit error raised while writing it.
   const outer = state.loc;
   if (node?.loc) state.loc = node.loc;
+  if (node?.glue === true && !frame.verbatim) state.glue = true;
   renderNodeOf(node, frame, state);
   state.loc = outer;
 }
@@ -163,15 +174,33 @@ function renderNodeOf(node, frame, state) {
   switch (node?.type) {
     case "Doctype": return lineOrNot(state, frame, "<!doctype html>");
     case "Element": return renderElement(node, frame, state);
-    case "Text": return lineOrNot(state, frame, textOf(node.parts, node, frame, state, frame.raw ? String : escapeText));
+    case "Text": return renderText(node, frame, state);
     case "Comment": return lineOrNot(state, frame, `<!--${node.text}-->`);
     case "Raw": return renderRaw(node, frame, state);
     case "If": return renderIf(node, frame, state);
     case "Each": return renderEach(node, frame, state);
     case "Include": return renderInclude(node, frame, state);
+    case "Params": return;
     case "Component": return renderComponent(node, frame, state);
+    case "Copy": return renderCopy(node, frame, state);
     default: throw renderError("bad-ast", `unknown node ${JSON.stringify(node?.type)}`, state.ast, undefined);
   }
+}
+
+/**
+ * Text on its own line — except that text starting with closing punctuation
+ * joins the line before it, and text ending with opening punctuation the line
+ * after it, so `code x` then `| , then` reads "x, then" (§12.1 rule 2).
+ * @param {any} node
+ * @param {Frame} frame
+ * @param {State} state
+ */
+function renderText(node, frame, state) {
+  const text = textOf(node.parts, node, frame, state, frame.raw ? String : escapeText);
+  if (frame.verbatim) return put(state, text);
+  if (CLOSING.test(text)) state.glue = true;
+  lineOrNot(state, frame, text);
+  if (OPENING.test(text)) state.glue = true;
 }
 
 /**
@@ -199,7 +228,11 @@ function renderElement(node, frame, state) {
   if (VOID_TAGS.has(tag.toLowerCase())) return;
   const children = /** @type {any[]} */ (node.children);
   const verbatim = frame.verbatim || VERBATIM.has(tag.toLowerCase());
-  const inline = verbatim || (children.length === 1 && children[0].type === "Text");
+  const single = children.length === 1 && children[0].type === "Text" && children[0].glue !== true;
+  // A run of inline text (§6.1) is glued throughout: it renders on the
+  // element's own line, like single text, but its nodes are rendered as nodes.
+  const run = !verbatim && children.length > 0 && children.every((c) => c?.glue === true);
+  const inline = verbatim || single;
   // script and style content is checked literal text at compile time (§12.3)
   // and must reach the browser unescaped.
   const raw = frame.raw || tag.toLowerCase() === "script" || tag.toLowerCase() === "style";
@@ -210,7 +243,8 @@ function renderElement(node, frame, state) {
   } else {
     renderNodes(children, inner, state);
   }
-  if (!inline && children.length > 0) line(state, frame.depth);
+  if (!inline && !run && children.length > 0) line(state, frame.depth);
+  else state.glue = false;
   put(state, `</${tag}>`);
 }
 
@@ -300,6 +334,7 @@ function textOf(parts, node, frame, state, escape) {
   for (const part of parts) {
     if (typeof part === "string") out += escape(part);
     else if (part.id) out += escape(componentId(state));
+    else if (part.n) out += copyNumber(state, node);
     else out += escape(asText(evaluate(part.expr, env(state, frame, node.loc)), node, state, "text"));
   }
   return out;
@@ -314,7 +349,8 @@ function textOf(parts, node, frame, state, escape) {
 function renderRaw(node, frame, state) {
   const value = node.expr ? evaluate(node.expr, env(state, frame, node.loc)) : node.text;
   if (typeof value !== "string") throw renderError("type", `raw needs a string, not ${kind(value)}`, state.ast, node.loc);
-  if (!frame.verbatim && state.out.length > 0) put(state, "\n");
+  if (!frame.verbatim && state.out.length > 0 && !state.glue) put(state, "\n");
+  state.glue = false;
   put(state, value);
 }
 
@@ -380,6 +416,12 @@ function renderInclude(node, frame, state) {
   if (state.includes >= MAX_INCLUDE_DEPTH) throw renderError("include-depth", `includes nest deeper than ${MAX_INCLUDE_DEPTH}`, state.ast, node.loc);
   const params = Object.create(null);
   for (const p of node.params) params[p.name] = paramValue(p.value, node, frame, state);
+  // Declared parameters left out take their defaults, in order, each seeing
+  // the parameters before it (§10.3).
+  const declared = partial[0]?.type === "Params" ? partial[0] : null;
+  for (const p of declared?.params ?? []) {
+    if (!(p.name in params) && p.value !== null) params[p.name] = paramValue(p.value, declared, { scope: [params], depth: 0, verbatim: false }, state);
+  }
   state.includes++;
   renderNodes(partial, { scope: [params], depth: frame.depth, verbatim: frame.verbatim }, state);
   state.includes--;
@@ -412,6 +454,35 @@ function renderComponent(node, frame, state) {
   state.ids.push({ value: given });
   renderNodes(node.body, frame, state);
   state.ids.pop();
+}
+
+/**
+ * One fill of a repeated part (§11.4): the Nth copy of its slot in this
+ * component renders the first reference body when N is 1, else the last, and
+ * numbers the ids derived in it with N.
+ * @param {any} node
+ * @param {Frame} frame
+ * @param {State} state
+ */
+function renderCopy(node, frame, state) {
+  const current = state.ids[state.ids.length - 1];
+  const bodies = node.bodies;
+  if (!current || !Array.isArray(bodies) || bodies.length === 0 || typeof node.slot !== "string") {
+    throw renderError("bad-ast", "a Copy needs a slot and bodies, inside a component", state.ast, node.loc);
+  }
+  current.copies ??= new Map();
+  const n = (current.copies.get(node.slot) ?? 0) + 1;
+  current.copies.set(node.slot, n);
+  state.copy.push(n);
+  renderNodes(bodies[Math.min(n, bodies.length) - 1], frame, state);
+  state.copy.pop();
+}
+
+/** The number of the copy being rendered. @param {State} state @param {any} node */
+function copyNumber(state, node) {
+  const n = state.copy[state.copy.length - 1];
+  if (n === undefined) throw renderError("bad-ast", "a copy number outside a Copy", state.ast, node.loc);
+  return String(n);
 }
 
 /** The current component's id, generating it on first use (§11.5). @param {State} state */

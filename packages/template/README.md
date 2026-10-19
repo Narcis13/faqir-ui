@@ -4,8 +4,10 @@ A small, zero-dependency template language for rendering Faqir pages,
 primitives and recipes on the server. Indentation-based like Pug; its component
 calls are checked against Faqir's manifests; its output is canonical registry
 markup that passes `faqir audit` and that faqir-core's controllers take over in
-the browser unchanged. The full language is specified in
-[`docs/template.md`](../../docs/template.md).
+the browser unchanged. The full language — grammar, every diagnostic code, the
+AST — is specified in `template.md`, which ships in this package
+(`node_modules/@faqir-ui/template/template.md`; in the repository it is
+[`docs/template.md`](https://github.com/Narcis13/faqir-ui/blob/main/docs/template.md)).
 
 ```js
 import { compile } from "@faqir-ui/template/compile";
@@ -53,6 +55,26 @@ div(l-data=json(page.state))
   same bytes, so a host can store compiled templates as data.
 - **Bounded.** Include depth, nesting, output size and render steps are limited,
   so a hostile template cannot run away.
+- **Per-page CSS.** `ast.uses` lists every component the output draws, so a
+  host can cut `@faqir-ui/core`'s theme bundle down to what a page needs with
+  `subsetBundle` from `@faqir-ui/core/subset`, without rendering first.
+
+```
+p Run #[code npm ci], then continue.
++tabs
+  each t in page.tabs
+    @trigger {{ t.label }}
+    @panel
+      p {{ t.body }}
++card(title="Watch every session" heading="h2")
+  @body
+    p Sessions stream live.
+```
+
+Inline elements go in text as `#[tag text]`; a fill written more than once, or
+inside `each`, repeats its part (tabs, accordion items, timeline items,
+breadcrumb links), with ids numbered per copy; optional parts left unfilled are
+not rendered; a partial can declare `params href label current=false`.
 
 Projects that take Faqir as committed files rather than npm packages install the
 engine with `faqir template`, which copies these files into

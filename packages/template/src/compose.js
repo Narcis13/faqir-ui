@@ -34,6 +34,7 @@ export function isValidName(name) {
 export function compose(nodes, ctx, loader) {
   /** @type {Composer} */
   const c = { ctx, loader, partials: Object.create(null), heights: new Map() };
+  notParams(nodes, c);
   const body = nodes.some((n) => n.type === "Layout") ? applyLayout(nodes, c) : flattenBlocks(nodes, c, false);
   resolveIncludes(body, c, [ctx.files[0]]);
   return { body, partials: { ...c.partials } };
@@ -76,6 +77,7 @@ function applyLayout(nodes, c) {
   const blocks = pageBlocks(rest, c);
   const layout = load(first.name, first.loc, c);
   if (!layout) return [];
+  notParams(layout, c);
   const nested = layout.find((n) => n.type === "Layout");
   if (nested) {
     reportAt(c.ctx, "nested-layout", "a layout cannot itself have a layout", nested.loc);
@@ -86,6 +88,37 @@ function applyLayout(nodes, c) {
     if (!names.has(name)) reportAt(c.ctx, "unknown-block", `the layout has no block "${name}"`, block.loc);
   }
   return fillBlocks(layout, blocks);
+}
+
+/**
+ * `params` declares a partial's parameters; a page or a layout has none.
+ * Removes it from `nodes` after reporting it.
+ * @param {any[]} nodes
+ * @param {Composer} c
+ */
+function notParams(nodes, c) {
+  if (nodes[0]?.type !== "Params") return;
+  reportAt(c.ctx, "misplaced", "params belongs to a partial, not a page or a layout", nodes[0].loc);
+  nodes.shift();
+}
+
+/**
+ * An include against its partial's `params` (§10.3): every parameter it passes
+ * is declared, and every declared one without a default is passed.
+ * @param {any} node the Include
+ * @param {any[]} partial
+ * @param {Composer} c
+ */
+function checkParams(node, partial, c) {
+  if (partial[0]?.type !== "Params") return;
+  const declared = new Map(partial[0].params.map((/** @type {any} */ p) => [p.name, p]));
+  const given = new Set(node.params.map((/** @type {any} */ p) => p.name));
+  for (const p of node.params) {
+    if (!declared.has(p.name)) reportAt(c.ctx, "unknown-param", `"${node.name}" takes no parameter "${p.name}"; it takes ${[...declared.keys()].join(", ")}`, node.loc);
+  }
+  for (const [name, p] of declared) {
+    if (p.value === null && !given.has(name)) reportAt(c.ctx, "missing-param", `"${node.name}" needs the parameter "${name}"`, node.loc);
+  }
 }
 
 /**
@@ -170,7 +203,7 @@ export function mapChildren(node, fn) {
   if (node.body) node.body = fn(node.body);
   if (node.else) node.else = fn(node.else);
   if (node.branches) for (const b of node.branches) b.body = fn(b.body);
-  if (node.fills) for (const f of node.fills) f.body = fn(f.body);
+  if (node.fills) node.fills = fn(node.fills);
   return node;
 }
 
@@ -217,5 +250,6 @@ function includeHeight(node, c, chain) {
   if (chain.length - 1 + height > MAX_INCLUDE_DEPTH) {
     reportAt(c.ctx, "include-depth", `includes nest deeper than ${MAX_INCLUDE_DEPTH}`, node.loc);
   }
+  if (c.partials[node.name]) checkParams(node, c.partials[node.name], c);
   return height;
 }

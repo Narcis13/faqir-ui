@@ -171,7 +171,7 @@ export function isResponsiveGroup(v: ManifestVariant): boolean {
  * `aria-pressed` (aria), `data-state="loading"` / `aria-checked="false"`
  * (value), and bare `data-state` where the value is the state's own name.
  */
-function parseStateAttr(stateName: string, attr: string): Omit<IRState, "prop"> {
+export function parseStateAttr(stateName: string, attr: string): Omit<IRState, "prop"> {
   const eq = attr.indexOf("=");
   if (eq !== -1) {
     const name = attr.slice(0, eq);
@@ -231,11 +231,14 @@ export function manifestToIR(manifest: Manifest, manifestPath: string): Componen
   // Boolean props carrying an explicit attribute (task 0.8-03). Same emitted
   // shape as a state — a boolean that writes an attribute — so they ride the
   // same IR channel rather than growing a fourth spec array in every runtime.
-  for (const [propName, p] of Object.entries(manifest.props ?? {})) {
+  // A kebab-case manifest name (table's `no-resize`) becomes its camelCase
+  // prop (`noResize`), as attribute names do everywhere else in the bindings.
+  for (const [manifestName, p] of Object.entries(manifest.props ?? {})) {
     if (p.type !== "boolean" || !p.attr) continue;
+    const propName = manifestName.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
     if (!/^[a-z][A-Za-z0-9]*$/.test(propName)) {
       throw new Error(
-        `${manifest.name}: boolean prop "${propName}" declares an attr but is not a valid prop name`
+        `${manifest.name}: boolean prop "${manifestName}" declares an attr but is not a valid prop name`
       );
     }
     if (usedProps.has(propName)) {

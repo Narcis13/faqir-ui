@@ -10,6 +10,7 @@ import {
   duplicateIdRule,
   headingOrderRule,
   landmarkRule,
+  unknownElementRule,
   DOCUMENT_RULES,
   getRuleInventory,
   type AuditResult,
@@ -320,6 +321,31 @@ describe("landmark", () => {
 
 // ───────────────────── rule inventory + JSON output ─────────────────────
 
+// ───────────────────────────── unknown-element ─────────────────────────────
+
+describe("unknown-element", () => {
+  it("flags prose that a template read as a tag, with the text in the message", () => {
+    const results = check(unknownElementRule, "<p><Open>the app now</Open></p>");
+    expect(results.length).toBe(1);
+    expect(results[0].rule_id).toBe("unknown-element");
+    expect(results[0].severity).toBe("warning");
+    expect(results[0].line).toBe(1);
+    expect(results[0].column).toBe(4);
+    expect(results[0].message).toContain("<open> is not an HTML, SVG or MathML element");
+    expect(results[0].message).toContain('"open the app now" is text');
+  });
+
+  it("passes HTML, SVG and MathML elements, obsolete ones and custom elements", () => {
+    const html = `<main><center>old</center><svg><linearGradient></linearGradient><foreignObject></foreignObject></svg>
+<math><mi>x</mi></math><my-widget></my-widget><dl><dt>a</dt><dd>b</dd></dl></main>`;
+    expect(check(unknownElementRule, html)).toEqual([]);
+  });
+
+  it("ignores markup-looking text in comments, scripts and styles", () => {
+    expect(check(unknownElementRule, "<!-- <Open> --><script>a = '<Open>'</script><style>/* <x> */</style>")).toEqual([]);
+  });
+});
+
 describe("document rules · inventory & JSON", () => {
   it("registers every document rule in DOCUMENT_RULES", () => {
     expect(DOCUMENT_RULES.map((r) => r.id).sort()).toEqual([
@@ -327,6 +353,7 @@ describe("document rules · inventory & JSON", () => {
       "field-wiring",
       "heading-order",
       "landmark",
+      "unknown-element",
     ]);
   });
 

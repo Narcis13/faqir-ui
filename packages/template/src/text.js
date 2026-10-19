@@ -1,31 +1,35 @@
 // Interpolated text (docs/template.md §6). Splits inline text, piped text and
 // quoted attribute literals into parts: literal strings and `{{ expr }}` holes.
-// `\{{` is the only escape. A hole ends at the `}}` after a complete
+// `\{{` is an escape, and so is `\#[` in element text. A hole ends at the `}}` after a complete
 // expression, so a string literal inside a hole may itself contain `}}`.
 
 import { report } from "./diagnostics.js";
 import { parseExpression } from "./expr.js";
 
 /**
- * Parse text from `start` up to the end of `src`, or up to the first `stop`
- * character outside a hole (for attribute literals). Returns the parts and the
- * index of the `stop` character (or `src.length`), or null after a diagnostic.
- * `line`/`colBase` place `src[0]` in the template.
+ * Parse text from `start` up to the end of `src`, or up to the first of the
+ * `stop` characters outside a hole (an attribute literal's quote; `#`, `[`
+ * and `]` for inline elements, §6.1). Returns the parts and the index of the
+ * stop character (or `src.length`), or null after a diagnostic. With `inline`,
+ * `\#[` is an escape for a literal `#[`. `line`/`colBase` place `src[0]` in
+ * the template.
  * @param {string} src
  * @param {number} start
  * @param {import("./diagnostics.js").Context} ctx
  * @param {number} line
  * @param {number} colBase
  * @param {string} [stop]
+ * @param {boolean} [inline]
  * @returns {{ parts: Array<string | { expr: any }>, end: number } | null}
  */
-export function parseText(src, start, ctx, line, colBase, stop) {
+export function parseText(src, start, ctx, line, colBase, stop = "", inline = false) {
   /** @type {Array<string | { expr: any }>} */
   const parts = [];
   let literal = "";
   let i = start;
-  while (i < src.length && src[i] !== stop) {
+  while (i < src.length && !stop.includes(src[i])) {
     if (src.startsWith("\\{{", i)) { literal += "{{"; i += 3; continue; }
+    if (inline && src.startsWith("\\#[", i)) { literal += "#["; i += 3; continue; }
     if (!src.startsWith("{{", i)) { literal += src[i++]; continue; }
     if (literal) parts.push(literal);
     literal = "";

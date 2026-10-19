@@ -1032,7 +1032,7 @@ protocol attribute and preserving their quoting.
 
 ## CLI Reference
 
-Twenty-four commands in five categories, one table in
+Twenty-five commands in five categories, one table in
 [`src/command-registry.ts`](src/command-registry.ts) that renders both
 `faqir help` and the skill's CLI reference. Run `faqir <command> --help` for
 options. Every command accepts `--json`.
@@ -1070,6 +1070,7 @@ faqir scaffold landing-page|admin-dashboard|internal-tool|invoice|report [--outp
 faqir bundle [--minify] [--watch] [--js] [--output <path>] [--dry-run]
 faqir dev [--port <n>] [--dir <path>] [--host <addr>] [--open] [--bundle] [--no-overlay]   # default port 3000
 faqir bindings vue|react [--out <dir>] [--check]  # generate framework packages from manifests
+faqir template [--check]                        # install @faqir-ui/template and this project's component table
 ```
 
 ### Quality
@@ -1110,13 +1111,13 @@ rest are workspaces under `packages/`.
 | Package | What it is | README |
 |---------|-----------|--------|
 | `faqir-ui-cli` | The `faqir` CLI and the registry it installs from | this file |
-| `@faqir-ui/core` | Prebuilt runtime: minified engine, per-theme CSS bundles, SRI hashes, ESM entry with 19 named exports | [packages/core](packages/core/README.md) |
-| `@faqir-ui/rules` | Isomorphic, zero-dependency form rules: shape validation, formats, logic, the `faqir-rules` plugin | [packages/rules](packages/rules/README.md) |
-| `@faqir-ui/forms` | JSON Schema to audit-clean Faqir form markup, rules included | [packages/forms](packages/forms/README.md) |
-| `@faqir-ui/template` | Zero-dependency template language: manifest-checked component calls, context escaping, audit-clean server output | [packages/template](packages/template/README.md) |
-| `@faqir-ui/mcp` | Stdio MCP server exposing the registry, manifests, themes, audit and generation to any MCP host | [packages/mcp](packages/mcp/README.md) |
-| `@faqir-ui/react` | React bindings generated from manifests by `faqir bindings react` | [packages/react](packages/react/README.md) |
-| `@faqir-ui/vue` | Vue 3 bindings generated from manifests by `faqir bindings vue` | [packages/vue](packages/vue/README.md) |
+| `@faqir-ui/core` | Prebuilt runtime: minified engine, per-theme CSS bundles, SRI hashes, ESM entry with 19 named exports | [packages/core](https://github.com/Narcis13/faqir-ui/tree/main/packages/core#readme) |
+| `@faqir-ui/rules` | Isomorphic, zero-dependency form rules: shape validation, formats, logic, the `faqir-rules` plugin | [packages/rules](https://github.com/Narcis13/faqir-ui/tree/main/packages/rules#readme) |
+| `@faqir-ui/forms` | JSON Schema to audit-clean Faqir form markup, rules included | [packages/forms](https://github.com/Narcis13/faqir-ui/tree/main/packages/forms#readme) |
+| `@faqir-ui/template` | Zero-dependency template language: manifest-checked component calls, context escaping, audit-clean server output | [packages/template](https://github.com/Narcis13/faqir-ui/tree/main/packages/template#readme) |
+| `@faqir-ui/mcp` | Stdio MCP server exposing the registry, manifests, themes, audit and generation to any MCP host | [packages/mcp](https://github.com/Narcis13/faqir-ui/tree/main/packages/mcp#readme) |
+| `@faqir-ui/react` | React bindings generated from manifests by `faqir bindings react` | [packages/react](https://github.com/Narcis13/faqir-ui/tree/main/packages/react#readme) |
+| `@faqir-ui/vue` | Vue 3 bindings generated from manifests by `faqir bindings vue` | [packages/vue](https://github.com/Narcis13/faqir-ui/tree/main/packages/vue#readme) |
 
 ---
 

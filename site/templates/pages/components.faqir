@@ -43,6 +43,12 @@ block content
     code current
     | which the partial turns into the attribute or leaves out.
   p
+    | The partial's first line,
+    code params href label current=false
+    | declares what it takes. A bare name must be passed and a name with a value has a default, so the partial reads
+    code current
+    | without a fallback, and an include that passes a parameter the partial does not declare, or leaves out one it needs, is a compile error.
+  p
     | Nothing else crosses into the partial. The page below has a user in its data, and the partial still cannot see it.
   include "partials/failure.faqir" (failure=err.scope)
   p
@@ -87,6 +93,12 @@ block content
           td A literal or an expression giving text
         tr
           td
+            code heading
+            | on a component whose markup has headings, such as a card's title
+          td The level of those headings, so a card under a page title can be an h2
+          td A literal h1 to h6
+        tr
+          td
             code id
           td The component's id, which every id inside it derives from
           td Unset, the render's next id
@@ -124,10 +136,15 @@ block content
     code data-ui
     | too. It is written as you typed it and not checked as a call. That is how you write a component that is also a part of another one, such as a button that is a dialog's trigger, because a call never takes
     code data-part
+  h3#components-repeat Repeating parts
   p
-    | Some recipes repeat a part: the tabs recipe has one trigger and one panel per tab. A repeated part is not a slot, so
-    code +tabs
-    | renders the reference markup as it ships. Draw those from data with plain elements, as the recipes below do.
+    | A slot filled more than once, or filled inside
+    code each
+    | or
+    code if
+    | under the call, repeats its part: one breadcrumb link, step, tab or accordion item per fill, in the order written. A fill whose lines are fills of its own fills the parts inside it, and a fill takes arguments in parentheses: the states the manifest gives that part, and attributes such as an href. Optional parts left unfilled are not written at all.
+  include "partials/example.faqir" (example=ex.repeat)
+  p Notice that each breadcrumb link came with its list item and the separator after it, which is what repeats with a link in the breadcrumb's reference markup, and that each step took its state from the data. Ids inside a repeated part are numbered per copy, so the tabs below pair trigger N with panel N however many the data holds.
 
   h2#island The l-data island
   p

@@ -54,8 +54,58 @@ for tamper-proof loads:
 | `faqir-core.js` | Canonical UMD engine — what `<script src>` and the CDN load. Reachable explicitly at `@faqir-ui/core/faqir-core.js`. |
 | `faqir-core.min.js` (+ `.map`) | Minified classic-script build; a plain `<script src>` sets `window.Faqir`. |
 | `faqir.{theme}.css` | Full CSS bundle per theme: all tokens + theme + base + every component. Self-contained (no `@import`). |
+| `themes.json` | Each theme's bundle file and the density it was designed at — see [Themes and density](#themes-and-density). |
 | `plugins/` | Official self-registering drops — see [Plugins](#plugins) below. |
 | `sri.json` | SHA-384 integrity hashes for every file above. |
+
+## Themes and density
+
+Density is the one theme axis a bundle cannot carry: each ramp is scoped to a
+`[data-density]` subtree, so the page opts in on its root. Most themes are
+drawn at the default, `comfortable`; the rest say so in their bundle's header
+and in `dist/themes.json` (`@faqir-ui/core/themes.json`):
+
+```json
+{ "themes": { "slate": { "css": "faqir.slate.css", "density": "compact" }, … } }
+```
+
+```html
+<html data-theme="light" data-density="compact">
+  <link rel="stylesheet" href="…/dist/faqir.slate.css">
+```
+
+Without the attribute a compact or spacious theme still works, at the
+comfortable ramp it was not designed for.
+
+## A page's own CSS
+
+Each `faqir.<theme>.css` holds every component. A page that draws a few of them
+can ship only those: the bundle is a sequence of sections, each opened by a
+marker on a line of its own, and the markers are a stable contract:
+
+```css
+/* === tokens/palette.css === */      /* tokens, in cascade order — always kept */
+/* === themes/slate.css === */        /* the theme — always kept */
+/* === base/prose.css === */          /* the base layer — always kept */
+/* === primitives/button.css === */   /* one per component: primitives, */
+/* === recipes/tabs.css === */        /* recipes and patterns, by name */
+```
+
+`@faqir-ui/core/subset` keeps the tokens, the theme, the base layer and the
+components you name:
+
+```js
+import { readFileSync } from "node:fs";
+import { subsetBundle } from "@faqir-ui/core/subset";
+
+const bundle = readFileSync(new URL(import.meta.resolve("@faqir-ui/core/dist/faqir.slate.css")), "utf8");
+const css = subsetBundle(bundle, ["card", "button", "tabs"]);
+```
+
+With [`@faqir-ui/template`](https://www.npmjs.com/package/@faqir-ui/template),
+a compiled page lists the components it draws in `ast.uses`, so
+`subsetBundle(bundle, ast.uses)` needs no render. Name every component the page
+draws, nested ones included: a section is kept only when its own name is listed.
 
 ## Plugins
 
