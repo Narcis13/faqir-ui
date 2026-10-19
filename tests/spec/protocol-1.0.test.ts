@@ -296,8 +296,8 @@ describe("SPEC-1.0.md and src/protocol.ts describe one protocol", () => {
     expect(findings.join("\n")).toBe("");
   });
 
-  it("grew SANCTIONED_ATTRIBUTES by exactly one attribute (data-skin)", () => {
-    expect(SANCTIONED_ATTRIBUTES.length).toBe(PROTOCOL_ATTRIBUTES.length + 4);
+  it("grew SANCTIONED_ATTRIBUTES one modifier at a time (data-skin, then data-accent)", () => {
+    expect(SANCTIONED_ATTRIBUTES.length).toBe(PROTOCOL_ATTRIBUTES.length + 5);
     expect(SANCTIONED_ATTRIBUTES).toContain("data-skin");
   });
 

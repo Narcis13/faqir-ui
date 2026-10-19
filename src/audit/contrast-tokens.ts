@@ -22,6 +22,9 @@ import {
   contrastRatio,
   cssColorToOklch,
   isOpaqueColor,
+  colorAlpha,
+  parseOklch,
+  linearRgbToOklch,
 } from "../utils/oklch";
 
 /** WCAG 2.x AA minimum contrast for normal-size text. */
@@ -174,6 +177,99 @@ export interface ThemeContrastInput {
   pairs?: ContrastPair[];
   /** Non-text (3:1) pair list override, for tests; defaults to NON_TEXT_PAIRS. */
   nonTextPairs?: ContrastPair[];
+  /**
+   * Measure the theme as a `data-accent` subtree renders it: the five
+   * {@link ACCENT_TOKENS} re-hued to `hue` (degrees), everything else as the
+   * theme states it. Omitted, the theme is measured as written.
+   */
+  accent?: { name: string; hue: number };
+}
+
+// ── data-accent: the theme's own accent, re-hued  [forecraft #9] ─────────────
+//
+// `data-accent` (SPEC-1.0 §4) re-points five tokens with relative colour syntax,
+// `oklch(from <the theme's value> l c <hue>)`: each keeps the lightness and
+// chroma its theme gave it and takes the accent's hue. Nothing else moves —
+// `--color-primary-fg` in particular is still the label the theme tuned for its
+// OWN hue, now sitting on another one, and at equal OKLCH lightness two hues
+// still differ in WCAG luminance (and a chroma that fits the gamut at one hue
+// clips at the next). That is why the named hues are a closed vocabulary picked
+// by measurement, and why this gate is what holds them to it.
+
+/**
+ * The five tokens `data-accent` re-points, without the leading `--`. The same
+ * list, in the same order, as the `ACCENT` dial of `faqir-tweak`, and as the
+ * declarations of `registry/tokens/accent.css` — both asserted.
+ */
+export const ACCENT_TOKENS = [
+  "color-primary",
+  "color-primary-hover",
+  "color-primary-active",
+  "color-primary-subtle",
+  "color-ring",
+] as const;
+
+/**
+ * `oklch(from <value> l c <hue>)`, computed statically: the colour's own OKLCH
+ * lightness, chroma and alpha, at `hue`. `null` for anything that is not a
+ * colour the shared parser reads (oklch, hex, `white`/`black`).
+ */
+export function rehueColor(value: string, hue: number): string | null {
+  const v = value.trim().toLowerCase();
+  const alpha = colorAlpha(v);
+  if (alpha == null) return null;
+  let lc = parseOklch(v);
+  if (!lc) {
+    const rgb = parseCssColor(v);
+    if (!rgb) return null;
+    lc = linearRgbToOklch(rgb);
+  }
+  const n = (x: number) => String(Math.round(x * 1e6) / 1e6);
+  return `oklch(${n(lc.l)} ${n(lc.c)} ${n(hue)}${alpha === 1 ? "" : ` / ${n(alpha)}`})`;
+}
+
+/**
+ * The per-scheme lookups with the {@link ACCENT_TOKENS} replaced by their
+ * re-hued, already-resolved colours — the cascade a `data-accent` subtree sees.
+ * Every token is resolved against the ORIGINAL lookup first, exactly as the
+ * stylesheet captures the theme's values before it re-points them.
+ */
+export function accentLookups(
+  lookups: Record<Scheme, Map<string, string>>,
+  hue: number,
+): Record<Scheme, Map<string, string>> {
+  const out = {} as Record<Scheme, Map<string, string>>;
+  for (const scheme of SCHEMES) {
+    const lk = lookups[scheme];
+    const next = new Map(lk);
+    for (const token of ACCENT_TOKENS) {
+      const raw = lk.get(token);
+      const resolved = raw == null ? null : resolveColorString(raw, lk);
+      const rehued = resolved == null ? null : rehueColor(resolved, hue);
+      if (rehued != null) next.set(token, rehued);
+    }
+    out[scheme] = next;
+  }
+  return out;
+}
+
+/** `[theme · scheme]`, plus the accent when one is being measured. */
+function tag(input: ThemeContrastInput, scheme: Scheme): string {
+  const accent = input.accent ? ` · data-accent="${input.accent.name}"` : "";
+  return `[${input.themeName} · ${scheme}${accent}]`;
+}
+
+/**
+ * The contrast gate, once per named accent: every finding a theme would have
+ * inside `data-accent="<name>"`, for each name in `accents` (name → hue).
+ */
+export function checkAccentContrast(
+  input: Omit<ThemeContrastInput, "accent">,
+  accents: Readonly<Record<string, number>>,
+): AuditResult[] {
+  return Object.entries(accents).flatMap(([name, hue]) =>
+    checkThemeContrast({ ...input, accent: { name, hue } }),
+  );
 }
 
 /** Euclidean distance in OKLab, the perceptually uniform space underlying OKLCH. */
@@ -237,7 +333,8 @@ export function checkThemeContrast(input: ThemeContrastInput): AuditResult[] {
   const pairs = input.pairs ?? CONTRAST_PAIRS;
   const file = input.file ?? input.themeName;
   const severity: Severity = CONTRAST_TOKENS_RULE.severity;
-  const lookups = buildSchemeLookups(input.themeCss, input.baseCss);
+  const built = buildSchemeLookups(input.themeCss, input.baseCss);
+  const lookups = input.accent ? accentLookups(built, input.accent.hue) : built;
   const results: AuditResult[] = [];
 
   for (const scheme of SCHEMES) {
@@ -264,7 +361,7 @@ export function checkThemeContrast(input: ThemeContrastInput): AuditResult[] {
             file,
             line,
             message:
-              `[${input.themeName} · ${scheme}] --${fg} on --${bg} cannot be guaranteed because ` +
+              `${tag(input, scheme)} --${fg} on --${bg} cannot be guaranteed because ` +
               `the text-bearing pair is translucent (${fgVal} on ${bgVal}). Use opaque colors and ` +
               `clear the ${threshold}:1 WCAG AA minimum.`,
           });
@@ -290,7 +387,7 @@ export function checkThemeContrast(input: ThemeContrastInput): AuditResult[] {
         file,
         line,
         message:
-          `[${input.themeName} · ${scheme}] --${fg} on --${bg} is ${ratio.toFixed(2)}:1 — ` +
+          `${tag(input, scheme)} --${fg} on --${bg} is ${ratio.toFixed(2)}:1 — ` +
           `below the ${threshold}:1 WCAG AA minimum (${fgVal} on ${bgVal}). ` +
           `Darken the background or the foreground until the pair clears ${threshold}:1.`,
       });
@@ -346,7 +443,7 @@ function checkNonTextContrast(
           file,
           line: tokenLine(input.themeCss, fg) || 1,
           message:
-            `[${input.themeName} · ${scheme}] --${fg} is translucent (${fgVal}), so the focus ` +
+            `${tag(input, scheme)} --${fg} is translucent (${fgVal}), so the focus ` +
             `indicator it draws has no contrast guarantee against any surface. WCAG 2.2 SC 1.4.11 ` +
             `requires ${CONTRAST_NON_TEXT}:1; make --${fg} opaque.`,
         });
@@ -368,7 +465,7 @@ function checkNonTextContrast(
         file,
         line: tokenLine(input.themeCss, fg) || tokenLine(input.themeCss, bg) || 1,
         message:
-          `[${input.themeName} · ${scheme}] --${fg} on --${bg} is ${ratio.toFixed(2)}:1 — below the ` +
+          `${tag(input, scheme)} --${fg} on --${bg} is ${ratio.toFixed(2)}:1 — below the ` +
           `${CONTRAST_NON_TEXT}:1 WCAG 2.2 SC 1.4.11 minimum for a focus indicator ` +
           `(${fgVal} on ${bgVal}).`,
       });
