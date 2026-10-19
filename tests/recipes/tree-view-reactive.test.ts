@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 import { settle } from "../helpers/settle";
 import { createTreeView } from "../../registry/recipes/tree-view/tree-view.js";
 
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 function tick(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));

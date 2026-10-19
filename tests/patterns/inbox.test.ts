@@ -22,6 +22,7 @@
 // facts about the cascade rather than about which block a line was typed in.
 
 import { describe, it, expect, beforeEach, afterAll } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { auditHtmlSource } from "../../src/audit/checker";
@@ -34,7 +35,7 @@ import { collectRules, resolve, resolveDeepValue } from "../helpers/css-cascade"
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
 
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 const ROOT = join(import.meta.dir, "../..");
 const REGISTRY = join(ROOT, "registry");

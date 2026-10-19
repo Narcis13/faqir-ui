@@ -8,11 +8,12 @@
 // which would leak into every later file sharing this happy-dom realm.
 
 import { afterEach, describe, expect, it } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { settle } from "../helpers/settle";
 
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 function tick(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
