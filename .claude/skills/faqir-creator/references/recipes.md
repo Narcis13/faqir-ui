@@ -72,7 +72,7 @@ Interruptive confirmation dialog (role=alertdialog) for destructive or irreversi
 
 ```html
 <div data-ui="alert-dialog" data-state="closed" id="{id}"{confirm_required}>
-  <button data-part="trigger">{trigger_text}</button>
+  <button data-part="trigger" data-ui="button" data-variant="destructive">{trigger_text}</button>
   <div data-part="overlay" hidden></div>
   <div data-part="panel" role="alertdialog" aria-modal="true" aria-labelledby="{id}-title" aria-describedby="{id}-desc" data-variant="{tone}" data-size="{size}" hidden>
     <div data-part="header">
@@ -528,7 +528,7 @@ Modal dialog with focus trap, escape-to-close, and overlay backdrop
 
 ```html
 <div data-ui="dialog" data-state="closed" id="{id}">
-  <button data-part="trigger">{trigger_text}</button>
+  <button data-part="trigger" data-ui="button" data-variant="primary">{trigger_text}</button>
   <div data-part="overlay" hidden></div>
   <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="{id}-title" data-size="{size}" hidden>
     <div data-part="header">
@@ -587,7 +587,7 @@ Side panel that slides in from screen edge with overlay backdrop
 
 ```html
 <div data-ui="drawer" data-state="closed" id="{id}">
-  <button data-part="trigger">{trigger_text}</button>
+  <button data-part="trigger" data-ui="button" data-variant="primary">{trigger_text}</button>
   <div data-part="overlay" hidden></div>
   <div data-part="panel" data-variant="{side}" data-size="{size}" role="dialog" aria-modal="true" aria-labelledby="{id}-title" hidden>
     <div data-part="header">
@@ -1064,7 +1064,7 @@ Mobile-friendly bottom or side sheet that slides in from screen edge
 
 ```html
 <div data-ui="sheet" data-state="closed" id="{id}">
-  <button data-part="trigger">{trigger_text}</button>
+  <button data-part="trigger" data-ui="button" data-variant="primary">{trigger_text}</button>
   <div data-part="overlay" hidden></div>
   <div data-part="panel" data-variant="{side}" data-size="{size}" role="dialog" aria-modal="true" aria-labelledby="{id}-title" hidden>
     <div data-part="header">
@@ -1522,7 +1522,7 @@ Informational popup shown on hover or focus of trigger element
 
 ```html
 <div data-ui="tooltip" data-variant="{position}" data-state="hidden">
-  <button data-part="trigger" aria-describedby="{id}-content">{trigger_text}</button>
+  <button data-part="trigger" data-ui="button" data-variant="outline" aria-describedby="{id}-content">{trigger_text}</button>
   <div data-part="content" id="{id}-content" role="tooltip" hidden>{tooltip_text}</div>
 </div>
 ```

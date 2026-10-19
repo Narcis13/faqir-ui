@@ -131,6 +131,22 @@ describe("the pattern templates the gate caught, fixed", () => {
     }
   });
 
+  it("nothing is pending any more — every template is held at zero", () => {
+    expect(Object.keys(TEMPLATE_AUDIT_PENDING)).toEqual([]);
+    expect(findings.map((f) => `${f.id} [${f.result.rule_id}]`)).toEqual([]);
+  });
+
+  it("the overlay recipes' template triggers are buttons, and app_shell has a real sidebar", () => {
+    const recipe = (name: string, key = "html") =>
+      templates.find((t) => t.layer === "recipes" && t.name === name && t.key === key)!.html;
+    for (const name of ["alert-dialog", "dialog", "drawer", "sheet", "tooltip"]) {
+      expect(recipe(name), name).toMatch(/<button data-part="trigger" data-ui="button" data-variant="[a-z]+"/);
+    }
+    const shell = recipe("sidebar", "app_shell");
+    expect(shell).toContain('<aside data-part="panel"');
+    expect(shell).not.toContain("…");
+  });
+
   it("no pattern template elides a nested component with '...'", () => {
     for (const t of templates.filter((x) => x.layer === "patterns")) {
       expect(t.html, `${t.name}#${t.key}`).not.toMatch(/>\s*\.\.\.\s*</);

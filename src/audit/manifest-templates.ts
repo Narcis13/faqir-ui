@@ -36,14 +36,7 @@ export const TEMPLATE_GATE_SEVERITIES: ReadonlySet<string> = new Set(["critical"
  * is owned by another area and is reported, not failed, until it is fixed;
  * an entry whose template has become clean is reported as stale so it can go.
  */
-export const TEMPLATE_AUDIT_PENDING: Readonly<Record<string, string>> = Object.freeze({
-  "recipes/alert-dialog#html": "trigger-contract: the bare trigger is styled by nothing (recipes area, #11)",
-  "recipes/dialog#html": "trigger-contract: the bare trigger is styled by nothing (recipes area)",
-  "recipes/drawer#html": "trigger-contract: the bare trigger is styled by nothing (recipes area)",
-  "recipes/sheet#html": "trigger-contract: the bare trigger is styled by nothing (recipes area)",
-  "recipes/tooltip#html": "trigger-contract: the bare trigger is styled by nothing (recipes area)",
-  "recipes/sidebar#app_shell": "required-slot: the sidebar has no [data-part=\"panel\"] (recipes area)",
-});
+export const TEMPLATE_AUDIT_PENDING: Readonly<Record<string, string>> = Object.freeze({});
 
 /** One HTML template a manifest ships. */
 export interface ManifestTemplate {

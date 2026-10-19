@@ -1262,10 +1262,10 @@
         },
         {
           "path": "alert-dialog.manifest.json",
-          "sha256": "4ec13ed4dbbc1540463dba01a85956f9f58de2a40352ac3f70106fd8d92a24e4"
+          "sha256": "0702f9fa4db64aadf2fa5c158bb241a3e989c3c911573f76cc69bce5d800553b"
         }
       ],
-      "hash": "6d3d113da8fbd1af7e82ad1bbb9c9f377949165976c5f9168d80f6e68f73c78e",
+      "hash": "084e47412cec34888ef057ceb75edbdaa7beb6d656265d1f4404e73874c84464",
       "deps": [
         "button"
       ]
@@ -1477,10 +1477,10 @@
         },
         {
           "path": "dialog.manifest.json",
-          "sha256": "43ce9248f24c85cc03f9ea6cb4c46cb5a198b7b8dfa0aaddf8d9bffb9a74e16f"
+          "sha256": "1d653ea40d071a3566a1bff17b9660201312ba39b74fa56ca5a429fb77e1226b"
         }
       ],
-      "hash": "45631587df3d421d3f5adf4c7f286c275a3ff5501073c0a9b552efab813b1ca4",
+      "hash": "d26d4df0fa369101ddd0ef5fe92db74fe92fe4d70d0038dc3b5a09d0e108fead",
       "deps": [
         "button"
       ]
@@ -1505,10 +1505,10 @@
         },
         {
           "path": "drawer.manifest.json",
-          "sha256": "d6aa588eb5a34258a3bec27e89887884b7992f60834ff9e5b45bef05fd5b9ea3"
+          "sha256": "2632af27665accc576fd308d1c1606023d0bf8a09ac30b214c7a263075064e30"
         }
       ],
-      "hash": "757109855dbdd9bd9c358af1a6d3b10aa57bcad62320ac2a28344693af225cc4",
+      "hash": "a9aa8c58ea5b8e47a2b068d380e3bda7a714843e660874a21b19b14de5af79ef",
       "deps": [
         "button"
       ]
@@ -1745,10 +1745,10 @@
         },
         {
           "path": "sheet.manifest.json",
-          "sha256": "8df74552a1ff20cdd130940d1b02d47ae361f7c651cce310801b9fca3f2eaac4"
+          "sha256": "0836a120836860cf51000754df6209e17c11d82ab3c6d99dc57f2087d8cbc22d"
         }
       ],
-      "hash": "969d2dd00a1224fd2e91c8bf51f688976843cf954514330b8fdcf44be8a6bf56",
+      "hash": "a7865f37e6c9f73b1e0bdd61321d0517d9fe711683c06627c12aa910d3e83c8e",
       "deps": [
         "button"
       ]
@@ -1773,10 +1773,10 @@
         },
         {
           "path": "sidebar.manifest.json",
-          "sha256": "e08a583981d4a29363ff695e84a992444fd4df79ccdd22a8150aebd225cf2322"
+          "sha256": "f34c1266269ea0c3fd8a72a58f45601b9534f33218d19dc17c4583ce176fbd1d"
         }
       ],
-      "hash": "8a9d4e6eb4240eee89f8b9a711c0bc30d9d0e9213c24cffc351775af54b6ddf5",
+      "hash": "99da74db983e3a8086d839ab3ad5ab4269393409a149b1140d1a987969f85593",
       "deps": [
         "button",
         "badge",
@@ -1969,10 +1969,10 @@
         },
         {
           "path": "tooltip.manifest.json",
-          "sha256": "20ad664459bd57a17d302025cde3be0d0550a0da798b7646062e0dd224b2ca78"
+          "sha256": "37266ac8a5395fed4ed1d15727767e45670e1efc812eed2a11d2deadf5b15390"
         }
       ],
-      "hash": "e387867c1f608d4e78541e804f2c30839137f098ef206434e80d6f0d7ef6ca6f",
+      "hash": "1c4ad3e8304d16ea00bc7b1d06ec97bd5c6e3359fbb8e05f68d82c742d2a1560",
       "deps": [
         "button"
       ]

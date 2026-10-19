@@ -110,6 +110,10 @@ attribute). The packaged `faqir-core.min.js` gzip budget is 47 KB (was 46);
   sizes itself from the document inside one.
 - **Added** — `audit:registry` gate 10 audits every manifest template with the
   real auditor; the forms tests audit `renderForm` output against the registry.
+- **Fixed** — the `alert-dialog`, `dialog`, `drawer`, `sheet` and `tooltip`
+  templates give their trigger `data-ui="button"` (`trigger-contract`), so the
+  React, Vue and template bindings render a styled trigger; `sidebar`'s
+  `app_shell` template spells out the sidebar instead of eliding it.
 - **Fixed** — `landmark` no longer warns for an inline control's non-modal popup
   (the date-picker calendar) inside `<main>`; `field-wiring` ignores hidden
   inputs.

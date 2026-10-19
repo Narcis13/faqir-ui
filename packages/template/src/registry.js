@@ -552,6 +552,18 @@ export const components = {
         [
          "trigger"
         ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "destructive"
+        ]
        ]
       ],
       "children": [],
@@ -4156,6 +4168,18 @@ export const components = {
         [
          "trigger"
         ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "primary"
+        ]
        ]
       ],
       "children": [
@@ -4427,6 +4451,18 @@ export const components = {
         "data-part",
         [
          "trigger"
+        ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "primary"
         ]
        ]
       ],
@@ -8663,6 +8699,18 @@ export const components = {
         [
          "trigger"
         ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "primary"
+        ]
        ]
       ],
       "children": [
@@ -11965,6 +12013,18 @@ export const components = {
         "data-part",
         [
          "trigger"
+        ]
+       ],
+       [
+        "data-ui",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-variant",
+        [
+         "outline"
         ]
        ],
        [
