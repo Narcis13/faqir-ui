@@ -2,8 +2,10 @@
   Authored home-page fragment.
 
   The generator replaces the @faqir:home-* comment markers with registry-derived
-  blocks: the theme runway and its spec plate, the registry counts, and the live
-  pattern frames. Everything else is audited like every generated page: no
+  blocks: the theme runway and its spec plate, the registry counts, the live
+  pattern frames, and the 1.3 story's accent badges (one per named hue, from
+  src/theme/accent.ts). The 1.3 chart is drawn by faqir-chart.js, which the
+  generator loads on this page because it carries a chart. Everything else is audited like every generated page: no
   classes, no hardcoded colours, and no component contract invented on the site.
 -->
       <div data-docs-home>
@@ -72,6 +74,145 @@
         <!-- @faqir:home-themes -->
 
         <!-- @faqir:home-stats -->
+
+        <section aria-labelledby="release-13-heading" data-docs-section data-docs-release>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="primary">1.3</span>
+            <h2 id="release-13-heading">New in 1.3: what two real apps asked for</h2>
+            <p>
+              A form-and-report platform whose first user is an agent, and a twenty-page manual
+              rendered on a server, each sent back a list of what Faqir could not yet do. This
+              release is that list, done: a runtime accent, charts, paper, a strict-CSP engine,
+              forms that submit and templates that repeat.
+            </p>
+          </div>
+
+          <div data-docs-release-grid>
+            <article data-docs-release-item>
+              <h3>A brand hue in one attribute</h3>
+              <p>
+                <code>data-accent</code> re-hues any subtree in whatever theme is active, keeping the
+                theme's own lightness and chroma. Nine hues are named, each measured against every
+                contrast pair in every theme; <code>custom</code> takes any other.
+              </p>
+              <div data-docs-release-artifact>
+<!-- @faqir:home-accents -->
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="accent/index.html">The runtime accent, live</a>
+                <a data-ui="link" href="studio/index.html">The studio's Named accent dial</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Charts drawn from their own table</h3>
+              <p>
+                The <code>chart</code> primitive's table is the chart without JavaScript and prints
+                under the drawing. <code>faqir-chart.js</code>, an opt-in 4 KB plugin, draws a column,
+                bar or line chart from it in the theme's colours, with an <code>aria-label</code> that
+                reads the numbers.
+              </p>
+              <div data-docs-release-artifact>
+                <figure data-ui="chart" data-variant="column" data-docs-home-chart>
+                  <figcaption data-part="caption">Invoices paid per quarter</figcaption>
+                  <div data-part="plot"></div>
+                  <table data-part="data">
+                    <thead><tr><th scope="col">Quarter</th><th scope="col">Invoices</th></tr></thead>
+                    <tbody>
+                      <tr><th scope="row">Q1</th><td>42</td></tr>
+                      <tr><th scope="row">Q2</th><td>57</td></tr>
+                      <tr><th scope="row">Q3</th><td>61</td></tr>
+                      <tr><th scope="row">Q4</th><td>48</td></tr>
+                    </tbody>
+                  </table>
+                </figure>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="components/primitives/chart.html">The chart contract</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Documents that know paper</h3>
+              <p>
+                Documents print on named pages sized by their own attributes, with running headers,
+                a page counter in the document's language and a DIN 5008 letter. Each print theme has
+                a typographic voice of its own, and thirteen font families install true italics.
+              </p>
+              <div data-docs-release-artifact>
+                <pre tabindex="0"><code>&lt;article data-ui="document"
+  data-variant="letter" lang="de"
+  data-header="from-page-2"&gt;</code></pre>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="print/index.html">Documents &amp; print</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>An engine for a strict CSP</h3>
+              <p>
+                <code>faqir-core.csp.js</code> is the same engine with its expressions interpreted by a
+                Pratt parser instead of compiled, so a page needs no <code>'unsafe-eval'</code>. The
+                default build is byte for byte what it was.
+              </p>
+              <div data-docs-release-artifact>
+                <pre tabindex="0"><code>Content-Security-Policy: script-src 'self'
+
+&lt;script src="core/faqir-core.csp.js" defer&gt;&lt;/script&gt;</code></pre>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="engine/csp/index.html">See it run under the policy</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Forms that submit</h3>
+              <p>
+                A rendered form ends in its submit button, and <code>faqir-validate</code> fires
+                <code>faqir:valid-submit</code> with the form's coerced data. <code>rulesFor</code> hands a
+                server the exact definition the page enforces; scales, half-width fields and
+                horizontal groups come from the UI schema.
+              </p>
+              <div data-docs-release-artifact>
+                <pre tabindex="0"><code>document.addEventListener("faqir:valid-submit", (e) =&gt; {
+  e.preventDefault();
+  fetch("/api/signup", { method: "POST",
+    body: JSON.stringify(e.detail) });
+});</code></pre>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="rules/index.html#forms">Forms and rules</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Templates for real apps</h3>
+              <p>
+                <code>@faqir-ui/template</code> takes inline elements in text, repeats a part filled more
+                than once, passes parameters to partials, and calls every registry component.
+                <code>subsetBundle</code> cuts the stylesheet down to the components a page draws.
+              </p>
+              <div data-docs-release-artifact>
+                <pre tabindex="0"><code>+tabs
+  each s in page.sections
+    @trigger {{ s.title }}
+    @panel
+      p Run #[code npm ci], then {{ s.next }}.</code></pre>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="template/components/index.html">Component calls</a>
+                <a data-ui="link" href="template/api/index.html">The API</a>
+              </div>
+            </article>
+          </div>
+          <p>
+            Also in 1.3: <code>Faqir.ui()</code> reaches a component's controller from plain JavaScript,
+            <code>@faqir-ui/mcp/audit</code> runs the auditor in process, a <code>skip-link</code> primitive
+            opens every site header, and a rule catches element names that are no HTML at all.
+            <a data-ui="link" href="https://github.com/Narcis13/faqir-ui/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">The full changelog</a>.
+          </p>
+        </section>
 
         <section aria-labelledby="release-heading" data-docs-section data-docs-release>
           <div data-docs-section-heading>
@@ -281,6 +422,7 @@ bun run dream:digest
                 <li><a data-ui="link" href="spacing/index.html">Spacing and rhythm</a> · the ladder and who owns the gap</li>
                 <li><a data-ui="link" href="density/index.html">Density</a> · compact, comfortable, spacious</li>
                 <li><a data-ui="link" href="motion/index.html">Motion &amp; effects</a> · entrances, loops and the tokens behind them</li>
+                <li><a data-ui="link" href="print/index.html">Documents &amp; print</a> · named pages, letters and print voices</li>
                 <li><a data-ui="link" href="tokens/index.html">Design tokens</a> · every token, by file</li>
               </ul>
             </div>
@@ -290,8 +432,10 @@ bun run dream:digest
                 <li><a data-ui="link" href="themes/index.html">Theme gallery</a> · filter by axis, switch live</li>
                 <li><a data-ui="link" href="themes/axes/index.html">The fourteen axes</a> · what each value does</li>
                 <li><a data-ui="link" href="themes/authoring/index.html">Authoring</a> · seeds, light-dark(), scopes, fonts</li>
+                <li><a data-ui="link" href="accent/index.html">Runtime accent</a> · one attribute, nine measured hues</li>
                 <li><a data-ui="link" href="studio/index.html">Theme studio</a> · tune any theme live, export the CSS</li>
                 <li><a data-ui="link" href="engine/index.html">Reactive engine</a> · directives, magics, plugins</li>
+                <li><a data-ui="link" href="engine/csp/index.html">Strict-CSP engine</a> · no 'unsafe-eval', live</li>
                 <li><a data-ui="link" href="rules/index.html">Rules and validation</a> · one definition, three realms</li>
                 <li><a data-ui="link" href="template/index.html">Server templates</a> · render components on the server</li>
                 <li><a data-ui="link" href="scaffolds/index.html">Scaffolds</a> · five complete pages</li>

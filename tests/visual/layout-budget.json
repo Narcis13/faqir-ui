@@ -6,7 +6,7 @@
         "height": 900
       },
       "totals": {
-        "pages": 283,
+        "pages": 286,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -15,6 +15,12 @@
       },
       "pages": {
         "404.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "accent/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -687,6 +693,12 @@
           "overlaps": 0
         },
         "density/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "engine/csp/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1394,6 +1406,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "print/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "responsive/index.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -1720,7 +1738,7 @@
         "height": 812
       },
       "totals": {
-        "pages": 283,
+        "pages": 286,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -1729,6 +1747,12 @@
       },
       "pages": {
         "404.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "accent/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2401,6 +2425,12 @@
           "overlaps": 0
         },
         "density/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "engine/csp/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -3103,6 +3133,12 @@
           "overlaps": 0
         },
         "playground/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "print/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,

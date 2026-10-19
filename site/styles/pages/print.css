@@ -1,0 +1,59 @@
+/* ── Documents & print (print/) and the strict-CSP engine (engine/csp/) ──
+   Same rules as docs.css: attribute selectors and tokens only. Both pages
+   open with the studio's intro shape: a badge, a balanced heading, a lede. */
+
+:is([data-docs-print], [data-docs-csp]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
+}
+
+:is([data-docs-print-intro], [data-docs-csp-intro]) {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-inline-size: var(--measure-content);
+  padding-block-start: var(--space-8);
+}
+
+:is([data-docs-print-intro], [data-docs-csp-intro]) :is(h1, p, pre) {
+  margin: 0;
+}
+
+:is([data-docs-print-intro], [data-docs-csp-intro]) h1 {
+  text-wrap: balance;
+}
+
+:is([data-docs-print-intro], [data-docs-csp-intro]) pre,
+[data-docs-csp-policy] {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  font-size: var(--text-xs);
+}
+
+[data-docs-print-chart] {
+  max-inline-size: var(--measure-content);
+}
+
+/* ── Strict-CSP engine ── */
+[data-docs-csp-proof] {
+  margin: 0;
+}
+
+[data-docs-csp-proof] dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+[data-docs-csp-demos] > * {
+  min-inline-size: 0;
+}
+
+[data-docs-csp-demos] p {
+  margin: 0;
+}
+
+[data-docs-csp] a[data-ui="button"] {
+  text-decoration-line: none;
+}

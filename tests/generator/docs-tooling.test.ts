@@ -196,8 +196,10 @@ describe("Integrations page is generated from the packages", () => {
     expect(html).toContain("&lt;template #title&gt;Sign in&lt;/template&gt;");
   });
 
-  it("tables the seven publishable packages with their real versions and GitHub links", () => {
-    const dirs = ["core", "forms", "mcp", "react", "rules", "vue"];
+  it("tables the eight publishable packages with their real versions and GitHub links", () => {
+    // @faqir-ui/template joined the lockstep set in 1.2.5; the table missed it until 1.3.
+    const dirs = ["core", "forms", "mcp", "react", "rules", "template", "vue"];
+    expect(html).toContain("8 publishable packages, one version line.");
     const root = JSON.parse(readFileSync(join(REPO, "package.json"), "utf8")) as { name: string; version: string };
     expect(html).toContain(`<code>${root.name}</code>`);
     for (const d of dirs) {

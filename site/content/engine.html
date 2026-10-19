@@ -43,6 +43,23 @@
             the scope declares is in scope unqualified, and the <code>$…</code> magics below
             are always available.
           </p>
+          <p>
+            A classic <code>&lt;script defer&gt;</code> engine boots on <code>DOMContentLoaded</code>,
+            after the deferred scripts that follow it, so plugins and <code>Faqir.data()</code>
+            registrations in later tags are in place before the first scope binds.
+          </p>
+          <div data-ui="callout" data-variant="info" role="note">
+            <span data-part="icon"><span data-ui="icon" data-icon="shield" aria-hidden="true"></span></span>
+            <div data-part="content">
+              <strong data-part="title">Under a strict Content-Security-Policy, swap one file.</strong>
+              <p>
+                This build compiles expressions with <code>new Function</code>, so its pages need
+                <code>'unsafe-eval'</code>. <code>faqir-core.csp.js</code> interprets them instead, with
+                the same directives, controllers and API.
+                <a data-ui="link" href="csp/index.html">Watch it run under a policy without <code>'unsafe-eval'</code></a>.
+              </p>
+            </div>
+          </div>
         </section>
 
         <section aria-labelledby="engine-directives-heading" data-docs-section>
@@ -626,6 +643,25 @@
   </div>
 </form>
           </template>
+        </section>
+
+        <section aria-labelledby="engine-script-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">From plain JavaScript</span>
+            <h2 id="engine-script-heading"><code>Faqir.ui()</code> reaches any component's controller.</h2>
+            <p>
+              <code>$ui</code> answers inside an expression; <code>Faqir.ui(selectorOrElement)</code> is the
+              same lookup from a script, a test or an agent driving the page, and the typed ESM build
+              exports it as <code>ui</code>. It returns <code>null</code> when nothing matches or the match
+              has no controller.
+            </p>
+          </div>
+          <pre tabindex="0"><code>Faqir.ui("#settings-tabs").activate(1);
+Faqir.ui(document.querySelector("[data-ui='dialog']")).open();
+
+// Registered after boot, a directive is applied once to the bound
+// elements that already carry it (here l-hint), in their scopes.
+Faqir.directive("hint", function (el, dir, scope) { … });</code></pre>
         </section>
 
         <section aria-labelledby="engine-inspect-heading" data-docs-section>

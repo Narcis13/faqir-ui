@@ -1,0 +1,192 @@
+<!--
+  Documents & print (1.3). The live documents are the invoice and report
+  scaffolds, in the same frames the scaffold gallery uses, so they follow the
+  theme picker. The chart is drawn by scripts/plugins/faqir-chart.js, which
+  runs without the engine. The generator replaces @faqir:print-voices with the
+  print themes' document tokens, read out of their stylesheets.
+-->
+      <div data-docs-print>
+        <header data-docs-print-intro>
+          <span data-ui="badge" data-variant="primary">New in 1.3</span>
+          <h1>Paper is a target, <span data-ui="highlight">not an afterthought</span>.</h1>
+          <p>
+            The <a data-ui="link" href="../components/patterns/document.html">document</a> pattern prints
+            on named pages sized from its own attributes, repeats a running header and footer, counts
+            pages in the document's language and folds into an envelope window. Five print themes
+            give it five typographic voices, and every component that carries data prints its data.
+          </p>
+          <pre tabindex="0"><code>&lt;article data-ui="document" data-variant="invoice"
+         data-format="a4" data-orientation="portrait"
+         data-header="from-page-2" lang="de"&gt;</code></pre>
+        </header>
+
+        <section aria-labelledby="print-live-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Live</span>
+            <h2 id="print-live-heading">Two documents the CLI writes for you.</h2>
+            <p>
+              <code>faqir scaffold invoice</code> and <code>faqir scaffold report</code>, rendered. Choose
+              <code>document</code>, <code>ink-document</code> or <code>swiss-document</code> in the header
+              to read a print voice on screen; open a scaffold and print it to see the pages.
+            </p>
+          </div>
+          <div data-ui="grid" data-cols="1" data-cols-lg="2" data-gap="4" data-docs-featured-grid>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <h3 data-part="title">Invoice</h3>
+                <p data-part="description">Line items, a payment QR code and signatures, on A4.</p>
+              </div>
+              <div data-part="body">
+                <iframe src="../frames/scaffold-invoice.html" title="invoice scaffold, live" loading="lazy" data-component-frame></iframe>
+              </div>
+              <div data-part="footer">
+                <a data-ui="link" href="../scaffolds/invoice/index.html">Open the invoice scaffold</a>
+              </div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <h3 data-part="title">Report</h3>
+                <p data-part="description">Callouts, metrics, details and imagery, with a running page counter.</p>
+              </div>
+              <div data-part="body">
+                <iframe src="../frames/scaffold-report.html" title="report scaffold, live" loading="lazy" data-component-frame></iframe>
+              </div>
+              <div data-part="footer">
+                <a data-ui="link" href="../scaffolds/report/index.html">Open the report scaffold</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="print-pages-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <h2 id="print-pages-heading">Named pages: the paper comes from the document.</h2>
+            <p>
+              A document asks for its own <code>@page</code> by name, so an app that bundles the
+              pattern but prints an ordinary page keeps the browser's margins. A document that states
+              both its format and its orientation pins a literal page, so one file can print an A4
+              invoice and a Letter statement.
+            </p>
+          </div>
+          <div data-docs-table tabindex="0">
+            <table>
+              <thead><tr><th scope="col">The document says</th><th scope="col">It prints on</th></tr></thead>
+              <tbody>
+                <tr><td>neither, or only one of them</td><td><code>@page faqir-document</code>, paper and margins from the <code>--page-*</code> tokens</td></tr>
+                <tr><td><code>data-format="a4" data-orientation="portrait"</code></td><td><code>@page faqir-document-a4-portrait</code></td></tr>
+                <tr><td><code>data-format="a4" data-orientation="landscape"</code></td><td><code>@page faqir-document-a4-landscape</code></td></tr>
+                <tr><td><code>data-format="letter" data-orientation="portrait"</code></td><td><code>@page faqir-document-letter-portrait</code></td></tr>
+                <tr><td><code>data-format="letter" data-orientation="landscape"</code></td><td><code>@page faqir-document-letter-landscape</code></td></tr>
+                <tr><td><code>data-variant="letter"</code></td><td><code>@page faqir-document-letter</code>, A4 with the DIN 5008 margins</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            A change of named page is a forced break, so only documents that ask for different paper
+            break between them. The page counter reads <code>Page 1 / 3</code> and is localised from the
+            document's <code>lang</code> for German, Spanish, French, Italian, Dutch, Portuguese and
+            Romanian; any other language sets <code>--doc-page-label</code>,
+            <code>--doc-page-separator</code> and <code>--doc-page-suffix</code> on <code>:root</code>.
+          </p>
+        </section>
+
+        <section aria-labelledby="print-running-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <h2 id="print-running-heading">Running headers and footers, two ways.</h2>
+            <p>
+              By default the document's own <code>doc-header</code> and <code>doc-footer</code> repeat on
+              every printed page. Two attributes change that, and both are opt-in.
+            </p>
+          </div>
+          <div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="6">
+            <div>
+              <h3><code>data-header="from-page-2"</code></h3>
+              <p>Leaves the running header off the first page, where the letterhead already is.</p>
+            </div>
+            <div>
+              <h3><code>data-running="margin"</code></h3>
+              <p>Prints the header and footer from two CSS strings in the page-margin boxes, with the footer and the counter on one line under one rule. The DOM header stays for the screen.</p>
+            </div>
+          </div>
+          <pre tabindex="0"><code>:root {
+  --doc-running-header: "Forecraft · Quarterly report";
+  --doc-running-footer: "Confidential \A Registered in Bucharest";
+}</code></pre>
+          <p>Set the strings on <code>:root</code>: a page box inherits from the root element only.</p>
+        </section>
+
+        <section aria-labelledby="print-letter-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <h2 id="print-letter-heading">A business letter that fits the envelope.</h2>
+            <p>
+              <code>data-variant="letter"</code> is a DIN 5008 letter: A4, fold marks at 105 and 210 mm,
+              a punch mark at 148.5 mm, and an <code>address</code> part that prints inside the Form B
+              window. <code>data-form="a"</code> moves it to Form A.
+            </p>
+          </div>
+          <pre tabindex="0"><code>&lt;article data-ui="document" data-variant="letter" lang="de" aria-label="Letter to Müller GmbH"&gt;
+  &lt;header data-part="doc-header"&gt; … letterhead … &lt;/header&gt;
+  &lt;address data-part="address"&gt;Müller GmbH&lt;br&gt;Hauptstraße 5&lt;br&gt;10115 Berlin&lt;/address&gt;
+  &lt;div data-part="body"&gt; … &lt;/div&gt;
+&lt;/article&gt;</code></pre>
+        </section>
+
+        <section aria-labelledby="print-data-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Live</span>
+            <h2 id="print-data-heading">Every component with data prints its data.</h2>
+            <p>
+              The <a data-ui="link" href="../components/primitives/chart.html">chart</a> below is drawn by
+              <code>faqir-chart.js</code> from its own table. On screen the table is visually hidden and a
+              screen reader still reaches it; on paper it prints under the drawing. Print this page to
+              see both.
+            </p>
+          </div>
+          <figure data-ui="chart" data-variant="column" data-docs-print-chart>
+            <figcaption data-part="caption">Invoices paid per quarter</figcaption>
+            <div data-part="plot"></div>
+            <table data-part="data">
+              <thead>
+                <tr><th scope="col">Quarter</th><th scope="col">Paid</th><th scope="col">Overdue</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Q1</th><td>42</td><td>9</td></tr>
+                <tr><th scope="row">Q2</th><td>57</td><td>6</td></tr>
+                <tr><th scope="row">Q3</th><td>61</td><td>4</td></tr>
+                <tr><th scope="row">Q4</th><td>48</td><td>7</td></tr>
+              </tbody>
+            </table>
+          </figure>
+          <ul>
+            <li><a data-ui="link" href="../components/recipes/table.html">table</a> repeats its head on every page, and <code>data-print-footer="last"</code> prints the totals row once, at the end.</li>
+            <li><a data-ui="link" href="../components/recipes/qr-code.html">qr-code</a> encodes versions 1 to 40 and <a data-ui="link" href="../components/recipes/barcode.html">barcode</a> draws its bars; both keep a quiet zone (<code>--qr-quiet</code>, <code>--barcode-quiet</code>) and set <code>data-state="error"</code> on a value they cannot encode.</li>
+            <li><a data-ui="link" href="../components/primitives/quote.html">quote</a> takes <code>data-mark="above|hang|none"</code> and sizes itself from the document it sits in; <a data-ui="link" href="../components/primitives/page-break.html">page-break</a> forces a break before or after itself, and shows where on screen.</li>
+            <li><code>faqir fonts add &lt;family&gt; --italic</code> installs the true italics thirteen catalog families ship, pinned by SHA-256, so emphasis on paper is a real italic rather than a slanted roman.</li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="print-voices-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">From the stylesheets</span>
+            <h2 id="print-voices-heading">Five print themes, five voices.</h2>
+            <p>
+              A print theme used to differ from another only in hue. Now each one re-declares the
+              document tokens that make a table read differently on paper: how heavy the rules are,
+              how large the numerals sit and whether the first and last cells hang flush. A muted
+              value below is the token layer's default, kept by that theme.
+            </p>
+          </div>
+<!-- @faqir:print-voices -->
+          <p>
+            <code>faqir theme generate</code> with <code>document: true</code> gives a seed's print companion
+            the voice of its <code>type.pairing</code>: a serif pairing prints like
+            <code>editorial-document</code>, <code>sans-grotesque</code> like <code>swiss-document</code>,
+            and <code>slab</code> like <code>ink-document</code>.
+          </p>
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../themes/document/index.html">The document theme's specimen sheet</a>
+            <a data-ui="link" data-effect="arrow" href="../themes/authoring/index.html">Generate a theme with a print companion</a>
+            <a data-ui="link" data-effect="arrow" href="../scaffolds/index.html">Every scaffold</a>
+          </div>
+        </section>
+      </div>

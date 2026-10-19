@@ -770,7 +770,10 @@ ${json(lintReport)}`) + "\n" +
     [`${code("string")} + ${code('format: "date"')}`, `${code("date-picker")} + ${code("calendar")}`],
     [`${code("string")} + ${code("enum")} (1 to 4 values)`, "radio group"],
     [`${code("string")} + ${code("enum")} (5+ values)`, "select"],
-    [code("number"), code("input[type=number]")],
+    [`${code("string")} or ${code("integer")} + ${code("enum")} + widget ${code("scale")}`, "horizontal radio group with end captions"],
+    [`${code("integer")} + ${code("enum")}`, "radio group (1 to 4 values) or select, like a string enum"],
+    [`${code("integer")} + ${code("minimum")}/${code("maximum")} + widget ${code("scale")}`, "one radio per step of the range, as a scale (at most 21)"],
+    [code("number"), code("input[type=number][step=any]")],
     [code("integer"), code("input[type=number][step=1]")],
     [code("boolean"), `checkbox, or ${code("switch")} via the UI schema`],
     [`${code("object")} (nested)`, `fieldset card (${code("card")} + ${code("legend")}), children recurse`],
@@ -789,9 +792,41 @@ ${json(lintReport)}`) + "\n" +
   const forms =
     `      <p><code>renderForm(jsonSchema, uiSchema?, opts?)</code> turns a JSON Schema into audit-clean Faqir markup: field-groups, deterministic ids, <code>l-validate</code>, and <code>l-data</code> on the form so the engine adopts it as a scope root. ` +
     `It only builds strings. The browser needs <code>faqir-core.js</code> and <code>faqir-validate.js</code>, plus <code>faqir-rules.js</code> when the form carries rules; the <code>@ui:requires</code> comment at the top says which. ` +
-    `Options are <code>idPrefix</code>, <code>radioThreshold</code> (default <code>${DEFAULT_RADIO_THRESHOLD}</code>), <code>theme</code>, <code>density</code>, <code>i18n</code> and <code>rules</code>.</p>\n` +
+    `Options are <code>idPrefix</code>, <code>radioThreshold</code> (default <code>${DEFAULT_RADIO_THRESHOLD}</code>), <code>theme</code>, <code>density</code>, <code>i18n</code>, <code>rules</code>, <code>gap</code> (the rhythm step between fields, default <code>4</code>), <code>submit</code>, <code>heading</code> and <code>labelledBy</code>. ` +
+    `A single-page form ends in its submit button; <code>submit: false</code> leaves it out for a page that places its own. <code>{ heading: false, labelledBy: "hero-title" }</code> is for a page that draws its own hero above the form: the schema's <code>title</code> still names the form, without a second heading inside the card.</p>\n` +
     `      <h3 id="forms-widgets">Widget mapping</h3>\n` +
     table(["JSON Schema", "Faqir widget"], widgetRows, "No widgets.") + "\n" +
+    `      <h3 id="forms-layout">Layout keys</h3>\n` +
+    `      <p>On any scalar or enum-array field of the UI schema. <code>width</code> becomes <code>data-span</code> on the field-group: from the md tier up, the fields' container is a six-track grid and the field takes that share of a row, while a phone stays one column.</p>\n` +
+    table(
+      ["Key", "Values", "Renders"],
+      [
+        [code("width"), `${code('"full"')} ${code('"half"')} ${code('"third"')}`, `${code("data-span")} on the field-group`],
+        [code("orientation"), `${code('"vertical"')} ${code('"horizontal"')}`, `${code("data-orientation")} on a radio or checkbox group: horizontal is a wrapping row`],
+        [`${code("minLabel")}, ${code("maxLabel")}`, "strings", `captions under the first and last choice of a ${code("scale")}, wired to those options' ${code("aria-describedby")}`],
+      ],
+      "No layout keys.",
+    ) + "\n" +
+    pre(`const uiSchema = {
+  firstName: { width: "half" },
+  lastName: { width: "half" },
+  contact: { widget: "radio", orientation: "horizontal" },
+  recommend: { widget: "scale", minLabel: "Not likely", maxLabel: "Very likely" }, // integer 0–10
+};`) + "\n" +
+    `      <h3 id="forms-submit">Submitting: <code>faqir:valid-submit</code></h3>\n` +
+    `      <p><code>faqir-validate</code> fires <code>faqir:valid-submit</code> on the form, bubbling and cancelable, once per finished submit: on every clean submit of a single-page form, just before the browser posts it, and on the clean submit of a wizard's last step. ` +
+    `Cancel it and there is no native post, which is the hook a single-page app needs. <code>event.detail</code> is the form's data: <code>Faqir.rules.data(form)</code> when <code>faqir-rules</code> is loaded, coerced through the definition with any field a rule hid left out, which is what a server's <code>coerce</code> makes of the post. A control the wizard disabled on an earlier step still answers.</p>\n` +
+    pre(`document.addEventListener("faqir:valid-submit", async (event) => {
+  event.preventDefault();
+  await fetch("/api/forms/signup", { method: "POST", body: JSON.stringify(event.detail) });
+});`) + "\n" +
+    `      <h3 id="forms-rules-for"><code>rulesFor</code>: the definition as data</h3>\n` +
+    `      <p>A server that re-checks a submission needs the definition the page enforces, without rendering HTML and parsing the script back out. <code>rulesFor(schema, ui, opts)</code> takes <code>renderForm</code>'s arguments and returns exactly the object the form's rules script holds, or <code>null</code> when the form carries none. It is the same render, so the two cannot drift.</p>\n` +
+    pre(`import { rulesFor } from "@faqir-ui/forms";
+import { coerce, fromFormData, validate } from "@faqir-ui/rules";
+
+const definition = rulesFor(jsonSchema, uiSchema, opts);
+const verdict = validate(definition, coerce(definition, fromFormData(body)));`) + "\n" +
     `      <h3 id="forms-rules">Schema → rules</h3>\n` +
     `      <p>A form's <code>fields</code> map is always derived from the schema, with the same coercion types the widgets were chosen from, so the page's data and the server's data are the same object. ` +
     `<code>opts.rules</code> adds what a schema cannot say; author rules come first and keep their ids. Four conditional keywords the schema itself may carry become rules instead of throwing:</p>\n` +

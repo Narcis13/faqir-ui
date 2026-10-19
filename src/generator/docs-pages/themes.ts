@@ -728,6 +728,7 @@ function renderAuthoringPage(ctx: PageContext, themes: ThemeEntry[]): SiteFile {
     ["light-dark", "Authoring both schemes"],
     ["rules", "What a theme may contain"],
     ["scoped", "Scoped themes and data-skin"],
+    ["accent", "A runtime accent instead"],
     ["fonts", "Self-hosted fonts"],
     ["manifest", "Manifest fields"],
   ] as [string, string][];
@@ -905,6 +906,17 @@ function renderAuthoringPage(ctx: PageContext, themes: ThemeEntry[]): SiteFile {
         )}: a single-scheme theme's scope root pins the one it has, and a dual theme's declares none, so the island inherits the page's scheme like any other element. The token set before and after must be identical or the transform throws. A theme with a print companion bundles both, each to its own ${code(
           "data-skin",
         )}; an explicit selector names one subtree and leaves the companion to a second run.</p>`,
+    ),
+    section(
+      "accent",
+      "A runtime accent instead",
+      `      <p>When the brief is a brand colour and not a new voice, no theme is needed. ${code(
+        'data-accent="<hue>"',
+      )} on any element re-hues the active theme's ${code("--color-primary")} family and focus ring for that subtree, keeping the theme's own lightness and chroma, in nine named hues each measured against every theme's contrast pairs, or ${code(
+        "custom",
+      )} with ${code("--accent-hue")}. It is a token modifier of the protocol, not a theme, so it works under every theme here, scoped islands included.</p>
+` +
+        `      <p><a data-ui="link" href="${escAttr(relUrl(THEME_AUTHORING_PAGE, "accent/index.html"))}">The runtime accent, live in every hue</a>.</p>`,
     ),
     section(
       "fonts",

@@ -35,6 +35,10 @@ import {
   ENGINE_PAGE,
   MOTION_PAGE,
   STUDIO_PAGE,
+  ACCENT_PAGE,
+  PRINT_PAGE,
+  CSP_PAGE,
+  CSP_ENGINE_SCRIPT,
   TWEAK_SCRIPT,
   RESPONSIVE_PAGE,
   THEMES_PAGE,
@@ -334,6 +338,8 @@ describe("site JavaScript", () => {
     expect(shipped).toEqual(
       [
         "scripts/faqir-core.js",
+        // The strict-CSP twin, loaded by the strict-CSP page alone (1.3).
+        CSP_ENGINE_SCRIPT,
         "scripts/faqir-manifests.js",
         ...PLUGIN_SCRIPTS,
         ...SITE_SCRIPTS.map((n) => `scripts/${n}`),
@@ -382,6 +388,13 @@ describe("site JavaScript", () => {
       TWEAK_SCRIPT,
       "scripts/studio.js",
     ]);
+    // 1.3: the accent page's custom dial is an l-data scope; the print page and
+    // the home page draw a chart, which faqir-chart does without the engine; the
+    // strict-CSP page runs the interpreter build, never faqir-core.js.
+    expect(scriptsOf(ACCENT_PAGE)).toEqual(["scripts/gallery.js", "scripts/faqir-core.js"]);
+    expect(scriptsOf(PRINT_PAGE)).toEqual(["scripts/gallery.js", "scripts/plugins/faqir-chart.js"]);
+    expect(scriptsOf("index.html")).toEqual(["scripts/gallery.js", "scripts/plugins/faqir-chart.js"]);
+    expect(scriptsOf(CSP_PAGE)).toEqual(["scripts/gallery.js", CSP_ENGINE_SCRIPT, "scripts/csp-proof.js"]);
     expect(scriptsOf("components/primitives/button.html")).toEqual([
       "scripts/gallery.js",
       "scripts/copy-snippet.js",
@@ -427,8 +440,9 @@ describe("site JavaScript", () => {
     // sheet per theme (src/generator/docs-pages/).
     // +1: the motion page (the studio is checked above, with its plugin).
     // +6 on 1.2.5: the Server templates section (src/generator/docs-pages/template.ts).
+    // +3 on 1.3: the runtime accent, documents & print, and the strict-CSP engine.
     expect(documentation.length).toBe(
-      components.length + 16 + 7 + 1 + 6 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 16 + 7 + 1 + 6 + 3 + SCAFFOLD_NAMES.length + themes.length,
     );
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
@@ -441,7 +455,16 @@ describe("site JavaScript", () => {
       // template engine wrote for it says so, in its `@ui:requires` comment.
       const templateNeedsEngine =
         f.path.startsWith("template/") && f.content.includes("<!-- @ui:requires faqir-core.js");
-      const allowed = isComponentPage
+      // The 1.3 pages, and the home page's chart, as asserted script by script above.
+      const own: Record<string, string[]> = {
+        "index.html": ["scripts/plugins/faqir-chart.js"],
+        [ACCENT_PAGE]: ["scripts/faqir-core.js"],
+        [PRINT_PAGE]: ["scripts/plugins/faqir-chart.js"],
+        [CSP_PAGE]: [CSP_ENGINE_SCRIPT, "scripts/csp-proof.js"],
+      };
+      const allowed = own[f.path]
+        ? ["scripts/gallery.js", ...own[f.path]!].map((p) => `<script src="${relUrl(f.path, p)}" defer>`)
+        : isComponentPage
         ? [
             `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
             `<script src="${relUrl(f.path, "scripts/copy-snippet.js")}" defer>`,
