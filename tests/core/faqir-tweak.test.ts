@@ -2,6 +2,8 @@
 // inline custom properties, the export hands them back as a :root block, and
 // the state round-trips through localStorage.
 import { beforeEach, describe, expect, it } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 const Faqir = require("../../registry/core/faqir-core.js");
 
@@ -12,7 +14,16 @@ Faqir.plugin = function (fn: (api: typeof Faqir) => void) {
   return originalPlugin.call(Faqir, fn);
 };
 (globalThis as any).Faqir = Faqir;
-const install = require("../../registry/core/plugins/faqir-tweak.js");
+// Evaluated from source rather than require()d: another file in this shared
+// realm (faqir-tweak-forecraft-accent) may already hold the module in the
+// require cache, and a cached require neither runs the self-registration nor
+// hands back a fresh installer — which made this file depend on test-file order.
+const install = (() => {
+  const mod = { exports: {} as any };
+  const source = readFileSync(join(import.meta.dir, "../../registry/core/plugins/faqir-tweak.js"), "utf8");
+  new Function("module", "exports", source)(mod, mod.exports);
+  return mod.exports;
+})();
 Faqir.plugin = originalPlugin;
 
 const html = document.documentElement;
