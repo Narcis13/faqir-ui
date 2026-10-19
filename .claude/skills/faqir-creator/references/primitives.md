@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-54 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+55 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -244,6 +244,67 @@ Container surface with header, optional divider, body, and footer slots; direct 
 
 - **Safe transforms:** `change-variant`, `add-header`, `add-divider`, `add-footer`, `change-title`, `restyle-background`, `add-media`, `set-hover`
 - **Unsafe (never do):** `remove-body-slot`, `flatten-to-single-div`
+
+## chart
+
+_kind: primitive · category: data-display_
+
+Bar, column or line chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin
+
+```html
+<figure data-ui="chart" data-variant="{variant}">
+  <figcaption data-part="caption">{caption}</figcaption>
+  <div data-part="plot"></div>
+  <table data-part="data">
+    <thead>
+      <tr><th scope="col">{category_heading}</th><th scope="col">{series}</th></tr>
+    </thead>
+    <tbody>
+      <tr><th scope="row">{category}</th><td>{value}</td></tr>
+    </tbody>
+  </table>
+</figure>
+```
+
+**Anatomy**
+
+```text
+[data-ui='chart']  ·  <figure> · content: slots
+├─ [data-part='caption']  <figcaption>  optional  — The chart's title. It opens the SVG's aria-label, so name the measure and its unit here ("Revenue, thousand euro")
+├─ [data-part='plot']  <div>  optional  — Where faqir-chart draws the SVG; empty and collapsed until it does. The plugin creates it before the table when the markup leaves it out
+├─ [data-part='data']  <table>  required  — The numbers: the last thead row names the category column and then one series per column; each tbody row is a category, its first cell the label, the rest one value per series. A cell's number is its data-value when present, else its text read in the page language; the text itself is what the labels and the aria-label read. Visible without JavaScript; once the chart draws, visually hidden on screen and printed under the chart
+├─ [data-part='grid']  <g>  optional  — Drawn by faqir-chart: the value-axis rules, one line per tick
+├─ [data-part='axis']  <g>  optional  — Drawn by faqir-chart: the tick and category labels
+├─ [data-part='marks']  <g>  optional  — Drawn by faqir-chart: one series group per table column, in table order
+├─ [data-part='series']  <g>  optional  — Drawn by faqir-chart: one series' marks, labels and name. Its position in marks picks its lightness band
+├─ [data-part='mark']  <rect>  optional  — Drawn by faqir-chart: a bar or column (rect), or a line's point (circle)
+├─ [data-part='line']  <path>  optional  — Drawn by faqir-chart: a line series' path, dashed per series (solid, dash, dot, dash-dot)
+├─ [data-part='label']  <text>  optional  — Drawn by faqir-chart: a value label on a mark, the cell's own text, where it fits
+├─ [data-part='name']  <text>  optional  — Drawn by faqir-chart: a series name written on its marks (bar, column) or after its end (line) instead of a legend, where every name fits
+├─ [data-part='baseline']  <line>  optional  — Drawn by faqir-chart: the zero rule the bars and columns grow from
+├─ [data-part='legend']  <g>  optional  — Drawn by faqir-chart only when the series names do not fit on the marks
+├─ [data-part='key']  <g>  optional  — Drawn by faqir-chart: one legend entry, a swatch and the series name
+└─ [data-part='swatch']  <rect>  optional  — Drawn by faqir-chart: a legend key's sample of the series' band (and dash, for lines)
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| variant | `column`, `bar`, `line` | `column` | `data-variant` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createChart(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `redraw()` | Read the data table again and redraw the chart; false when it holds no number. |
+| `destroy()` | Stop watching the table, remove the drawing and show the table again. |
+
+- **Safe transforms:** `Change data-variant to column, bar or line`, `Add, remove or reorder table rows (categories) and columns (series)`, `Edit a cell's text, or add a data-value with its number`, `Change data-table to auto, visible or hidden`, `Set --chart-accent to another colour token`
+- **Unsafe (never do):** `Remove the data table`, `Draw the chart without the table (an SVG alone has no accessible numbers and nothing to print without JavaScript)`, `Give the marks literal colours`
+- **Required ARIA:** `a <table data-part="data"> with th scope="col" headers and th scope="row" category labels`; `the drawn svg carries role="img" and an aria-label reading the caption, the kind and every value`
 
 ## checkbox
 

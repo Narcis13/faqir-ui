@@ -136,7 +136,7 @@ Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split 
 
 ## Component Inventory
 
-**54 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, skip-link, spinner, spotlight, stack, stamp, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
+**55 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, chart, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, skip-link, spinner, spotlight, stack, stamp, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
 
 **29 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 
@@ -184,6 +184,7 @@ Width is the one thing it sets for you: `max-inline-size: var(--measure-prose)`.
 
 Load a plugin after `faqir-core.js`, or combine core plus every plugin with `faqir bundle --js`:
 
+- `faqir-chart` (`redraw`, `destroy`): `registry/core/plugins/faqir-chart.js` — draws a chart's data table as an inline SVG bar, column or line chart.
 - `faqir-collapse` (`l-collapse`): `registry/core/plugins/faqir-collapse.js` — height auto-animation for a boolean expression.
 - `faqir-intersect` (`l-intersect`): `registry/core/plugins/faqir-intersect.js` — declarative IntersectionObserver hooks.
 - `faqir-mask` (`l-mask`): `registry/core/plugins/faqir-mask.js` — caret-safe input masking.
@@ -460,7 +461,7 @@ Every command accepts `--json` for machine-readable output.
 
 Full anatomy trees, variant tables, and safe/unsafe transforms for every component:
 
-- [references/primitives.md](references/primitives.md) — 54 primitives
+- [references/primitives.md](references/primitives.md) — 55 primitives
 - [references/recipes.md](references/recipes.md) — 29 recipes
 - [references/patterns.md](references/patterns.md) — 23 patterns
 - [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`

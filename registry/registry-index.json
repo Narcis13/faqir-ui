@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 106,
+  "count": 107,
   "components": [
     {
       "name": "aspect-ratio",
@@ -181,6 +181,28 @@
       "deps": [
         "button"
       ]
+    },
+    {
+      "name": "chart",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "chart.css",
+          "sha256": "974bab5e577e8da5c76e90f818f4f700c9df1a2d4620facbb7bb5ae616bf23ce"
+        },
+        {
+          "path": "chart.html",
+          "sha256": "5d10d66c6b368a99637a242b67e294c6a3f6d0b8e6bb357b49cd7755d3467921"
+        },
+        {
+          "path": "chart.manifest.json",
+          "sha256": "03e67e1e038ea32223a3e3dc9673e9d03f0bd8604820ed1a58d501a645e7a355"
+        }
+      ],
+      "hash": "8b5bc7ca06c38020d9d9a37ba115ef54d20157cca27848a3fbf396dd1260dac3",
+      "deps": []
     },
     {
       "name": "checkbox",
@@ -2183,7 +2205,7 @@
         },
         {
           "path": "document.css",
-          "sha256": "1624a93a0fab7e33537b8f7c304448a44f8caa69b3667b725b940b4917f21aa9"
+          "sha256": "cc8b045c9e7725e6fbd14f482e03a38354657c4b9c97103d130ccd9dd6c689ce"
         },
         {
           "path": "document.html",
@@ -2191,10 +2213,10 @@
         },
         {
           "path": "document.manifest.json",
-          "sha256": "39f16b778ac71e18a99e88d1bc35be4281015163d1c9fc7230191d604e1d89aa"
+          "sha256": "756088d8f5e85e985668b2236acb166c0cd6a89295cc91ba2f2c959805cb881b"
         }
       ],
-      "hash": "f57e930e250505c2964791498598b75206e73365e4b8bbd0d32382786c853bf7",
+      "hash": "eaf7187ec2559a4dbbe0f276669f67093c34c8b4c6b620bad332ad5a4fbcb959",
       "deps": [
         "key-value",
         "table",

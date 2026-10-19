@@ -171,10 +171,11 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 
 ## Plugin Vocabulary
 
-7 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).
+8 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).
 
 | Plugin | Provides | File | What it does |
 |---|---|---|---|
+| `faqir-chart` | `redraw`, `destroy` | `registry/core/plugins/faqir-chart.js` | draws a chart's data table as an inline SVG bar, column or line chart. |
 | `faqir-collapse` | `l-collapse` | `registry/core/plugins/faqir-collapse.js` | height auto-animation for a boolean expression. |
 | `faqir-intersect` | `l-intersect` | `registry/core/plugins/faqir-intersect.js` | declarative IntersectionObserver hooks. |
 | `faqir-mask` | `l-mask` | `registry/core/plugins/faqir-mask.js` | caret-safe input masking. |
@@ -182,6 +183,17 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 | `faqir-rules` | `l-rules`, `$rules` | `registry/core/plugins/faqir-rules.js` | a form's conditional logic, from one JSON definition. |
 | `faqir-tweak` | `l-tweak` | `registry/core/plugins/faqir-tweak.js` | a live theme studio for any Faqir page. |
 | `faqir-validate` | `l-validate` | `registry/core/plugins/faqir-validate.js` | declarative + programmatic form validation. |
+
+### `faqir-chart`
+
+The table is the source of truth and the SVG a progressive enhancement: without this plugin the table is the chart; once it draws, the root takes data-state="drawn", the table stays in the page for assistive technology and paper, and the SVG (role="img", an aria-label that reads the numbers) redraws when the table or the width changes. Colours, type and rules come from the component's custom properties; bar and column value axes start at zero; series differ by lightness, and lines also by dash. Runs with or without faqir-core.
+
+```html
+<figure data-ui="chart" data-variant="column">
+  <figcaption data-part="caption">Revenue, k€</figcaption>
+  <table data-part="data"> … </table>
+</figure>
+```
 
 ### `faqir-collapse`
 
@@ -240,7 +252,7 @@ On init and on every `input`/`change`/`reset`, the form's controls are read (a c
 
 ### `faqir-tweak`
 
-Mounts a panel of dials into the element: scheme and density, the accent's hue and chroma, the radius, spacing, type and motion scales, the heading voice, easing personality, hover lift, edge weight, depth and material. Every dial writes design tokens onto `<html>` as inline custom properties — nothing is recompiled, every component on the page follows at once — and `Faqir.tweak.css()` hands back the overrides as a `:root` block to paste into a theme. The state persists in localStorage, so a tweak survives a reload. Self-registering, zero dependencies.
+Mounts a panel of dials into the element: scheme and density, a named accent (`data-accent`), the accent's hue and chroma, the radius, spacing, type and motion scales, the heading voice, easing personality, hover lift, edge weight, depth and material. Every dial writes design tokens onto `<html>` as inline custom properties — nothing is recompiled, every component on the page follows at once — and `Faqir.tweak.css()` hands back the overrides as a `:root` block to paste into a theme. The state persists in localStorage, so a tweak survives a reload. Self-registering, zero dependencies.
 
 ```html
 <aside l-tweak aria-label="Theme studio"></aside>

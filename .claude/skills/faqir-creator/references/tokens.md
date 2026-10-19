@@ -4,14 +4,15 @@
 
 Every token the registry declares, read out of `registry/tokens/*.css` — the values below ARE the declarations. Never hardcode a colour, size, duration or shadow: reference one of these tokens through `var()`.
 
-Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.css` → `typography.css` → `effects.css` → `textures.css` → `motion.css` → `semantic.css` → `aliases.css` → `document.css` → `doc-aliases.css` → `density.css`. First declaration wins, and each heading below is the `@ui:tokens` group name its file carries — palette (raw values) feeds semantic (purpose) feeds aliases (per-component).
+Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.css` → `typography.css` → `effects.css` → `textures.css` → `motion.css` → `semantic.css` → `aliases.css` → `document.css` → `doc-aliases.css` → `accent.css` → `density.css`. First declaration wins, and each heading below is the `@ui:tokens` group name its file carries — palette (raw values) feeds semantic (purpose) feeds aliases (per-component).
 
 ## Sanctioned Token Modifiers
 
-4 attributes are part of the frozen contract without being protocol attributes: each re-declares design tokens for its subtree, and every descendant inherits the result. None names a component, fills a slot, or needs a manifest declaration.
+5 attributes are part of the frozen contract without being protocol attributes: each re-declares design tokens for its subtree, and every descendant inherits the result. None names a component, fills a slot, or needs a manifest declaration.
 
 | Attribute | Purpose | Values | Written by | Scope |
 |---|---|---|---|---|
+| `data-accent` | Re-hues the five accent tokens for a subtree, keeping the active theme's own lightness and chroma. | `violet`, `purple`, `fuchsia`, `pink`, `custom` | author | Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. `custom` takes its hue from `--accent-hue`. |
 | `data-density` | Re-declares the spacing and control-height ramps for a subtree. | `compact`, `comfortable`, `spacious` | author | Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. |
 | `data-motion` | The transition phase of one enter/leave cycle, driven by the engine. | `enter`, `enter-active`, `leave`, `leave-active` | controller | The element being transitioned. Removed again when the cycle ends. |
 | `data-skin` | Selects which theme's token declarations a subtree resolves — the scope selector `faqir theme bundle` emits when it scopes a theme to part of a page. | `<theme-name>` | author | Legal on any element; scopes the theme it names to that element's subtree without switching the whole page. |
@@ -19,7 +20,7 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-393 tokens in 10 groups:
+397 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
@@ -29,7 +30,7 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 - `motion` (30) — easings, durations and motion personality
 - `semantic` (31) — purpose-based tokens, referenced by components
 - `aliases` (65) — per-component overrides mapping to semantic tokens
-- `document` (63) — structural tokens for document/print rendering
+- `document` (67) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
 ## palette — raw oklch color values, never referenced by components directly
@@ -574,7 +575,7 @@ _`registry/tokens/aliases.css` · 65 tokens_
 
 ## document — structural tokens for document/print rendering
 
-_`registry/tokens/document.css` · 63 tokens_
+_`registry/tokens/document.css` · 67 tokens_
 
 ### Page Geometry
 
@@ -653,6 +654,10 @@ _`registry/tokens/document.css` · 63 tokens_
 | `--doc-table-footer-bg` | `var(--color-bg-muted)` | — |
 | `--doc-table-footer-weight` | `var(--weight-bold)` | — |
 | `--doc-table-stripe-bg` | `var(--color-bg-subtle)` | — |
+| `--doc-rule-scale` | `1` | — |
+| `--doc-rule-strong-scale` | `1` | — |
+| `--doc-table-num-scale` | `1` | — |
+| `--doc-table-flush` | `0` | — |
 
 ### Signature Tokens
 
@@ -818,3 +823,41 @@ Invariant in `spacing`: `--space-0`, `--space-px` — never scaled, at any densi
 | `--section-gap-md` | `var(--space-20)` | `var(--space-20)` |
 | `--section-gap-lg` | `var(--space-32)` | `var(--space-32)` |
 | `--content-gutter` | `var(--space-6)` | `var(--space-6)` |
+
+## accent — [data-accent] subtree modifier
+
+_`registry/tokens/accent.css` · 4 named hues · 7 tokens re-pointed per scope_
+
+`data-accent` sets `--accent-hue` (OKLCH degrees) and re-points the tokens below to `oklch(from <the theme's own value> l c <hue>)` — the theme's lightness and chroma, the accent's hue. `custom` names no hue: set `--accent-hue` beside it.
+
+| Value | `--accent-hue` |
+|---|---|
+| `violet` | `293` |
+| `purple` | `304` |
+| `fuchsia` | `322` |
+| `pink` | `354` |
+
+Everything below is inside `@supports (color: oklch(from light-dark(red, red) l c h))`: without it, the theme's own accent renders.
+
+### Captured on `:root, [data-theme], [data-skin]`
+
+| Token | Value |
+|---|---|
+| `--accent-base-primary` | `var(--color-primary)` |
+| `--accent-base-primary-hover` | `var(--color-primary-hover)` |
+| `--accent-base-primary-active` | `var(--color-primary-active)` |
+| `--accent-base-primary-subtle` | `var(--color-primary-subtle)` |
+| `--accent-base-ring` | `var(--color-ring)` |
+| `--accent-base-doc` | `var(--doc-accent)` |
+
+### Re-pointed on `[data-accent]:not(:root, [data-theme], [data-skin]), :is(:root, [data-theme], [data-skin])[data-accent] > :not([data-theme], [data-skin]), [data-accent] :is([data-theme], [data-skin]) > :not([data-theme], [data-skin])`
+
+| Token | Value |
+|---|---|
+| `--color-primary` | `oklch(from var(--accent-base-primary) l c var(--accent-hue, h))` |
+| `--color-primary-hover` | `oklch(from var(--accent-base-primary-hover) l c var(--accent-hue, h))` |
+| `--color-primary-active` | `oklch(from var(--accent-base-primary-active) l c var(--accent-hue, h))` |
+| `--color-primary-subtle` | `oklch(from var(--accent-base-primary-subtle) l c var(--accent-hue, h))` |
+| `--color-ring` | `oklch(from var(--accent-base-ring) l c var(--accent-hue, h))` |
+| `--doc-accent` | `oklch(from var(--accent-base-doc) l c var(--accent-hue, h))` |
+| `--focus-ring-color` | `var(--color-ring)` |
