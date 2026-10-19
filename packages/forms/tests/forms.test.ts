@@ -396,7 +396,7 @@ describe("additionalProperties, nullable unions, examples and const", () => {
 
   it("notes additionalProperties: false and ignores every other value", () => {
     const closed = renderUnchecked({ type: "object", additionalProperties: false, properties: { a: { type: "string" } } });
-    expect(closed).toContain(`<form id="faqir-form" l-data l-validate>\n  ${NOTE}\n`);
+    expect(closed).toContain(`<form id="faqir-form" l-data l-validate data-gap="4">\n  ${NOTE}\n`);
     const open = { type: "object", properties: { a: { type: "string" } } };
     const plain = renderUnchecked(open);
     for (const value of [true, {}, { type: "string" }]) {

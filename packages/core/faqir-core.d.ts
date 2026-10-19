@@ -445,6 +445,8 @@ export interface DatePickerApi extends ControllerApi {
   close(): void;
   getValue(): CalendarValue;
   setValue(date: string): void;
+  /** No date: empties the calendar, the visible input and the value part. */
+  clear(): void;
   navigate(month: number, year: number): void;
   selectDate(date: Date | string): void;
 }

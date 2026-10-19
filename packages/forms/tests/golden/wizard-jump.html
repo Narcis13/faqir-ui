@@ -57,7 +57,7 @@
   ]
 }
 </script>
-<form id="plan-form" l-data="{ step: 0 }" l-validate="step &lt; 2 ? (step = $rules.next[step] === undefined ? step + 1 : +$rules.next[step]) : ($el.dataset.state = &#39;submitted&#39;)" l-rules="#plan-rules" aria-label="Choose a plan">
+<form id="plan-form" l-data="{ step: 0 }" l-validate="step &lt; 2 ? (step = $rules.next[step] === undefined ? step + 1 : +$rules.next[step]) : ($el.dataset.state = &#39;submitted&#39;)" l-rules="#plan-rules" aria-label="Choose a plan" data-gap="4">
   <h1>Choose a plan</h1>
   <div data-ui="stepper" role="navigation" aria-label="Plan steps">
     <div data-part="step" data-state="active" :data-state="step &gt; 0 ? &#39;completed&#39; : (step === 0 ? &#39;active&#39; : null)">

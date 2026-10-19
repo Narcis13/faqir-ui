@@ -236,8 +236,14 @@ describe("minified engine artifact", () => {
     // twelve overlay controllers, cleanup ownership that survives a detached
     // template, `l-model` listener teardown, and the missing-part guards that
     // name the part instead of throwing. See scripts/check-size.mjs for the ledger.
+    //
+    // 46 → 47 KB for the packaged file only (forecraft notes, item 29): the
+    // date-picker's value part, which keeps a form's submitted date ISO, fires
+    // input/change for it, restores it on reset and adds `clear()`. The packaged
+    // bundle had 15 B of room left; `bun run size` still holds the registry
+    // engine + controllers to 46 KB (scripts/check-size.mjs).
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
-    expect(gzip).toBeLessThanOrEqual(46 * 1024);
+    expect(gzip).toBeLessThanOrEqual(47 * 1024);
   });
 });
 

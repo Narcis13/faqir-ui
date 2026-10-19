@@ -1,5 +1,5 @@
 <!-- @ui:requires faqir-core.js faqir-validate.js date-picker.js calendar.js -->
-<form id="examples-form" l-data l-validate aria-label="Examples and constants">
+<form id="examples-form" l-data l-validate aria-label="Examples and constants" data-gap="4">
   <h1>Examples and constants</h1>
   <div data-ui="field-group">
     <label data-part="label" for="examples-field-city">City <span data-part="required">*</span></label>
@@ -26,8 +26,9 @@
     <label data-part="label" for="examples-field-startson">Starts on</label>
     <div data-part="input">
       <div data-ui="date-picker" data-state="closed" data-size="md">
+        <input data-part="value" type="hidden" name="startsOn">
         <div data-part="trigger">
-          <input data-part="input" id="examples-field-startson" name="startsOn" aria-describedby="examples-field-startson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Starts on" placeholder="2026-11-02">
+          <input data-part="input" id="examples-field-startson" aria-describedby="examples-field-startson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Starts on" placeholder="2026-11-02">
           <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
         </div>
         <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>

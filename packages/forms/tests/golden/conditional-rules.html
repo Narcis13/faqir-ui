@@ -134,7 +134,7 @@
   ]
 }
 </script>
-<form id="billing-form" l-data l-validate l-rules="#billing-rules" aria-label="Billing details">
+<form id="billing-form" l-data l-validate l-rules="#billing-rules" aria-label="Billing details" data-gap="4">
   <h1>Billing details</h1>
   <div data-ui="field-group">
     <label data-part="label" id="billing-field-accounttype-label" for="billing-field-accounttype-option-1">Account type <span data-part="required">*</span></label>
@@ -184,8 +184,9 @@
     <label data-part="label" for="billing-field-startson">Starts on</label>
     <div data-part="input">
       <div data-ui="date-picker" data-state="closed" data-size="md">
+        <input data-part="value" type="hidden" name="startsOn">
         <div data-part="trigger">
-          <input data-part="input" id="billing-field-startson" name="startsOn" aria-describedby="billing-field-startson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Starts on">
+          <input data-part="input" id="billing-field-startson" aria-describedby="billing-field-startson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Starts on">
           <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
         </div>
         <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>
@@ -219,8 +220,9 @@
     <label data-part="label" for="billing-field-endson">Ends on</label>
     <div data-part="input">
       <div data-ui="date-picker" data-state="closed" data-size="md">
+        <input data-part="value" type="hidden" name="endsOn">
         <div data-part="trigger">
-          <input data-part="input" id="billing-field-endson" name="endsOn" aria-describedby="billing-field-endson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Ends on">
+          <input data-part="input" id="billing-field-endson" aria-describedby="billing-field-endson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Ends on">
           <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
         </div>
         <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>

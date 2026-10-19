@@ -1,5 +1,5 @@
 <!-- @ui:requires faqir-core.js faqir-validate.js date-picker.js calendar.js -->
-<form id="intake-form" l-data="{ step: 0, rowsMedications: [{ __key: 1 }], seqMedications: 1 }" l-validate="step &lt; 2 ? (step = step + 1) : ($el.dataset.state = &#39;submitted&#39;)" aria-label="Patient intake" aria-describedby="intake-form-description">
+<form id="intake-form" l-data="{ step: 0, rowsMedications: [{ __key: 1 }], seqMedications: 1 }" l-validate="step &lt; 2 ? (step = step + 1) : ($el.dataset.state = &#39;submitted&#39;)" aria-label="Patient intake" aria-describedby="intake-form-description" data-gap="4">
   <h1>Patient intake</h1>
   <p id="intake-form-description">Pre-visit information for your first appointment.</p>
   <div data-ui="stepper" role="navigation" aria-label="Intake steps">
@@ -33,8 +33,9 @@
         <label data-part="label" for="intake-field-dateofbirth">Date of birth</label>
         <div data-part="input">
           <div data-ui="date-picker" data-state="closed" data-size="md">
+            <input data-part="value" type="hidden" name="dateOfBirth" :disabled="step !== 0">
             <div data-part="trigger">
-              <input data-part="input" id="intake-field-dateofbirth" name="dateOfBirth" aria-describedby="intake-field-dateofbirth-error" :disabled="step !== 0" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Date of birth">
+              <input data-part="input" id="intake-field-dateofbirth" aria-describedby="intake-field-dateofbirth-error" :disabled="step !== 0" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Date of birth">
               <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
             </div>
             <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>
