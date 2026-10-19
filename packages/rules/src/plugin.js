@@ -72,6 +72,7 @@ import { RULE_MESSAGES, coerce, compile, evaluate, fromFormData, resolveMessage,
  * @property {(name: string, callback: (el: unknown, scope: unknown) => unknown) => void} magic
  * @property {(name: string, handler: (el: any, dir: { expression?: string }, scope: any) => unknown) => void} directive
  * @property {{ report?: (message: string, el?: unknown) => boolean }} [devtools]
+ * @property {{ data: (form: any) => Record<string, unknown> }} [rules] what `install` adds
  * @property {{ register: (form: unknown, field: string, name: string,
  *              fn: (value: unknown, ctx: unknown) => unknown, message?: string) => unknown }} [validate]
  */
@@ -112,6 +113,9 @@ let F = null;
 /** scope → the reactive `$rules` state for the form bound in it. */
 /** @type {WeakMap<object, Record<string, unknown>>} */
 const states = new WeakMap();
+/** form → its context while `l-rules` is bound, for `Faqir.rules.data`. */
+/** @type {WeakMap<Element, FormContext>} */
+const bound = new WeakMap();
 /** Field-groups this plugin hid, so an author's own `hidden` is never cleared. */
 /** @type {WeakSet<Element>} */
 const ownHidden = new WeakSet();
@@ -219,13 +223,26 @@ function groupOf(el) {
  * @returns {Record<string, unknown>}
  */
 function collect(form, ctx) {
+  return coerce(ctx.definition, read(form, ctx.hidden));
+}
+
+/**
+ * The reading half of `collect`: `fromFormData` over the controls, before any
+ * definition coerces it — which is all a form with no `l-rules` gets from
+ * `Faqir.rules.data`.
+ *
+ * @param {Element} form
+ * @param {Set<Element>} [hidden] controls a `show` rule is hiding
+ * @returns {Record<string, unknown>}
+ */
+function read(form, hidden) {
   /** @type {[string, unknown][]} */
   const pairs = [];
   const all = /** @type {NodeListOf<Control>} */ (form.querySelectorAll("input, select, textarea"));
   for (let i = 0; i < all.length; i++) {
     const el = all[i];
     const name = el.name;
-    if (!name || ctx.hidden.has(el)) continue;
+    if (!name || (hidden && hidden.has(el))) continue;
     if (el.tagName === "SELECT") {
       const options = /** @type {HTMLSelectElement} */ (el).options;
       for (let j = 0; j < options.length; j++) {
@@ -245,7 +262,7 @@ function collect(form, ctx) {
     }
     pairs.push([name, el.value]);
   }
-  return coerce(ctx.definition, fromFormData(pairs));
+  return fromFormData(pairs);
 }
 
 /**
@@ -730,6 +747,21 @@ function resolveDefinition(form, expression, scope, out) {
 export function install(Faqir) {
   F = Faqir;
 
+  // The reader, public: what a server's `coerce(definition, fromFormData(body))`
+  // makes of this form, read the way `collect` reads it — a wizard's disabled
+  // steps answer, a field a rule hid does not. faqir-validate hands it out as
+  // the detail of `faqir:valid-submit`.
+  Faqir.rules = {
+    data: function (target) {
+      const form = typeof target === "string" ? document.querySelector(target) : target;
+      if (!form || !form.querySelectorAll) {
+        throw new TypeError("Faqir.rules.data: no form element matched " + JSON.stringify(target));
+      }
+      const ctx = bound.get(form);
+      return ctx ? collect(/** @type {HTMLFormElement} */ (form), ctx) : read(form);
+    },
+  };
+
   // `$rules` is how a wizard reads `jump` — and, since the state is reactive,
   // how any expression watches visibility, requiredness or a computed value.
   Faqir.magic("rules", function (el, scope) {
@@ -769,6 +801,7 @@ export function install(Faqir) {
       foreign: new Map(),
       observer: null,
     };
+    bound.set(form, ctx);
     if (typeof MutationObserver === "function") {
       ctx.observer = new MutationObserver(function (records) {
         noteForeign(ctx, records);
@@ -820,6 +853,7 @@ export function install(Faqir) {
       if (ctx.observer) ctx.observer.disconnect();
       for (let i = 0; i < unregister.length; i++) unregister[i]();
       if (states.get(scope) === state) states.delete(scope);
+      if (bound.get(form) === ctx) bound.delete(form);
     };
   });
 }

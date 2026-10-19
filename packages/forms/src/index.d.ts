@@ -242,6 +242,22 @@ export interface RenderFormOptions {
    * `if/then/else`, `dependentRequired` and wizard step `when`.
    */
   rules?: RulesDefinitionInput;
+  /**
+   * `false` drops the visible `<h1>` and description paragraph a root `title` /
+   * `description` render (and the `aria-describedby` to it); the form keeps
+   * its `aria-label`. Defaults to `true`.
+   */
+  heading?: boolean;
+  /**
+   * Id (or space-separated ids) of the element that names the form — a page's
+   * own heading. Emitted as `aria-labelledby` in place of `aria-label`.
+   */
+  labelledBy?: string;
+  /**
+   * `false` leaves out a single-page form's submit button (the footer labelled
+   * `i18n.submitLabel`). A wizard's navigation is unaffected. Defaults to `true`.
+   */
+  submit?: boolean;
 }
 
 /** Enums with this many values or fewer render as radio groups (single) or checkbox groups (arrays) by default. */
@@ -253,3 +269,25 @@ export function renderForm(
   uiSchema?: UISchema,
   opts?: RenderFormOptions,
 ): string;
+
+/**
+ * The `@faqir-ui/rules` definition `renderForm` embeds in its
+ * `<idPrefix>-rules` script for the same arguments — the object a server
+ * passes to `validate()` — or `null` when that form carries none. Same render,
+ * same errors.
+ */
+export function rulesFor(
+  jsonSchema: ObjectSchema,
+  uiSchema?: UISchema,
+  opts?: RenderFormOptions,
+): RulesDefinition | null;
+
+/** A rules definition as `renderForm` emits it: `version` and `fields` always present. */
+export interface RulesDefinition {
+  version: "1";
+  fields: Record<string, unknown>;
+  required?: string[];
+  messages?: Record<string, Record<string, string>>;
+  defaultLocale?: string;
+  rules?: FormRule[];
+}

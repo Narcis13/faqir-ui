@@ -45,7 +45,10 @@ const OBJECT_ARRAY_UI_KEYS = new Set(["items", "addLabel", "ui:addLabel", "remov
 const GROUP_KEYS = new Set(["title", "description", "fields"]);
 const WIZARD_KEYS = new Set(["label", "steps"]);
 const STEP_KEYS = new Set(["title", "description", "fields", "when"]);
-const OPTION_KEYS = new Set(["idPrefix", "radioThreshold", "theme", "density", "i18n", "rules"]);
+const OPTION_KEYS = new Set([
+  "idPrefix", "radioThreshold", "theme", "density", "i18n", "rules",
+  "heading", "labelledBy", "submit",
+]);
 const I18N_KEYS = new Set([
   "requiredMarker", "selectPlaceholder", "datePickerLabel", "calendarLabel",
   "addRowLabel", "removeRowLabel", "backLabel", "nextLabel", "submitLabel", "wizardNavLabel",
@@ -286,7 +289,17 @@ function normalizeOptions(raw) {
 
   const rules = raw.rules === undefined ? null : normalizeRulesOption(raw.rules);
 
-  return { prefix, threshold, theme, density, i18n, rules };
+  for (const key of ["heading", "submit"]) {
+    if (raw[key] !== undefined && typeof raw[key] !== "boolean") {
+      throw new TypeError(`@faqir-ui/forms: opts.${key} must be a boolean.`);
+    }
+  }
+  const heading = raw.heading !== false;
+  const submit = raw.submit !== false;
+  const labelledBy = raw.labelledBy === undefined ? undefined : assertString(raw.labelledBy, "opts.labelledBy").trim();
+  if (labelledBy !== undefined && labelledBy.length === 0) throw new Error("@faqir-ui/forms: opts.labelledBy cannot be empty.");
+
+  return { prefix, threshold, theme, density, i18n, rules, heading, submit, labelledBy };
 }
 
 /**
@@ -1855,6 +1868,36 @@ function renderWizard(wizard, renderNamedField, i18n, jumps = false) {
  * @returns {string}
  */
 export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
+  return composeForm(jsonSchema, uiSchema, opts).html;
+}
+
+/**
+ * The rules definition `renderForm` embeds in its `<prefix>-rules` script for
+ * the same arguments, as a plain object — what a server hands `validate()` —
+ * or `null` when that form carries no definition. It is the same render, not a
+ * second derivation: the definition depends on what the render accepted, so
+ * the two cannot drift. Throws exactly where `renderForm` throws.
+ *
+ * @param {Record<string, unknown>} jsonSchema
+ * @param {Record<string, unknown>} [uiSchema]
+ * @param {Record<string, unknown>} [opts]
+ * @returns {Record<string, unknown> | null}
+ */
+export function rulesFor(jsonSchema, uiSchema = {}, opts = {}) {
+  const { rules } = composeForm(jsonSchema, uiSchema, opts);
+  // A copy through JSON, as the script carries it: the author's rule objects
+  // are not handed back to be mutated, and what comes back is what parses.
+  return rules === null ? null : JSON.parse(JSON.stringify(rules));
+}
+
+/**
+ * The one render behind `renderForm` and `rulesFor`.
+ * @param {Record<string, unknown>} jsonSchema
+ * @param {Record<string, unknown>} uiSchema
+ * @param {Record<string, unknown>} opts
+ * @returns {{ html: string, rules: Record<string, unknown> | null }}
+ */
+function composeForm(jsonSchema, uiSchema, opts) {
   const root = assertRecord(jsonSchema, "jsonSchema");
   const uiRoot = assertRecord(uiSchema, "uiSchema");
   const rawOptions = assertRecord(opts, "opts");
@@ -2025,8 +2068,13 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
     formAttrs.push("l-validate");
   }
   if (rulesDefinition) formAttrs.push(`l-rules="#${attrValue(rulesId)}"`);
-  if (root.title !== undefined) formAttrs.push(`aria-label="${attrValue(/** @type {string} */ (root.title))}"`);
-  if (root.description !== undefined) formAttrs.push(`aria-describedby="${attrValue(`${normalizedOptions.prefix}-form-description`)}"`);
+  // `labelledBy`: the page's own heading names the form. `heading: false`
+  // keeps the name (`aria-label`) but drops the visible `<h1>` and description
+  // — and the describedby that would point at a paragraph no longer there.
+  const { heading, labelledBy } = normalizedOptions;
+  if (labelledBy !== undefined) formAttrs.push(`aria-labelledby="${attrValue(labelledBy)}"`);
+  else if (root.title !== undefined) formAttrs.push(`aria-label="${attrValue(/** @type {string} */ (root.title))}"`);
+  if (heading && root.description !== undefined) formAttrs.push(`aria-describedby="${attrValue(`${normalizedOptions.prefix}-form-description`)}"`);
   if (normalizedOptions.theme !== undefined) formAttrs.push(`data-theme="${attrValue(normalizedOptions.theme)}"`);
   if (normalizedOptions.density !== undefined) formAttrs.push(`data-density="${attrValue(normalizedOptions.density)}"`);
 
@@ -2035,11 +2083,20 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
   if (rulesDefinition) output.push(...rulesScriptLines(rulesId, rulesDefinition));
   output.push(`<form${renderAttrs(formAttrs)}>`);
   if (root.additionalProperties === false) output.push(`  ${CLOSED_NOTE}`);
-  if (root.title !== undefined) output.push(`  <h1>${escapeHtml(/** @type {string} */ (root.title))}</h1>`);
-  if (root.description !== undefined) {
+  if (heading && root.title !== undefined) output.push(`  <h1>${escapeHtml(/** @type {string} */ (root.title))}</h1>`);
+  if (heading && root.description !== undefined) {
     output.push(`  <p id="${attrValue(`${normalizedOptions.prefix}-form-description`)}">${escapeHtml(/** @type {string} */ (root.description))}</p>`);
   }
   output.push(...indentLines(bodyLines, 1));
+  // A single-page form ends in its submit button, as a wizard's last step does
+  // (`opts.submit: false` leaves it to the page).
+  if (!wizard && normalizedOptions.submit) {
+    output.push(
+      "  <div>",
+      `    <button type="submit" data-ui="button" data-variant="primary">${escapeHtml(normalizedOptions.i18n.submitLabel)}</button>`,
+      "  </div>",
+    );
+  }
   output.push("</form>");
-  return output.join("\n") + "\n";
+  return { html: output.join("\n") + "\n", rules: rulesDefinition };
 }
