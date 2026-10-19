@@ -868,7 +868,11 @@ export interface FaqirGlobal {
   data<T extends Record<string, unknown>>(name: string, factory: () => T): void;
   /** Register a global reactive store, reachable in expressions as `$store.<name>`. */
   store<T extends object>(name: string, obj: T): void;
-  /** Register `l-<name>`. The `l-` prefix is NOT part of `name`. */
+  /**
+   * Register `l-<name>`. The `l-` prefix is NOT part of `name`. Registered
+   * after the boot, it is applied once to every element already bound that
+   * carries it, in the scope that element was bound in.
+   */
   directive(name: string, handler: DirectiveHandler): void;
   /** Register `$<name>`. The `$` is NOT part of `name`. */
   magic(name: string, callback: MagicFactory): void;
@@ -887,9 +891,12 @@ export interface FaqirGlobal {
   // ── Lifecycle ──
   /**
    * Bootstrap. Runs automatically — on `DOMContentLoaded`, or one task after the
-   * engine is evaluated when the document is already parsed (a module, `defer`
+   * engine is evaluated when the document is already parsed (a module, `async`
    * script or bundler import), so `data()` / `directive()` calls made right after
-   * importing it are seen. Opt out with `data-manual` on the engine's `<script>`,
+   * importing it are seen. A classic `defer` script waits for `DOMContentLoaded`,
+   * so the deferred plugin scripts after it register first. A directive
+   * registered after the boot still binds the elements already bound.
+   * Opt out with `data-manual` on the engine's `<script>`,
    * or on the page's `<script type="module">` when the engine is imported.
    * Safe to call again: already-bound markup is not re-bound.
    */
@@ -920,6 +927,15 @@ export interface FaqirGlobal {
   inspect<A extends ControllerApi = ControllerApi>(
     target: Element | string,
   ): Inspection<A> | null;
+  /**
+   * The controller API of the component matching `target` — the same thing
+   * `$ui(target)` returns in an expression, for plain JavaScript. A selector
+   * or an element, which may be the `[data-ui]` root or anything inside it;
+   * the nearest enclosing component answers. `null` when nothing matches or
+   * the match has no controller. Pass the API type to narrow it:
+   * `Faqir.ui<ToastApi>("#toasts")?.add({ … })`.
+   */
+  ui<A extends ControllerApi = ControllerApi>(target: Element | string | null | undefined): A | null;
   /**
    * The same object installed at `window.__FAQIR_DEVTOOLS__`. Exposed here
    * too so code holding a specific engine instance reaches ITS handle rather
@@ -984,6 +1000,7 @@ export declare const controller: FaqirGlobal["controller"];
 export declare const start: FaqirGlobal["start"];
 export declare const initTree: FaqirGlobal["initTree"];
 export declare const inspect: FaqirGlobal["inspect"];
+export declare const ui: FaqirGlobal["ui"];
 export declare const devtools: FaqirGlobal["devtools"];
 export declare const destroy: FaqirGlobal["destroy"];
 

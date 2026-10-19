@@ -772,6 +772,11 @@ Faqir.data("counter", () => ({ n: 0 }));
 Add `data-manual` to that `<script type="module">` to boot it yourself with
 `Faqir.start()`.
 
+A classic `<script defer>` boots on `DOMContentLoaded`, after every deferred
+script that follows it, so plugins and `Faqir.data()` calls loaded the same way
+are in place first. A directive registered after the boot (an on-demand plugin,
+say) is still applied, once, to the elements already bound.
+
 ### Directives
 
 | Directive | Shorthand | Purpose |
@@ -808,7 +813,9 @@ Magics: `$el` `$this` `$refs` `$store` `$state` `$variant` `$ui` `$dispatch`
 (the `l-data` element); `$this` is the element the directive is written on, so
 `<input l-init="$this.focus()">` focuses the input. `$ui` is the enclosing
 component's controller (`$ui.open()`) and is callable to reach another's
-(`$ui('#detail-drawer').open()`).
+(`$ui('#detail-drawer').open()`). From plain JavaScript, `Faqir.ui(selectorOrElement)`
+returns the same controller API (`Faqir.ui('#toasts').add({ … })`), or `null`
+when nothing matches or the match has no controller.
 
 ```html
 <div l-data="{ count: 0 }">

@@ -55,4 +55,5 @@ export const destroy = Faqir.destroy;
 
 // ── Inspection ──
 export const inspect = Faqir.inspect;
+export const ui = Faqir.ui;
 export const devtools = Faqir.devtools;

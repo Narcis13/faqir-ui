@@ -231,3 +231,11 @@ Faqir.validate?.register(formEl, "email", "bad", () => 42);
 
 void [total, sum, untracked, wrongUntrack, bareSum, stop, variant, directiveTypes, firstArg];
 void [selectedRows, version, badKind, dropRule, clean];
+
+// ── ui — a controller from plain JavaScript [forecraft #10] ─────────────────
+const toasts = Faqir.ui<Faqir.ControllerApis["toast"]>("#toasts");
+toasts?.destroy();
+const anyController: Faqir.ControllerApi | null = Faqir.ui(document.body);
+// @ts-expect-error — ui returns null when nothing matches.
+Faqir.ui("#toasts").destroy();
+void [toasts, anyController];
