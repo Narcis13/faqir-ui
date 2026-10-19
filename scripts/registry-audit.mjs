@@ -343,7 +343,7 @@ if (cssRuleOffenders["undeclared-attribute"].length === 0 && cssRuleOffenders["b
 //     satisfy" cannot quietly leave one unarmed. Here it is a tripwire on the
 //     framework's own markup — a fragment may only name a component the registry
 //     has, an alias of one, a base-layer value, or a value some component
-//     stylesheet defines (`button-group` and its six siblings).
+//     stylesheet defines (`button-group` and its seven siblings).
 const fullRuleManifests = await loadRegistryManifestMap(REGISTRY);
 const fullRuleStyles = await loadRegistryStylesheetMap(REGISTRY);
 const fullRuleKnown = knownUiValues(REGISTRY);

@@ -91,6 +91,10 @@ function collectScope(root: ParsedElement): FieldGroupScope {
 }
 
 function isControl(el: ParsedElement): boolean {
+  // A hidden input is data, not the control a person reaches: a date-picker's
+  // value part carries the field's name beside the visible input, which is the
+  // one the label and the description wiring belong to.
+  if (el.tag === "input" && (el.attrs["type"] || "").toLowerCase() === "hidden") return false;
   if (CONTROL_TAGS.has(el.tag)) return true;
   const ui = el.attrs["data-ui"];
   return !!ui && CONTROL_UI.has(ui);

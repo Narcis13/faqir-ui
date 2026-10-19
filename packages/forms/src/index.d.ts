@@ -9,7 +9,18 @@ export type Widget =
   | "switch"
   | "date-picker"
   | "checkbox-group"
-  | "multi-select";
+  | "multi-select"
+  /** A horizontal radio group with optional end captions: a string or integer enum, or an integer `minimum`–`maximum` range. */
+  | "scale";
+
+/** `ui:width`: the field's share of a row from the md tier up (`data-span` on its field-group). Phones stay single-column. */
+export type FieldWidth = "full" | "half" | "third";
+
+/** `ui:orientation`: how a radio or checkbox group lays out its options. */
+export type ChoiceOrientation = "vertical" | "horizontal";
+
+/** `opts.gap`: a step on the rhythm ladder, written as the form's `data-gap`. */
+export type FormGap = "0" | "1" | "2" | "3" | "4" | "6" | "8" | "10" | "12" | "16" | 0 | 1 | 2 | 3 | 4 | 6 | 8 | 10 | 12 | 16;
 
 /**
  * `[T, "null"]`, in either order: a nullable `T`. It renders and emits rules as
@@ -28,7 +39,8 @@ export interface ScalarSchema {
   type: ScalarType | Nullable<ScalarType>;
   title?: string;
   description?: string;
-  enum?: string[];
+  /** Strings on a `string` field, integers on an `integer` field. */
+  enum?: string[] | number[];
   format?: StringFormat;
   /** `null` is accepted on a nullable field only, and means no default. */
   default?: string | number | boolean | null;
@@ -139,6 +151,17 @@ export interface FieldUISchema {
   "ui:rows"?: number;
   enumLabels?: string[];
   "ui:enumLabels"?: string[];
+  width?: FieldWidth;
+  "ui:width"?: FieldWidth;
+  /** Radio and checkbox-group widgets only. */
+  orientation?: ChoiceOrientation;
+  "ui:orientation"?: ChoiceOrientation;
+  /** Caption under the scale's first choice. `scale` widget only. */
+  minLabel?: string;
+  "ui:minLabel"?: string;
+  /** Caption under the scale's last choice. `scale` widget only. */
+  maxLabel?: string;
+  "ui:maxLabel"?: string;
 }
 
 /** UI schema for a nested object mirrors the schema structure (child name → child UI). */
@@ -258,7 +281,16 @@ export interface RenderFormOptions {
    * `i18n.submitLabel`). A wizard's navigation is unaffected. Defaults to `true`.
    */
   submit?: boolean;
+  /**
+   * The step between fields, as `data-gap` on the form (the rhythm ladder).
+   * Fields in a `ui:groups` card and in a wizard step keep the same step.
+   * Defaults to `"4"`.
+   */
+  gap?: FormGap;
 }
+
+/** The `data-gap` a form carries when `opts.gap` is not given. */
+export const DEFAULT_FORM_GAP: "4";
 
 /** Enums with this many values or fewer render as radio groups (single) or checkbox groups (arrays) by default. */
 export const DEFAULT_RADIO_THRESHOLD: 4;

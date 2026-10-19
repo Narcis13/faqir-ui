@@ -1,5 +1,5 @@
 <!-- @ui:requires faqir-core.js faqir-validate.js -->
-<form id="faqir-form" l-data="{ step: 0 }" l-validate="step &lt; 1 ? (step = step + 1) : ($el.dataset.state = &#39;submitted&#39;)" aria-label="Signup">
+<form id="faqir-form" l-data="{ step: 0 }" l-validate="step &lt; 1 ? (step = step + 1) : ($el.dataset.state = &#39;submitted&#39;)" aria-label="Signup" data-gap="4">
   <h1>Signup</h1>
   <div data-ui="stepper" role="navigation" aria-label="Signup steps">
     <div data-part="step" data-state="active" :data-state="step &gt; 0 ? &#39;completed&#39; : (step === 0 ? &#39;active&#39; : null)">

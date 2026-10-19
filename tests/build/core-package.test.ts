@@ -239,7 +239,9 @@ describe("minified engine artifact", () => {
     //
     // 46 → 47 KB for this bundle (the forecraft notes): 1.2.5 left it 15 bytes
     // under 46 KB; the late-directive hold, the classic-`defer` boot and
-    // `Faqir.ui` (#28/#10) and QR versions 11–40 (#44) need the room.
+    // `Faqir.ui` (#28/#10), QR versions 11–40 (#44) and the date-picker's ISO
+    // value part (#29) need the room. `bun run size` still holds the registry
+    // engine + controllers to 46 KB (scripts/check-size.mjs).
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
     expect(gzip).toBeLessThanOrEqual(47 * 1024);
   });

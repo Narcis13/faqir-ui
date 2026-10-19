@@ -123,6 +123,9 @@ without `'unsafe-eval'` needs the same arrangements as any other Faqir page.
 | `string` + `format: "date"` | `date-picker` + `calendar` |
 | `string` + `enum` (1–4 values) | radio group |
 | `string` + `enum` (5+ values) | select |
+| `string` or `integer` + `enum` + widget `scale` | horizontal radio group with end captions |
+| `integer` + `enum` | radio group (1–4 values) or select, like a string enum |
+| `integer` + `minimum`/`maximum` + widget `scale` | one radio per step of the range, as a scale |
 | `number` | `input[type=number][step=any]` |
 | `integer` | `input[type=number][step=1]` |
 | `boolean` | checkbox (or `switch` via uiSchema) |
@@ -137,8 +140,18 @@ The default cardinality threshold is **4** — shared by single enums
 (radio vs select) and enum arrays (checkbox group vs multi-select) — and is
 exported as `DEFAULT_RADIO_THRESHOLD`. Set `opts.radioThreshold` to change it,
 or force one field via its UI schema `widget` (`"radio"`, `"select"`,
-`"checkbox-group"`, `"multi-select"`, …). The mapping table above is mirrored
-row-for-row by a checklist in `tests/forms.test.ts`.
+`"checkbox-group"`, `"multi-select"`, `"scale"`, …). The mapping table above is
+mirrored row-for-row by a checklist in `tests/forms.test.ts` (the scale and
+integer-enum rows by `tests/forecraft-widgets.test.ts`).
+
+A **date** field renders the `date-picker` recipe. Its visible input shows the
+date as a person reads it ("October 15, 2026") and carries no `name`; a hidden
+`<input data-part="value" name="…">` holds the ISO date (`2026-10-15`), which
+the date-picker controller keeps current on every pick, `setValue()` and
+`clear()`, firing `input` and `change` on it. So `FormData`, a native submit,
+`l-model` and the rules all read the ISO value, which is what `format: "date"`
+accepts on the server. The label, `required` and the description wiring stay on
+the visible input.
 
 ## UI schema
 
@@ -157,7 +170,29 @@ const uiSchema = {
 ```
 
 Both the terse keys and their `ui:*` aliases are accepted; providing
-conflicting aliases throws. Nested-object UI schemas mirror the schema
+conflicting aliases throws.
+
+Layout keys, on any scalar or enum-array field:
+
+| Key | Values | Renders |
+| --- | --- | --- |
+| `width` | `"full"`, `"half"`, `"third"` | `data-span` on the field-group: from the md tier up the fields' container (the form, a group card, a wizard step) becomes a six-track grid and the field takes that share of a row; a phone stays one column |
+| `orientation` | `"vertical"`, `"horizontal"` | `data-orientation` on a radio group or checkbox group: horizontal is a wrapping row (only those two widgets) |
+| `minLabel`, `maxLabel` | strings | captions under the first and last choice of a `scale` (only that widget), each wired to its option's `aria-describedby` |
+
+```js
+const uiSchema = {
+  firstName: { width: "half" },
+  lastName: { width: "half" },
+  contact: { widget: "radio", orientation: "horizontal" },
+  recommend: { widget: "scale", minLabel: "Not likely", maxLabel: "Very likely" }, // integer 0–10
+};
+```
+
+A `scale` is a horizontal radio group: on a string or integer `enum`, or on an
+`integer` with `minimum` and `maximum` (every value in the range, or every
+`multipleOf`, or every `step` from the minimum — at most 21 choices). It cannot
+go in a repeatable row, where every enum renders as a select. Nested-object UI schemas mirror the schema
 structure (child name → child UI). Repeatable groups take `items` (per-row
 UI), `addLabel`, and `removeLabel`.
 
@@ -267,6 +302,16 @@ drift, and the same errors — or `null` when that form carries no definition.
 Everything emitted is lint-clean by construction: `faqir rules lint` (and
 `lintDefinition`, the same function) reports nothing for a definition this
 renderer produced, which is what `tests/rules.test.ts` checks case by case.
+
+### Spacing
+
+The form carries `data-gap` — `opts.gap`, one of the rhythm steps (`0`, `1`,
+`2`, `3`, `4`, `6`, `8`, `10`, `12`, `16`), default `"4"` — which sets the
+step between its fields through the base rhythm. A `ui:groups` card body and a
+wizard step's body inside the form keep the same step (`card`), so a grouped
+form and a wizard space their fields exactly as a flat form does; the
+`form-page` pattern uses the same step between its heading, description,
+fields and buttons.
 
 ## Repeatable groups
 
