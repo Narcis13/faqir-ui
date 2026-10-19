@@ -196,7 +196,7 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
     run: fonts,
     category: "Development",
     summary: "Install self-hosted OFL font families",
-    args: "list|add|remove <family> [--role <role>]",
+    args: "list|add|remove <family> [--role <role>|none] [--italic]",
     skillNote: "install a hash-verified OFL family and point a role token at it",
   },
   variant: {

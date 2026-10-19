@@ -262,7 +262,8 @@ describe("renderFontsCss", () => {
 
   it("renders nothing for an empty install list", () => {
     expect(renderFontsCss([])).toBe("");
-    expect(renderFontsCss([{ id: "inter", roles: [] }])).toBe("");
+    // A role-less entry is a `--role none` install now, which DOES render its
+    // faces: tests/commands/forecraft-fonts.test.ts.
   });
 
   it("names every role token exactly once", () => {
@@ -491,7 +492,10 @@ describe("faqir fonts add", () => {
     );
     expect(payload.tokens).toEqual(["--font-heading"]);
     expect(payload.stylesheet).toBe("./ui/fonts.css");
-    expect(payload.warnings).toEqual([]);
+    // Instrument Serif ships one weight against the default bold heading voice,
+    // which `add` says once (tests/commands/forecraft-fonts.test.ts).
+    expect(payload.warnings).toHaveLength(1);
+    expect(payload.warnings[0]).toContain("ships one weight (400)");
     expect(payload.bundle_regenerated).toBe(true);
   });
 });

@@ -352,11 +352,12 @@ describe("v0.2.4 → 1.0 · the migrated project", () => {
   it("audits with no critical or error findings on its own pages", () => {
     const pageFindings = postAudit.results.filter((r) => r.file.startsWith("app/"));
     expect(pageFindings.filter((r) => r.severity === "critical" || r.severity === "error")).toEqual([]);
-    // One residual warning, and it is not the migration's: the `landmark` rule
-    // flags any role="dialog" inside <main>, which a date-picker's popup always
-    // is — the registry's own reference markup trips it the same way. Named
-    // here so a *new* warning cannot hide behind a vague threshold.
-    expect(pageFindings.map((r) => r.rule_id)).toEqual(["landmark"]);
+    // No warnings either. There used to be one residual `landmark` warning for
+    // the date-picker's calendar popup inside <main>; that popup is a part of
+    // an inline control, which the rule now exempts
+    // (tests/audit/forecraft-landmark-popup.test.ts). Exact, so a *new*
+    // warning cannot hide behind a vague threshold.
+    expect(pageFindings.map((r) => r.rule_id)).toEqual([]);
   });
 
   it("leaves only the registry's own pre-existing CSS findings", () => {

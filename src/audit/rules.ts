@@ -1929,13 +1929,52 @@ export const headingOrderRule: DocumentRule = {
 //      intentionally NOT flagged here (reference pages demo several variants).
 //   2. A dialog (<dialog>, role="dialog"/"alertdialog", or data-ui="dialog") must
 //      not be nested inside <main> — overlays belong outside the content flow
-//      (typically a direct child of <body>).
+//      (typically a direct child of <body>). Exempt: the popup of an inline
+//      control (see `isInlineControlPopup`), such as the date-picker's calendar.
 //   3. When 2+ navigation landmarks exist, each needs an accessible name
 //      (aria-label/aria-labelledby) so they can be told apart. A lone nav is fine.
+
+/** True when `el` is `ancestor` or sits inside it. */
+function isWithin(el: ParsedElement, ancestor: ParsedElement): boolean {
+  for (let node: ParsedElement | null = el; node; node = node.parent) {
+    if (node === ancestor) return true;
+  }
+  return false;
+}
+
+/**
+ * A dialog that is a PART of an inline control rather than an overlay of its
+ * own — the date-picker's calendar panel (`data-part="calendar" role="dialog"`).
+ * It is the popup a form control opens beside itself, so it lives wherever the
+ * control does, and a form field inside `<main>` cannot move out of it.
+ *
+ * Decided from structure, not from a list of component names, so a project's
+ * own control of the same shape is treated the same way:
+ *   - the dialog is a `data-part` and not a component root of its own
+ *     (`data-ui="dialog" data-part="edit-dialog"` in a pattern is a real dialog);
+ *   - it is not modal — `aria-modal="true"` is an overlay by its own account
+ *     (the drawer, sheet, alert-dialog and command-palette panels all say so);
+ *   - the component root that owns it also holds the control that opens it, a
+ *     `role="combobox"` or an `aria-haspopup` element outside the dialog.
+ */
+function isInlineControlPopup(el: ParsedElement, doc: ParsedDocument): boolean {
+  if (el.attrs["data-part"] === undefined || el.attrs["data-ui"] !== undefined) return false;
+  if (el.attrs["aria-modal"]?.trim().toLowerCase() === "true") return false;
+  let root = el.parent;
+  while (root && root.attrs["data-ui"] === undefined) root = root.parent;
+  if (!root) return false;
+  const owner = root;
+  return doc.elements.some((candidate) => {
+    if (candidate === owner || !isWithin(candidate, owner) || isWithin(candidate, el)) return false;
+    const popup = candidate.attrs["aria-haspopup"]?.trim().toLowerCase();
+    return (popup !== undefined && popup !== "" && popup !== "false") || hasRole(candidate, "combobox");
+  });
+}
+
 export const landmarkRule: DocumentRule = {
   id: "landmark",
   severity: "warning",
-  description: "Landmark hygiene: full pages must have a main landmark; dialogs must not be nested inside <main>; and when multiple navigation landmarks exist each must have an accessible name.",
+  description: "Landmark hygiene: full pages must have a main landmark; dialogs must not be nested inside <main> (a non-modal dialog that is a part of an inline control, such as the date-picker's calendar, is exempt); and when multiple navigation landmarks exist each must have an accessible name.",
   check(doc) {
     const results: AuditResult[] = [];
     const isMain = (el: ParsedElement) => el.tag === "main" || hasRole(el, "main");
@@ -1962,7 +2001,7 @@ export const landmarkRule: DocumentRule = {
 
     // 2) Dialogs must not live inside the main content flow.
     for (const el of doc.elements) {
-      if (!isDialog(el)) continue;
+      if (!isDialog(el) || isInlineControlPopup(el, doc)) continue;
       let ancestor = el.parent;
       let insideMain = false;
       while (ancestor) {

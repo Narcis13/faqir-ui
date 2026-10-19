@@ -13,9 +13,8 @@ import { resolve } from "node:path";
 import { configExists, missingConfigMessage } from "../utils/config";
 import { log } from "../utils/logger";
 import { getRegistryPath } from "../utils/fs";
-import { extractComponents } from "../parser/html-parser";
-import { runAudit, auditHtmlSource, loadRegistryAuditInputs, withProjectAuditInputs, type AuditSummary } from "../audit/checker";
-import type { AuditResult, Severity } from "../audit/rules";
+import { runAudit, loadRegistryAuditInputs, withProjectAuditInputs } from "../audit/checker";
+import { auditSourceReport } from "../audit/string-report";
 import { printAuditReport, printAuditJSON, printRuleInventory } from "../audit/reporter";
 import { readStdin } from "../utils/stdin";
 
@@ -109,21 +108,6 @@ export function resolveAuditTarget(args: string[], cwd: string): string | undefi
   return path;
 }
 
-/** Build an AuditSummary from a flat result list (used by the stdin path). */
-function summarize(results: AuditResult[], filesScanned: number, componentsFound: number): AuditSummary {
-  const counts: Record<Severity, number> = { critical: 0, error: 0, warning: 0, info: 0 };
-  for (const r of results) counts[r.severity]++;
-  return {
-    results,
-    files_scanned: filesScanned,
-    components_found: componentsFound,
-    counts,
-    // Nothing piped on stdin is vendor: the caller authored what it sent.
-    vendor_counts: { critical: 0, error: 0, warning: 0, info: 0 },
-    passed: counts.critical === 0 && counts.error === 0,
-  };
-}
-
 /**
  * Audit HTML piped on stdin against the registry manifests — and, run inside a
  * project, against that project's installed ones laid over them.
@@ -144,18 +128,9 @@ async function auditStdin(args: string[], cwd: string): Promise<void> {
   const registry = await loadRegistryAuditInputs(getRegistryPath());
   const inputs = await withProjectAuditInputs(registry, cwd);
 
-  const results = auditHtmlSource({
-    source,
-    file: "<stdin>",
-    manifests: inputs.manifests,
-    styles: inputs.styles,
-    knownUiValues: inputs.knownUiValues,
-    engineControllers: inputs.engineControllers,
-    forbidDirectives: inputs.forbidDirectives,
-    skipRules: parseSkipRules(args),
-  });
-  const componentsFound = extractComponents(source, "<stdin>").length;
-  const summary = summarize(results, 1, componentsFound);
+  // The same call `auditHtml` from `@faqir-ui/mcp/audit` makes, so the library
+  // and this command cannot drift apart.
+  const { summary } = auditSourceReport(source, inputs, { skipRules: parseSkipRules(args) });
 
   if (jsonMode) {
     printAuditJSON(summary);

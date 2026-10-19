@@ -25,6 +25,8 @@ import {
   FONT_CATALOG,
   UNICODE_RANGES,
   findFamily,
+  isSingleWeight,
+  italicFiles,
   roleStack,
   type CatalogEntry,
   type CatalogFile,
@@ -42,8 +44,14 @@ export const MANAGED_MARKER = "Managed by `faqir fonts add`";
 export interface InstalledFont {
   /** Catalog id (`src/fonts/catalog.ts`). */
   id: string;
-  /** The role tokens this family is pointed at. Never empty. */
+  /**
+   * The role tokens this family is pointed at. Empty means the family was
+   * installed with `--role none`: its `@font-face` rules are written and no
+   * role token names it — the project uses `font-family: "<Family>"` itself.
+   */
   roles: FontRole[];
+  /** Its true-italic faces are installed too (`--italic`). Absent means upright only. */
+  italic?: true;
 }
 
 /** Which custom property each role sets. */
@@ -69,10 +77,10 @@ function catalogIndex(id: string): number {
 /** The install list in rendering order: catalog order, roles in {@link ROLE_ORDER}. */
 export function normalizeInstalled(fonts: readonly InstalledFont[]): InstalledFont[] {
   return fonts
-    .filter((font) => font.roles.length > 0)
     .map((font) => ({
       id: font.id,
       roles: ROLE_ORDER.filter((role) => font.roles.includes(role)),
+      ...(font.italic ? { italic: true as const } : {}),
     }))
     .sort((a, b) => catalogIndex(a.id) - catalogIndex(b.id));
 }
@@ -94,11 +102,18 @@ export interface AssignResult {
  * no roles leaves the list (its files are then removable). This is why `add` is
  * idempotent: assigning the roles a family already holds is a no-op that still
  * produces the same list.
+ *
+ * An empty `roles` (`--role none`) installs the family's faces without pointing
+ * any token at it, and such a family stays in the list when another `add`
+ * moves roles around: it never held one to lose. Re-adding a family that holds
+ * roles with `--role none` keeps them — `add` never takes a role away from the
+ * family being added. `italic` is likewise additive.
  */
 export function assignRoles(
   fonts: readonly InstalledFont[],
   entry: CatalogEntry,
   roles: readonly FontRole[],
+  options: { italic?: boolean } = {},
 ): AssignResult {
   const displaced: [FontRole, string][] = [];
   const next: InstalledFont[] = [];
@@ -110,12 +125,15 @@ export function assignRoles(
       displaced.push([role, font.id]);
       return false;
     });
-    if (kept.length > 0) next.push({ id: font.id, roles: kept });
+    if (kept.length > 0 || font.roles.length === 0) {
+      next.push({ id: font.id, roles: kept, ...(font.italic ? { italic: true as const } : {}) });
+    }
   }
 
   const existing = fonts.find((font) => font.id === entry.id);
   const merged = new Set<FontRole>([...(existing?.roles ?? []), ...roles]);
-  next.push({ id: entry.id, roles: [...merged] });
+  const italic = existing?.italic || options.italic;
+  next.push({ id: entry.id, roles: [...merged], ...(italic ? { italic: true as const } : {}) });
 
   const dropped = fonts
     .filter((font) => font.id !== entry.id && !next.some((kept) => kept.id === font.id))
@@ -143,11 +161,11 @@ export function fontFilePath(outputDir: string, id: string, file: string): strin
   return join(outputDir, FONTS_DIR, id, file);
 }
 
-function fontFaceBlock(entry: CatalogEntry, file: CatalogFile): string {
+function fontFaceBlock(entry: CatalogEntry, file: CatalogFile, style: "normal" | "italic"): string {
   return [
     "@font-face {",
     `  font-family: "${entry.family}";`,
-    "  font-style: normal;",
+    `  font-style: ${style};`,
     `  font-weight: ${file.weight};`,
     "  font-display: swap;",
     `  src: url("${fontUrlPath(entry.id, file.file)}") format("woff2");`,
@@ -181,20 +199,60 @@ export function renderFontsCss(fonts: readonly InstalledFont[]): string {
     "",
   ];
 
-  for (const { entry } of entries) {
+  for (const { font, entry } of entries) {
     out.push(`/* ── ${entry.family} · ${entry.license} · ${entry.licenseUrl} ── */`);
-    for (const file of entry.files) out.push(fontFaceBlock(entry, file));
+    if (font.roles.length === 0) {
+      out.push(`/* No role (--role none): set font-family: "${entry.family}" where you want it. */`);
+    }
+    for (const file of entry.files) out.push(fontFaceBlock(entry, file, "normal"));
+    if (font.italic) {
+      for (const file of italicFiles(entry)) out.push(fontFaceBlock(entry, file, "italic"));
+    }
     out.push("");
   }
 
+  // The role block exists only when some family holds a role, so installing a
+  // role-less family leaves it byte-for-byte as it was.
+  const holders = ROLE_ORDER.map((role) => ({
+    role,
+    holder: entries.find(({ font }) => font.roles.includes(role)),
+  })).filter((slot) => slot.holder !== undefined);
+  if (holders.length === 0) return out.join("\n");
+
   out.push("/* Role tokens — what components read (1.1A-01). */", ":root {");
-  for (const role of ROLE_ORDER) {
-    const holder = entries.find(({ font }) => font.roles.includes(role));
-    if (holder) out.push(`  ${ROLE_TOKENS[role]}: ${roleStack(holder.entry)};`);
+  for (const { role, holder } of holders) {
+    out.push(`  ${ROLE_TOKENS[role]}: ${roleStack(holder!.entry)};`);
+  }
+  const display = singleWeightHeading(installed);
+  if (display) {
+    out.push(
+      `  /* ${display.family} ships one weight; draw headings in it instead of a synthesized bold.`,
+      "     Only text in a face that lacks the weight asked for is affected. */",
+      "  font-synthesis-weight: none;",
+    );
   }
   out.push("}", "");
 
   return out.join("\n");
+}
+
+/**
+ * The family whose single weight would otherwise be smeared into a fake bold
+ * by the heading voice: a single-weight static family holding `heading` and no
+ * text role. `font-synthesis-weight` is inherited and per element, not per
+ * face, so it is set on `:root`; every other catalogued family draws real
+ * weights and never reaches synthesis. A single-weight family that also sets
+ * body or UI text is left alone — there, `<strong>` losing its bold is worse
+ * than a synthesized one — and `fonts add` warns instead.
+ */
+export function singleWeightHeading(fonts: readonly InstalledFont[]): CatalogEntry | null {
+  for (const font of fonts) {
+    if (!font.roles.includes("heading")) continue;
+    if (font.roles.includes("body") || font.roles.includes("ui")) continue;
+    const entry = findFamily(font.id);
+    if (entry && isSingleWeight(entry)) return entry;
+  }
+  return null;
 }
 
 /** Whether this `fonts.css` is one the CLI wrote (and may therefore rewrite). */
@@ -241,7 +299,9 @@ export async function checkReferences(
   const issues: FontIssue[] = [];
   for (const reference of referencedFiles(css)) {
     const entry = findFamily(reference.id);
-    const file = entry?.files.find((candidate) => candidate.file === reference.file);
+    const file = entry
+      ? [...entry.files, ...italicFiles(entry)].find((candidate) => candidate.file === reference.file)
+      : undefined;
     if (!entry || !file) {
       issues.push({
         reference,
@@ -337,9 +397,13 @@ export interface DownloadedFile {
  * disk, so a family is never half-installed (the same all-or-nothing rule
  * `faqir add --registry` follows).
  */
-export async function downloadFamily(entry: CatalogEntry): Promise<DownloadedFile[]> {
+export async function downloadFamily(
+  entry: CatalogEntry,
+  options: { italic?: boolean } = {},
+): Promise<DownloadedFile[]> {
   const files: DownloadedFile[] = [];
-  for (const file of entry.files) {
+  const wanted = options.italic ? [...entry.files, ...italicFiles(entry)] : entry.files;
+  for (const file of wanted) {
     let response: Response;
     try {
       response = await activeFetch(file.url);
