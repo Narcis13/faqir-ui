@@ -14,7 +14,8 @@ const fails = (src: string) => codes(src, opts);
 describe("calls render the reference tree (§11.2)", () => {
   it("fills named slots and keeps the contract attributes", () => {
     const out = run("+callout(variant='warning' role='alert')\n  @content\n    p Mind the gap.\n");
-    expect(out).toBe('<div data-ui="callout" role="alert" data-variant="warning">\n  <span data-part="icon"></span>\n  <div data-part="content">\n    <p>Mind the gap.</p>\n  </div>\n</div>\n');
+    // The icon part's reference content was a sample: unfilled, it is left out.
+    expect(out).toBe('<div data-ui="callout" role="alert" data-variant="warning">\n  <div data-part="content">\n    <p>Mind the gap.</p>\n  </div>\n</div>\n');
   });
 
   it("takes default content for inline, text and block components", () => {
@@ -90,7 +91,7 @@ describe("@ui:requires (§11.6)", () => {
   });
 
   it("goes after the doctype and is absent when nothing is needed", () => {
-    expect(run("doctype html\nhtml\n  +tabs\n").split("\n").slice(0, 2)).toEqual(["<!doctype html>", "<!-- @ui:requires faqir-core.js tabs.js -->"]);
+    expect(run("doctype html\nhtml\n  +tabs\n    @trigger A\n    @panel a\n").split("\n").slice(0, 2)).toEqual(["<!doctype html>", "<!-- @ui:requires faqir-core.js tabs.js -->"]);
     expect(run("+badge x")).not.toContain("@ui:requires");
   });
 });
@@ -98,7 +99,6 @@ describe("@ui:requires (§11.6)", () => {
 describe("component diagnostics", () => {
   const cases: [string, string][] = [
     ["unknown-component", "+bogus\n"],
-    ["unknown-component", "+table\n"],
     ["unknown-arg", "+button(colour='red') x\n"],
     ["protocol-attr", "+button(data-variant='primary') x\n"],
     ["protocol-attr", "+button(data-ui='x') x\n"],
@@ -109,7 +109,7 @@ describe("component diagnostics", () => {
     ["bad-value", "+dialog(title)\n  @body\n    p b\n"],
     ["bad-value", "+badge(id) x\n"],
     ["unknown-slot", "+card\n  @body\n    p b\n  @nope x\n"],
-    ["duplicate-slot", "+card\n  @body\n    p b\n  @body\n    p c\n"],
+    ["duplicate-slot", "+dialog\n  @title A\n  @title B\n  @body\n    p b\n"],
     ["no-default-slot", "+card\n  p loose\n"],
     ["missing-slot", "+card\n"],
     ["missing-slot", "+dialog\n  @body\n    p b\n"],

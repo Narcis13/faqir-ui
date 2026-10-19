@@ -9,6 +9,7 @@ import { suggestClosest } from "../utils/suggest";
 import { CONTRAST_TOKENS_RULE, SURFACE_ELEVATION_RULE } from "./contrast-tokens";
 import { CSS_RULES } from "./css-rules";
 import { fieldWiringRule } from "./field-wiring";
+import { isKnownElement } from "./known-elements";
 import { VOCABULARY_RULES } from "./vocabulary";
 
 export type Severity = "critical" | "error" | "warning" | "info";
@@ -2009,12 +2010,45 @@ export const landmarkRule: DocumentRule = {
   },
 };
 
+// ── Rule: unknown-element ──
+// An element whose name is no HTML, SVG or MathML element and has no hyphen —
+// the one thing a custom element name must have — is almost always a mistake
+// the browser renders without complaint: a typo (`<sapn>`), or prose that a
+// template language read as a tag because its line lost the leading `|`
+// (`<p><Open>the app now</Open></p>`). The @faqir-ui/template compiler refuses
+// the same names (`unknown-tag`); this rule catches hand-written markup.
+export const unknownElementRule: DocumentRule = {
+  id: "unknown-element",
+  severity: "warning",
+  description: "An element name that is no HTML, SVG or MathML element and has no hyphen (which every custom element needs) — a typo, or a line of text that a template read as a tag.",
+  check(doc) {
+    const results: AuditResult[] = [];
+    for (const el of doc.elements) {
+      if (isKnownElement(el.tag)) continue;
+      const { line, column } = elementPosition(doc, el);
+      const words = textInSubtree(el).trim();
+      const prose = words ? ` If "${el.tag} ${words.slice(0, 40)}" is text, write it as text.` : "";
+      results.push({
+        rule_id: "unknown-element",
+        severity: "warning",
+        component_name: el.attrs["data-ui"] || "",
+        file: doc.file,
+        line,
+        column,
+        message: `<${el.tag}> is not an HTML, SVG or MathML element, and a custom element name needs a hyphen.${prose}`,
+      });
+    }
+    return results;
+  },
+};
+
 /** Every document-level rule, run on each scanned HTML file (tasks 0.4-15, 0.4-17). */
 export const DOCUMENT_RULES: DocumentRule[] = [
   duplicateIdRule,
   headingOrderRule,
   landmarkRule,
   fieldWiringRule,
+  unknownElementRule,
 ];
 
 // ── Anti-pattern rule metadata ──

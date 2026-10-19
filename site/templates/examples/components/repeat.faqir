@@ -1,0 +1,9 @@
++breadcrumb
+  each crumb in trail
+    @item(href=crumb.href) {{ crumb.label }}
+  @current {{ page }}
++stepper
+  each step, i in steps
+    @step(completed=step.done active=step.current)
+      @indicator {{ i + 1 }}
+      @label {{ step.title }}

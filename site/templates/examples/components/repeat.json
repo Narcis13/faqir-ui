@@ -1,0 +1,12 @@
+{
+  "trail": [
+    { "href": "https://example.com/docs/", "label": "Docs" },
+    { "href": "https://example.com/docs/template/", "label": "Server templates" }
+  ],
+  "page": "Composition and components",
+  "steps": [
+    { "title": "Account", "done": true, "current": false },
+    { "title": "Project", "done": false, "current": true },
+    { "title": "Review", "done": false, "current": false }
+  ]
+}

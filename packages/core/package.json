@@ -26,6 +26,11 @@
     },
     "./faqir-core.min.js": "./dist/faqir-core.min.js",
     "./sri.json": "./dist/sri.json",
+    "./subset": {
+      "types": "./subset.d.ts",
+      "default": "./subset.js"
+    },
+    "./themes.json": "./dist/themes.json",
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
@@ -33,6 +38,8 @@
     "dist",
     "faqir-core.d.ts",
     "src",
+    "subset.js",
+    "subset.d.ts",
     "examples",
     "cdn.json",
     "README.md"

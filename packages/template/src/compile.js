@@ -20,12 +20,13 @@ const OPTION_KEYS = new Set(["file", "loader", "components", "helpers", "raw"]);
  */
 export function compile(source, options = {}) {
   const opts = checkOptions(source, options);
+  /** @type {import("./diagnostics.js").Context} */
   const ctx = { files: [opts.file], file: 0, diagnostics: [] };
   const { body, partials } = compose(parseFile(source, ctx), ctx, opts.loader);
   const expanded = expandCalls(body, partials, ctx, opts.components);
-  const requires = check(expanded.body, expanded.partials, ctx, { helpers: opts.helpers, raw: opts.raw, table: opts.components });
+  const { requires, uses } = check(expanded.body, expanded.partials, ctx, { helpers: opts.helpers, raw: opts.raw, table: opts.components });
   if (ctx.diagnostics.length > 0) return { ast: null, diagnostics: ctx.diagnostics };
-  const ast = { type: "Template", files: ctx.files, requires, body: expanded.body, partials: expanded.partials };
+  const ast = { type: "Template", files: ctx.files, requires, uses, body: expanded.body, partials: expanded.partials };
   return { ast, diagnostics: [] };
 }
 

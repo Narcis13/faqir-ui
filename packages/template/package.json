@@ -31,18 +31,24 @@
   },
   "files": [
     "src",
-    "README.md"
+    "README.md",
+    "template.md"
   ],
   "sideEffects": false,
   "scripts": {
+    "prepack": "node ../../scripts/pack-template-spec.mjs",
     "test": "bun test",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "keywords": [
     "faqir",
+    "faqir-ui",
     "template",
+    "template-engine",
     "ssr",
+    "server-side-rendering",
     "html",
+    "pug",
     "zero-dependency",
     "isomorphic"
   ],

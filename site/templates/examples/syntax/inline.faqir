@@ -1,0 +1,7 @@
+p Run #[code npm ci], then #[a(href="https://example.com/guide") read the #[em guide]].
+p
+  | Install
+  code faqir-ui-cli
+  | , then run
+  code faqir init
+  | (once per project).

@@ -49,20 +49,21 @@ block content
   p The output is as plain as the input. These are the whole rules, and every example on this page follows them.
   ol
     li Every node is written on its own line, indented two spaces per level of output nesting. A line break in HTML renders as one space between inline content and is ignored between blocks, so words never run together across lines.
-    li An element whose only child is text is written on one line, as in a paragraph that holds a sentence.
+    li An element whose only child is text is written on one line, as in a paragraph that holds a sentence. Text that starts with closing punctuation, such as a comma, a full stop or a closing bracket, joins the line before it, and whatever follows text that ends with an opening bracket joins that text's line, so no space appears where none was meant.
     li Inside pre, textarea, script and style, nothing is added: children are written one after another and piped lines are joined by a newline, with no indentation.
     li Output ends with a single newline.
   include "partials/example.faqir" (example=ex.whitespace)
   p Open the HTML it wrote to compare. The short paragraph is one line. In the second paragraph, the text and the two elements each have a line to themselves, which the browser reads as a single space between them. The pre block keeps its piped lines exactly, including the indent on its second line: the first space after a pipe is only the separator, and the two spaces after it belong to the text.
-  +callout(variant="warning")
-    @content
-      p
-        strong The honest consequence:
-        | because an inline element is always followed by a line break, punctuation cannot follow it directly. A comma or full stop that starts the next piped line would be rendered with a space before it.
-      p Put a word after the element, put the punctuation inside the element's own text, or restructure the sentence. The paragraphs of this page do the first.
+  h3#inline Inline elements
+  p
+    | Prose is full of code followed by a comma. Inside text, write an element as
+    code \#[tag text]
+    | with the same head an element line has: an id, attributes in parentheses, holes, and further inline elements inside its text. The sentence stays on one line, punctuation and all. Inside pre, textarea, script and style the characters are plain text, and elsewhere a backslash before them writes them as typed.
+  include "partials/example.faqir" (example=ex.inline)
+  p Notice both ways in the output. The first paragraph is one line, links and emphasis included. The second keeps every node on its own line, and still no comma or bracket is separated from the word before it, because the punctuation rule joined those lines.
 
   h2#elements Elements and attributes
-  p An element is a tag, an optional id, optional attributes in parentheses, and optional inline text, in that order. Any HTML or custom element name works.
+  p An element is a tag, an optional id, optional attributes in parentheses, and optional inline text, in that order. Any HTML, SVG or MathML element name works, and so does a custom element name, which always has a hyphen.
   ul
     li
       strong The id shorthand.
@@ -87,6 +88,11 @@ block content
     li
       strong Separators.
       | Attributes are separated by spaces, and a comma is also accepted. An attribute can appear only once on an element.
+  p
+    | Any other name is the compile error
+    code unknown-tag
+    | because it is nearly always a line of text that lost its pipe. Without the check, the paragraph below would render a made-up Open element holding the rest of the sentence, and nothing would complain until someone read the page.
+  include "partials/failure.faqir" (failure=err.notag)
   include "partials/example.faqir" (example=ex.attrs)
   p Notice the three ways a value becomes an attribute. The input gets a bare disabled attribute because signup.locked is true, and the button has no disabled attribute at all because signup.empty is false. The link's href and its aria-label both carry holes inside quoted literals, and every value is escaped for the attribute it lands in.
 
@@ -125,15 +131,18 @@ block content
   include "partials/example.faqir" (example=ex.holes)
   p Notice that a hole can be followed directly by punctuation, since holes are part of the text and not separate nodes. The three types a hole may produce are text, a finite number and a boolean, and all are written as you would expect. The bio in the data contains angle brackets and an ampersand, and they arrive as text: literal text and data are escaped the same way.
   p
-    | Because both are escaped, write the character you mean. Typing an entity such as
-    code &mdash;
-    | would show those characters, not a dash. Template text is not a way to write markup. The only way is the keyword
+    | Because both are escaped, write the character you mean. An entity such as
+    code {{ "&mdash;" }}
+    | in literal text would show those characters, not a dash, so it is the compile error
+    code literal-entity
+    | whose message names the character to write instead. A hole, as in the line above, still shows an entity's text when that is the point. Template text is not a way to write markup. The only way is the keyword
     code raw
     | which the Escaping, limits and diagnostics page explains.
+  include "partials/failure.faqir" (failure=err.entity)
 
   h3 The escape
   p
-    | The one escape of the language is a backslash before the opening braces, written
+    | The escape for holes is a backslash before the opening braces, written
     code \\{{
     | in a template. It writes a literal pair of opening braces, and a backslash anywhere else is just a backslash.
   include "partials/example.faqir" (example=ex.escape)

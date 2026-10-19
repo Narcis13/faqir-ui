@@ -15,24 +15,13 @@ import { render } from "../src/index.js";
 import { components as table } from "../src/registry.js";
 
 /**
- * Components the template engine cannot call, and why. Each entry is a gap in
- * the component's manifest, not in the engine.
+ * Components the template engine cannot call, and why. Each entry would be a
+ * gap in the component's manifest, not in the engine. There are none: the
+ * table (and the checkbox, radio, switch and toggle manifests, whose
+ * `templates.html` is a group of samples) used to be here until the IR read
+ * kebab-case boolean props and picked one sample out of a group.
  */
-const EXCEPTIONS: Record<string, RegExp> = {
-  // These four manifests' `templates.html` shows a group of samples — two
-  // toggles in a cluster, a radio group — so the reference tree's root is
-  // another component. There is no one-component reference to expand.
-  checkbox: /data-ui="cluster" at its root, not "checkbox"/,
-  radio: /data-ui="radio-group" at its root, not "radio"/,
-  switch: /data-ui="cluster" at its root, not "switch"/,
-  toggle: /data-ui="cluster" at its root, not "toggle"/,
-  // The table manifest declares per-cell attributes (`no-resize`,
-  // `csv-skip`, `row-id`, …) as component `props` with an `attr` and no
-  // `applied_to`, so the bindings IR (`manifestToIR`) reads them as root
-  // attributes and refuses the kebab-case names. The recipe bindings never
-  // call that walker, which is why only the template table meets it.
-  table: /boolean prop "no-resize" declares an attr but is not a valid prop name/,
-};
+const EXCEPTIONS: Record<string, RegExp> = {};
 
 /**
  * Components that render, but whose reference markup — `templates.html`,
@@ -57,12 +46,19 @@ beforeAll(async () => {
   inputs = { ...(await loadRegistryAuditInputs(getRegistryPath())), styles: await loadRegistryStylesheetMap(getRegistryPath()) };
 });
 
-/** A call with the defaults and every required slot filled. */
+/**
+ * A call with the defaults and every required slot filled — a slot that sits
+ * in a repeating part (`within`) inside a fill of that part.
+ */
 function callFor(name: string, entry: any): string {
-  const fills = Object.entries(entry.slots)
-    .filter(([, slot]: [string, any]) => slot.required)
-    .map(([slot]) => `  @${slot} Sample ${slot}`);
-  return [`+${name}`, ...fills, ""].join("\n");
+  const fills = (outer: string | undefined, pad: string): string[] =>
+    Object.entries(entry.slots)
+      .filter(([, slot]: [string, any]) => slot.required && slot.within === outer)
+      .flatMap(([slot]) => {
+        const inner = fills(slot, `${pad}  `);
+        return inner.length > 0 ? [`${pad}@${slot}`, ...inner] : [`${pad}@${slot} Sample ${slot}`];
+      });
+  return [`+${name}`, ...fills(undefined, "  "), ""].join("\n");
 }
 
 describe("every registry primitive and recipe", () => {
@@ -91,10 +87,18 @@ describe("every registry primitive and recipe", () => {
     for (const name of Object.keys(AUDIT_EXCEPTIONS)) expect((table as any).components).toHaveProperty(name);
   });
 
-  it("is called with its exception named, not just unknown", () => {
-    const { diagnostics } = compile("+table\n", { components: table as any });
-    expect(diagnostics[0].code).toBe("unknown-component");
-    expect(diagnostics[0].message).toContain("no-resize");
+  it("calls the table, whose kebab-case boolean props are camelCase arguments", () => {
+    const { ast, diagnostics } = compile("+table(noResize)\n  @tbody\n    tr\n      td 1\n", { components: table as any });
+    expect(diagnostics).toEqual([]);
+    expect(render(ast!, {})).toContain('<div data-ui="table" data-no-resize>');
+  });
+
+  it("calls one sample of a manifest whose reference is a group of them", () => {
+    const { ast, diagnostics } = compile('+checkbox(id="terms" name="terms" checked)\n  @label I agree\n', { components: table as any });
+    expect(diagnostics).toEqual([]);
+    expect(render(ast!, {})).toBe(
+      '<label data-ui="checkbox-label">\n  <input data-ui="checkbox" type="checkbox" checked id="terms" name="terms">\n  <span data-part="label">I agree</span>\n</label>\n',
+    );
   });
 });
 

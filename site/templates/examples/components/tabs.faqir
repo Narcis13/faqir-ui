@@ -1,1 +1,7 @@
-include "partials/components-tabs.faqir" (id="plan" label="Plan details" tabs=plan.tabs)
++tabs(id="plan")
+  @list(aria-label="Plan details")
+    each tab in plan.tabs
+      @trigger {{ tab.label }}
+  each tab in plan.tabs
+    @panel
+      p {{ tab.text }}

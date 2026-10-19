@@ -10,7 +10,7 @@ import { reportAt } from "./diagnostics.js";
 /**
  * @typedef {import("./diagnostics.js").Context} Context
  * @typedef {{ ctx: Context, helpers: Set<string>, raw: boolean, table: any,
- *   core: boolean, plugins: Set<string>, controllers: Set<string> }} Checker
+ *   core: boolean, plugins: Set<string>, controllers: Set<string>, uses: Set<string> }} Checker
  */
 
 /** True for an attribute faqir-core evaluates (§5). */
@@ -31,23 +31,25 @@ function isLiteral(value) {
 }
 
 /**
- * Check the body and every partial; return the `@ui:requires` list (§11.6).
+ * Check the body and every partial; return the `@ui:requires` list (§11.6)
+ * and every component the output draws (§16.1 `uses`).
  * @param {any[]} body
  * @param {Record<string, any[]>} partials
  * @param {Context} ctx
  * @param {{ helpers: string[], raw: boolean, table: any }} options
- * @returns {string[]}
+ * @returns {{ requires: string[], uses: string[] }}
  */
 export function check(body, partials, ctx, options) {
   /** @type {Checker} */
   const k = {
     ctx, helpers: new Set(options.helpers), raw: options.raw, table: options.table,
-    core: false, plugins: new Set(), controllers: new Set(),
+    core: false, plugins: new Set(), controllers: new Set(), uses: new Set(),
   };
   checkNodes(body, k, false);
   for (const nodes of Object.values(partials)) checkNodes(nodes, k, false);
   if (k.controllers.size > 0) k.core = true;
-  return [...(k.core ? ["faqir-core.js"] : []), ...[...k.plugins].sort(), ...[...k.controllers].sort()];
+  const requires = [...(k.core ? ["faqir-core.js"] : []), ...[...k.plugins].sort(), ...[...k.controllers].sort()];
+  return { requires, uses: [...k.uses].sort() };
 }
 
 /**
@@ -88,6 +90,12 @@ function checkNode(node, k, script) {
     case "Include":
       for (const p of node.params) checkValue(p.value, node.loc, k);
       return;
+    case "Params":
+      for (const p of node.params) if (p.value !== null) checkValue(p.value, node.loc, k);
+      return;
+    case "Copy":
+      for (const nodes of node.bodies) checkNodes(nodes, k, script);
+      return;
     case "Component":
       // The expansion's root carries a literal data-ui, which records the
       // component's controllers like any plain data-ui element.
@@ -107,6 +115,7 @@ function checkElement(node, k) {
   checkNodes(node.children, k, tag === "script" || tag === "style");
   const ui = node.attrs.find((/** @type {any} */ a) => a.name.toLowerCase() === "data-ui")?.value;
   const name = ui?.parts?.length === 1 && typeof ui.parts[0] === "string" ? ui.parts[0] : undefined;
+  if (name) k.uses.add(name);
   const files = name && k.table?.controllers ? Object.getOwnPropertyDescriptor(k.table.controllers, name)?.value : undefined;
   for (const file of files ?? []) k.controllers.add(file);
 }
@@ -125,7 +134,10 @@ function checkAttr(attr, node, k) {
   if (NO_DATA_ATTRS.has(name.replace(/^.*:/, "")) && !isLiteral(attr.value)) {
     return reportAt(k.ctx, "unsafe-attr", `${attr.name} takes a literal, not data`, loc);
   }
-  if (!isDirective(name)) return checkValue(attr.value, loc, k);
+  if (!isDirective(name)) {
+    for (const part of attr.value.parts ?? []) if (typeof part === "string") checkEntity(part, loc, k);
+    return checkValue(attr.value, loc, k);
+  }
   k.core = true;
   const plugin = k.table?.plugins?.[name.replace(/[:.].*$/, "")];
   if (typeof plugin === "string") k.plugins.add(plugin);
@@ -153,11 +165,55 @@ function checkText(node, k, script) {
   for (const part of node.parts) {
     if (typeof part === "string") {
       if (script && /<\/(script|style)/i.test(part)) reportAt(k.ctx, "script-content", "script/style content cannot close its element", node.loc);
+      if (!script) checkEntity(part, node.loc, k);
     } else if (script) {
       reportAt(k.ctx, "script-content", "a hole cannot go into script or style content", node.loc);
     } else if (part.expr) {
       checkExpr(part.expr, node.loc, k);
     }
+  }
+}
+
+/**
+ * The named entities people write by reflex, with their characters for the
+ * hint. A name not here (`R&D;`) is not taken for an entity: the browser
+ * would show it as typed too.
+ */
+const ENTITIES = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "a no-break space", ensp: "an en space", emsp: "an em space",
+  thinsp: "a thin space", shy: "a soft hyphen", zwj: "a zero-width joiner", zwnj: "a zero-width non-joiner",
+  mdash: "—", ndash: "–", minus: "−", hellip: "…", bull: "•", middot: "·", deg: "°", prime: "′", Prime: "″",
+  copy: "©", reg: "®", trade: "™", sect: "§", para: "¶", dagger: "†", Dagger: "‡", permil: "‰",
+  laquo: "«", raquo: "»", lsaquo: "‹", rsaquo: "›", lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”", sbquo: "‚", bdquo: "„",
+  larr: "←", rarr: "→", uarr: "↑", darr: "↓", harr: "↔", lArr: "⇐", rArr: "⇒", hArr: "⇔",
+  times: "×", divide: "÷", plusmn: "±", le: "≤", ge: "≥", ne: "≠", asymp: "≈", infin: "∞", frac12: "½", frac14: "¼", frac34: "¾",
+  sup1: "¹", sup2: "²", sup3: "³", micro: "µ", cent: "¢", pound: "£", euro: "€", yen: "¥", curren: "¤",
+  iexcl: "¡", iquest: "¿", szlig: "ß", aacute: "á", agrave: "à", acirc: "â", auml: "ä", atilde: "ã", aring: "å",
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë", iacute: "í", igrave: "ì", icirc: "î", iuml: "ï",
+  oacute: "ó", ograve: "ò", ocirc: "ô", ouml: "ö", otilde: "õ", oslash: "ø", uacute: "ú", ugrave: "ù", ucirc: "û", uuml: "ü",
+  ccedil: "ç", ntilde: "ñ", Eacute: "É", Ccedil: "Ç", Auml: "Ä", Ouml: "Ö", Uuml: "Ü", Ntilde: "Ñ",
+  check: "✓", cross: "✗", star: "☆", hearts: "♥", nabla: "∇", sum: "∑", prod: "∏", radic: "√", alpha: "α", beta: "β", pi: "π", lambda: "λ",
+};
+
+/**
+ * Literal text is escaped like data (§6), so an entity in it renders as typed:
+ * `&lt;id&gt;` shows `&lt;id&gt;`. That is never what was meant
+ * (`literal-entity`); the character itself is written instead.
+ * @param {string} text
+ * @param {number[]} loc
+ * @param {Checker} k
+ */
+function checkEntity(text, loc, k) {
+  for (const m of text.matchAll(/&(#[0-9]+|#[xX][0-9a-fA-F]+|[A-Za-z][A-Za-z0-9]*);/g)) {
+    const body = m[1];
+    const code = /^#[xX]/.test(body) ? parseInt(body.slice(2), 16) : body.startsWith("#") ? Number(body.slice(1)) : NaN;
+    /** @type {string | undefined} */
+    const char = Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code)
+      : Object.prototype.hasOwnProperty.call(ENTITIES, body) ? /** @type {Record<string, string>} */ (ENTITIES)[body] : undefined;
+    if (char === undefined) continue;
+    const what = [...char].length === 1 ? `"${char}" itself` : char;
+    reportAt(k.ctx, "literal-entity", `"${m[0]}" would render as typed, since literal text is escaped; write ${what} (a hole, {{ "${m[0]}" }}, shows it as typed)`, loc);
+    return;
   }
 }
 

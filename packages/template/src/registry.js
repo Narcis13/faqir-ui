@@ -105,7 +105,30 @@ export const components = {
  "components": {
   "accordion": {
    "defaultSlot": false,
-   "slots": {},
+   "slots": {
+    "item": {
+     "required": true,
+     "states": {
+      "expanded": {
+       "attr": "data-state",
+       "value": "expanded",
+       "kind": "value"
+      }
+     }
+    },
+    "trigger": {
+     "required": true,
+     "within": "item"
+    },
+    "content": {
+     "required": true,
+     "within": "item"
+    },
+    "icon": {
+     "required": false,
+     "within": "trigger"
+    }
+   },
    "variants": {
     "bordered": {
      "attr": "data-bordered",
@@ -201,7 +224,8 @@ export const components = {
          {
           "tag": "span",
           "attrs": [],
-          "children": []
+          "children": [],
+          "sample": true
          },
          {
           "tag": "span",
@@ -263,7 +287,8 @@ export const components = {
           true
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ]
      },
@@ -322,7 +347,8 @@ export const components = {
          {
           "tag": "span",
           "attrs": [],
-          "children": []
+          "children": [],
+          "sample": true
          },
          {
           "tag": "span",
@@ -384,7 +410,8 @@ export const components = {
           true
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ]
      }
@@ -528,7 +555,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "trigger"
+      "slot": "trigger",
+      "sample": true
      },
      {
       "tag": "div",
@@ -758,7 +786,8 @@ export const components = {
       ]
      }
     ]
-   }
+   },
+   "heading": "h2"
   },
   "aspect-ratio": {
    "defaultSlot": true,
@@ -888,7 +917,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "fallback"
+      "slot": "fallback",
+      "sample": true
      }
     ],
     "dyn": [
@@ -953,7 +983,8 @@ export const components = {
       "intensity",
       "data-intensity"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "badge": {
@@ -1174,7 +1205,8 @@ export const components = {
            ]
           ],
           "children": [],
-          "slot": "item"
+          "slot": "item",
+          "sample": true
          }
         ]
        },
@@ -1218,7 +1250,8 @@ export const components = {
            ]
           ],
           "children": [],
-          "slot": "current"
+          "slot": "current",
+          "sample": true
          }
         ]
        }
@@ -1305,7 +1338,8 @@ export const components = {
       "size",
       "data-size"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "calendar": {
@@ -1599,7 +1633,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "icon"
+      "slot": "icon",
+      "sample": true
      },
      {
       "tag": "div",
@@ -1612,7 +1647,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "content"
+      "slot": "content",
+      "sample": true
      }
     ],
     "dyn": [
@@ -1744,7 +1780,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "body"
+      "slot": "body",
+      "sample": true
      },
      {
       "tag": "div",
@@ -1757,7 +1794,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "footer"
+      "slot": "footer",
+      "sample": true
      }
     ],
     "dyn": [
@@ -1770,13 +1808,17 @@ export const components = {
       "data-size"
      ]
     ]
-   }
+   },
+   "heading": "h3"
   },
   "carousel": {
    "defaultSlot": false,
    "slots": {
     "viewport": {
      "required": false
+    },
+    "slide": {
+     "required": true
     },
     "controls": {
      "required": false
@@ -1789,6 +1831,16 @@ export const components = {
     },
     "dots": {
      "required": false
+    },
+    "dot": {
+     "required": false,
+     "states": {
+      "active": {
+       "attr": "data-state",
+       "value": "active",
+       "kind": "value"
+      }
+     }
     },
     "status": {
      "required": false
@@ -1884,7 +1936,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "div",
@@ -1914,7 +1967,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ],
       "slot": "viewport"
@@ -2093,6 +2147,96 @@ export const components = {
       ],
       "children": [],
       "slot": "status"
+     }
+    ]
+   }
+  },
+  "checkbox": {
+   "defaultSlot": false,
+   "slots": {
+    "label": {
+     "required": false
+    }
+   },
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    }
+   },
+   "states": {
+    "checked": {
+     "attr": "checked",
+     "value": null,
+     "kind": "presence"
+    },
+    "indeterminate": {
+     "attr": "data-state",
+     "value": "indeterminate",
+     "kind": "value"
+    },
+    "disabled": {
+     "attr": "disabled",
+     "value": null,
+     "kind": "presence"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "label",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "checkbox-label"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "input",
+      "attrs": [
+       [
+        "data-ui",
+        [
+         "checkbox"
+        ]
+       ],
+       [
+        "type",
+        [
+         "checkbox"
+        ]
+       ]
+      ],
+      "children": [],
+      "dyn": [
+       [
+        "size",
+        "data-size"
+       ]
+      ],
+      "self": true
+     },
+     {
+      "tag": "span",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "label"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "label",
+      "sample": true
      }
     ]
    }
@@ -2450,7 +2594,8 @@ export const components = {
       "justify-xl",
       "data-justify-xl"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "collapsible": {
@@ -2504,7 +2649,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "trigger"
+      "slot": "trigger",
+      "sample": true
      },
      {
       "tag": "div",
@@ -2517,7 +2663,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "content"
+      "slot": "content",
+      "sample": true
      }
     ],
     "dyn": [
@@ -2533,6 +2680,21 @@ export const components = {
    "slots": {
     "listbox": {
      "required": false
+    },
+    "option": {
+     "required": true,
+     "states": {
+      "highlighted": {
+       "attr": "data-highlighted",
+       "value": null,
+       "kind": "presence"
+      },
+      "hidden": {
+       "attr": "data-hidden",
+       "value": null,
+       "kind": "presence"
+      }
+     }
     },
     "empty": {
      "required": false
@@ -2690,7 +2852,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "li",
@@ -2714,7 +2877,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "li",
@@ -2763,7 +2927,19 @@ export const components = {
      "required": false
     },
     "item": {
-     "required": false
+     "required": false,
+     "states": {
+      "highlighted": {
+       "attr": "data-highlighted",
+       "value": null,
+       "kind": "presence"
+      },
+      "hidden": {
+       "attr": "data-hidden",
+       "value": null,
+       "kind": "presence"
+      }
+     }
     },
     "empty": {
      "required": false
@@ -2993,7 +3169,8 @@ export const components = {
              ]
             ],
             "children": [],
-            "slot": "group-label"
+            "slot": "group-label",
+            "sample": true
            },
            {
             "tag": "div",
@@ -3029,7 +3206,8 @@ export const components = {
                ]
               ],
               "children": [],
-              "slot": "item-label"
+              "slot": "item-label",
+              "sample": true
              },
              {
               "tag": "kbd",
@@ -3042,7 +3220,8 @@ export const components = {
                ]
               ],
               "children": [],
-              "slot": "kbd"
+              "slot": "kbd",
+              "sample": true
              }
             ],
             "slot": "item"
@@ -3179,7 +3358,8 @@ export const components = {
       "measure-xl",
       "data-measure-xl"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "context-menu": {
@@ -3190,6 +3370,9 @@ export const components = {
     },
     "menu": {
      "required": false
+    },
+    "item": {
+     "required": true
     }
    },
    "variants": {},
@@ -3263,7 +3446,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "target"
+      "slot": "target",
+      "sample": true
      },
      {
       "tag": "div",
@@ -3329,7 +3513,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "button",
@@ -3359,7 +3544,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "hr",
@@ -3414,7 +3600,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ],
       "slot": "menu"
@@ -3835,7 +4022,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "term"
+      "slot": "term",
+      "sample": true
      },
      {
       "tag": "dd",
@@ -3848,7 +4036,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "details"
+      "slot": "details",
+      "sample": true
      }
     ],
     "dyn": [
@@ -4101,7 +4290,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "body"
+        "slot": "body",
+        "sample": true
        },
        {
         "tag": "div",
@@ -4114,7 +4304,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "footer"
+        "slot": "footer",
+        "sample": true
        }
       ],
       "slot": "panel",
@@ -4130,7 +4321,8 @@ export const components = {
       ]
      }
     ]
-   }
+   },
+   "heading": "h2"
   },
   "drawer": {
    "defaultSlot": false,
@@ -4370,7 +4562,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "body"
+        "slot": "body",
+        "sample": true
        },
        {
         "tag": "div",
@@ -4383,7 +4576,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "footer"
+        "slot": "footer",
+        "sample": true
        }
       ],
       "slot": "panel",
@@ -4399,7 +4593,8 @@ export const components = {
       ]
      }
     ]
-   }
+   },
+   "heading": "h2"
   },
   "dropdown": {
    "defaultSlot": false,
@@ -4410,6 +4605,9 @@ export const components = {
     },
     "menu": {
      "required": false
+    },
+    "item": {
+     "required": true
     }
    },
    "variants": {
@@ -4527,7 +4725,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "button",
@@ -4545,7 +4744,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "hr",
@@ -4576,7 +4776,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ],
       "slot": "menu",
@@ -4646,7 +4847,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "icon"
+      "slot": "icon",
+      "sample": true
      },
      {
       "tag": "h3",
@@ -4659,7 +4861,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "title"
+      "slot": "title",
+      "sample": true
      },
      {
       "tag": "p",
@@ -4672,7 +4875,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "description"
+      "slot": "description",
+      "sample": true
      },
      {
       "tag": "div",
@@ -4685,7 +4889,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "actions"
+      "slot": "actions",
+      "sample": true
      }
     ],
     "dyn": [
@@ -4694,7 +4899,8 @@ export const components = {
       "data-size"
      ]
     ]
-   }
+   },
+   "heading": "h3"
   },
   "field-group": {
    "defaultSlot": false,
@@ -4782,7 +4988,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "label"
+      "slot": "label",
+      "sample": true
      },
      {
       "tag": "div",
@@ -4829,7 +5036,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "description"
+      "slot": "description",
+      "sample": true
      }
     ],
     "dyn": [
@@ -5134,7 +5342,8 @@ export const components = {
       "trigger",
       "data-trigger"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "grid": {
@@ -5353,7 +5562,8 @@ export const components = {
       "gap-xl",
       "data-gap-xl"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "highlight": {
@@ -5399,7 +5609,8 @@ export const components = {
       "variant",
       "data-variant"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "icon": {
@@ -5731,6 +5942,26 @@ export const components = {
    "slots": {
     "segments": {
      "required": false
+    },
+    "segment": {
+     "required": false,
+     "states": {
+      "filled": {
+       "attr": "data-filled",
+       "value": null,
+       "kind": "presence"
+      },
+      "active": {
+       "attr": "data-active",
+       "value": null,
+       "kind": "presence"
+      },
+      "caret": {
+       "attr": "data-caret",
+       "value": null,
+       "kind": "presence"
+      }
+     }
     }
    },
    "variants": {
@@ -6050,7 +6281,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "label"
+      "slot": "label",
+      "sample": true
      },
      {
       "tag": "dd",
@@ -6063,7 +6295,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "value"
+      "slot": "value",
+      "sample": true
      }
     ],
     "dyn": [
@@ -6197,7 +6430,11 @@ export const components = {
   },
   "marquee": {
    "defaultSlot": false,
-   "slots": {},
+   "slots": {
+    "track": {
+     "required": false
+    }
+   },
    "variants": {
     "direction": {
      "attr": "data-direction",
@@ -6304,7 +6541,23 @@ export const components = {
   },
   "menubar": {
    "defaultSlot": false,
-   "slots": {},
+   "slots": {
+    "group": {
+     "required": false
+    },
+    "trigger": {
+     "required": true,
+     "within": "group"
+    },
+    "submenu": {
+     "required": true,
+     "within": "group"
+    },
+    "item": {
+     "required": true,
+     "within": "submenu"
+    }
+   },
    "variants": {
     "size": {
      "attr": "data-size",
@@ -6435,7 +6688,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "div",
@@ -6504,7 +6758,8 @@ export const components = {
             ]
            ]
           ],
-          "children": []
+          "children": [],
+          "sample": true
          },
          {
           "tag": "button",
@@ -6534,7 +6789,8 @@ export const components = {
             ]
            ]
           ],
-          "children": []
+          "children": [],
+          "sample": true
          },
          {
           "tag": "hr",
@@ -6583,7 +6839,8 @@ export const components = {
             ]
            ]
           ],
-          "children": []
+          "children": [],
+          "sample": true
          }
         ]
        }
@@ -6664,7 +6921,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "div",
@@ -6733,7 +6991,8 @@ export const components = {
             ]
            ]
           ],
-          "children": []
+          "children": [],
+          "sample": true
          },
          {
           "tag": "button",
@@ -6763,7 +7022,8 @@ export const components = {
             ]
            ]
           ],
-          "children": []
+          "children": [],
+          "sample": true
          }
         ]
        }
@@ -6782,7 +7042,14 @@ export const components = {
    "defaultSlot": false,
    "slots": {
     "link": {
-     "required": true
+     "required": true,
+     "states": {
+      "active": {
+       "attr": "data-state",
+       "value": "active",
+       "kind": "value"
+      }
+     }
     }
    },
    "variants": {
@@ -6828,7 +7095,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "link"
+      "slot": "link",
+      "sample": true
      }
     ],
     "dyn": [
@@ -6897,6 +7165,16 @@ export const components = {
     },
     "next": {
      "required": false
+    },
+    "page": {
+     "required": false,
+     "states": {
+      "active": {
+       "attr": "data-state",
+       "value": "active",
+       "kind": "value"
+      }
+     }
     },
     "ellipsis": {
      "required": false
@@ -7048,7 +7326,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "button",
@@ -7509,7 +7788,8 @@ export const components = {
        {
         "tag": "p",
         "attrs": [],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ],
       "slot": "text"
@@ -7536,7 +7816,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "name"
+        "slot": "name",
+        "sample": true
        },
        {
         "tag": "span",
@@ -7549,7 +7830,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "role"
+        "slot": "role",
+        "sample": true
        }
       ],
       "slot": "author"
@@ -7568,6 +7850,91 @@ export const components = {
       "align",
       "data-align"
      ]
+    ]
+   }
+  },
+  "radio": {
+   "defaultSlot": false,
+   "slots": {
+    "label": {
+     "required": false
+    }
+   },
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    }
+   },
+   "states": {
+    "checked": {
+     "attr": "checked",
+     "value": null,
+     "kind": "presence"
+    },
+    "disabled": {
+     "attr": "disabled",
+     "value": null,
+     "kind": "presence"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "label",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "radio-label"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "input",
+      "attrs": [
+       [
+        "data-ui",
+        [
+         "radio"
+        ]
+       ],
+       [
+        "type",
+        [
+         "radio"
+        ]
+       ]
+      ],
+      "children": [],
+      "dyn": [
+       [
+        "size",
+        "data-size"
+       ]
+      ],
+      "self": true
+     },
+     {
+      "tag": "span",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "label"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "label",
+      "sample": true
+     }
     ]
    }
   },
@@ -7700,7 +8067,8 @@ export const components = {
       "trigger",
       "data-trigger"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "scroll-progress": {
@@ -7834,6 +8202,21 @@ export const components = {
     },
     "listbox": {
      "required": false
+    },
+    "option": {
+     "required": true,
+     "states": {
+      "highlighted": {
+       "attr": "data-highlighted",
+       "value": null,
+       "kind": "presence"
+      },
+      "hidden": {
+       "attr": "data-hidden",
+       "value": null,
+       "kind": "presence"
+      }
+     }
     },
     "chevron": {
      "required": false
@@ -8026,7 +8409,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "div",
@@ -8058,7 +8442,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ],
       "slot": "listbox"
@@ -8371,7 +8756,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "body"
+        "slot": "body",
+        "sample": true
        }
       ],
       "slot": "panel",
@@ -8387,7 +8773,8 @@ export const components = {
       ]
      }
     ]
-   }
+   },
+   "heading": "h2"
   },
   "sidebar": {
    "defaultSlot": false,
@@ -8553,7 +8940,8 @@ export const components = {
              ]
             ],
             "children": [],
-            "slot": "brand-icon"
+            "slot": "brand-icon",
+            "sample": true
            },
            {
             "tag": "span",
@@ -8566,7 +8954,8 @@ export const components = {
              ]
             ],
             "children": [],
-            "slot": "brand-label"
+            "slot": "brand-label",
+            "sample": true
            }
           ],
           "slot": "brand"
@@ -8602,7 +8991,8 @@ export const components = {
            ]
           ],
           "children": [],
-          "slot": "trigger"
+          "slot": "trigger",
+          "sample": true
          }
         ],
         "slot": "header"
@@ -8664,7 +9054,8 @@ export const components = {
              ]
             ],
             "children": [],
-            "slot": "icon"
+            "slot": "icon",
+            "sample": true
            },
            {
             "tag": "span",
@@ -8677,7 +9068,8 @@ export const components = {
              ]
             ],
             "children": [],
-            "slot": "label"
+            "slot": "label",
+            "sample": true
            }
           ],
           "slot": "item"
@@ -8696,7 +9088,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "footer"
+        "slot": "footer",
+        "sample": true
        }
       ],
       "slot": "panel"
@@ -8784,7 +9177,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "label"
+      "slot": "label",
+      "sample": true
      }
     ],
     "dyn": [
@@ -9136,7 +9530,8 @@ export const components = {
       "variant",
       "data-variant"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "stack": {
@@ -9492,7 +9887,8 @@ export const components = {
       "justify-xl",
       "data-justify-xl"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "stamp": {
@@ -9619,7 +10015,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "label"
+      "slot": "label",
+      "sample": true
      },
      {
       "tag": "span",
@@ -9632,7 +10029,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "value"
+      "slot": "value",
+      "sample": true
      },
      {
       "tag": "span",
@@ -9645,7 +10043,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "change"
+      "slot": "change",
+      "sample": true
      }
     ],
     "dyn": [
@@ -9668,7 +10067,19 @@ export const components = {
    "defaultSlot": false,
    "slots": {
     "step": {
-     "required": false
+     "required": false,
+     "states": {
+      "active": {
+       "attr": "data-state",
+       "value": "active",
+       "kind": "value"
+      },
+      "completed": {
+       "attr": "data-state",
+       "value": "completed",
+       "kind": "value"
+      }
+     }
     },
     "indicator": {
      "required": true
@@ -9732,7 +10143,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "indicator"
+        "slot": "indicator",
+        "sample": true
        },
        {
         "tag": "span",
@@ -9745,7 +10157,8 @@ export const components = {
          ]
         ],
         "children": [],
-        "slot": "label"
+        "slot": "label",
+        "sample": true
        }
       ],
       "slot": "step"
@@ -9810,6 +10223,121 @@ export const components = {
       "size",
       "data-size"
      ]
+    ],
+    "sample": true
+   }
+  },
+  "switch": {
+   "defaultSlot": false,
+   "slots": {
+    "label": {
+     "required": false
+    },
+    "thumb": {
+     "required": false
+    }
+   },
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    }
+   },
+   "states": {
+    "on": {
+     "attr": "data-state",
+     "value": "on",
+     "kind": "value"
+    },
+    "disabled": {
+     "attr": "disabled",
+     "value": null,
+     "kind": "presence"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "label",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "switch-label"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "button",
+      "attrs": [
+       [
+        "type",
+        [
+         "button"
+        ]
+       ],
+       [
+        "data-ui",
+        [
+         "switch"
+        ]
+       ],
+       [
+        "role",
+        [
+         "switch"
+        ]
+       ],
+       [
+        "aria-checked",
+        [
+         "false"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "span",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "thumb"
+          ]
+         ]
+        ],
+        "children": [],
+        "slot": "thumb"
+       }
+      ],
+      "dyn": [
+       [
+        "size",
+        "data-size"
+       ]
+      ],
+      "self": true
+     },
+     {
+      "tag": "span",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "label"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "label",
+      "sample": true
+     }
     ]
    }
   },
@@ -9867,6 +10395,412 @@ export const components = {
       "gap",
       "data-gap"
      ]
+    ],
+    "sample": true
+   }
+  },
+  "table": {
+   "defaultSlot": false,
+   "slots": {
+    "table": {
+     "required": false
+    },
+    "thead": {
+     "required": false
+    },
+    "tbody": {
+     "required": false
+    },
+    "tr": {
+     "required": false,
+     "states": {
+      "selected": {
+       "attr": "data-selected",
+       "value": null,
+       "kind": "presence"
+      },
+      "row-collapsed": {
+       "attr": "data-collapsed",
+       "value": null,
+       "kind": "presence"
+      },
+      "filtered": {
+       "attr": "data-filtered",
+       "value": null,
+       "kind": "presence"
+      },
+      "dragging": {
+       "attr": "data-dragging",
+       "value": null,
+       "kind": "presence"
+      },
+      "drop-target": {
+       "attr": "data-drop-target",
+       "value": null,
+       "kind": "presence"
+      },
+      "drop-pos": {
+       "attr": "data-drop-pos",
+       "value": "before",
+       "kind": "value"
+      },
+      "stripe": {
+       "attr": "data-stripe",
+       "value": "even",
+       "kind": "value"
+      }
+     }
+    },
+    "th": {
+     "required": false,
+     "within": "tr",
+     "states": {
+      "sort-order": {
+       "attr": "data-sort-order",
+       "value": null,
+       "kind": "presence"
+      },
+      "col-hidden": {
+       "attr": "data-col-hidden",
+       "value": null,
+       "kind": "presence"
+      },
+      "pin-edge": {
+       "attr": "data-pin-edge",
+       "value": null,
+       "kind": "presence"
+      }
+     }
+    },
+    "td": {
+     "required": false,
+     "within": "tr",
+     "states": {
+      "editing": {
+       "attr": "data-editing",
+       "value": null,
+       "kind": "presence"
+      },
+      "negative": {
+       "attr": "data-negative",
+       "value": null,
+       "kind": "presence"
+      },
+      "tree-cell": {
+       "attr": "data-tree-cell",
+       "value": null,
+       "kind": "presence"
+      }
+     }
+    }
+   },
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    },
+    "variant": {
+     "attr": "data-variant",
+     "values": [
+      "default",
+      "striped",
+      "bordered"
+     ],
+     "default": "default"
+    }
+   },
+   "states": {
+    "resized": {
+     "attr": "data-resized",
+     "value": null,
+     "kind": "presence"
+    },
+    "stacked": {
+     "attr": "data-stacked",
+     "value": null,
+     "kind": "presence"
+    },
+    "sortable": {
+     "attr": "data-sortable",
+     "value": null,
+     "kind": "presence"
+    },
+    "readonly": {
+     "attr": "data-readonly",
+     "value": null,
+     "kind": "presence"
+    },
+    "noResize": {
+     "attr": "data-no-resize",
+     "value": null,
+     "kind": "presence"
+    },
+    "csvSkip": {
+     "attr": "data-csv-skip",
+     "value": null,
+     "kind": "presence"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "table"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "table",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "table"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "thead",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "thead"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "tr",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "tr"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "th",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "th"
+              ]
+             ],
+             [
+              "scope",
+              [
+               "col"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "input",
+              "attrs": [
+               [
+                "data-part",
+                [
+                 "checkbox"
+                ]
+               ],
+               [
+                "type",
+                [
+                 "checkbox"
+                ]
+               ],
+               [
+                "aria-label",
+                [
+                 "Select all rows"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           },
+           {
+            "tag": "th",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "th"
+              ]
+             ],
+             [
+              "scope",
+              [
+               "col"
+              ]
+             ],
+             [
+              "data-sortable",
+              true
+             ],
+             [
+              "aria-sort",
+              [
+               "none"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           },
+           {
+            "tag": "th",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "th"
+              ]
+             ],
+             [
+              "scope",
+              [
+               "col"
+              ]
+             ],
+             [
+              "data-sortable",
+              true
+             ],
+             [
+              "aria-sort",
+              [
+               "none"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           }
+          ]
+         }
+        ],
+        "slot": "thead"
+       },
+       {
+        "tag": "tbody",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "tbody"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "tr",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "tr"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "td",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "td"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "input",
+              "attrs": [
+               [
+                "data-part",
+                [
+                 "checkbox"
+                ]
+               ],
+               [
+                "type",
+                [
+                 "checkbox"
+                ]
+               ],
+               [
+                "aria-label",
+                [
+                 "Select row"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           },
+           {
+            "tag": "td",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "td"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           },
+           {
+            "tag": "td",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "td"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           }
+          ]
+         }
+        ],
+        "slot": "tbody"
+       }
+      ],
+      "slot": "table"
+     }
+    ],
+    "dyn": [
+     [
+      "size",
+      "data-size"
+     ],
+     [
+      "variant",
+      "data-variant"
+     ]
     ]
    }
   },
@@ -9875,6 +10809,12 @@ export const components = {
    "slots": {
     "list": {
      "required": false
+    },
+    "trigger": {
+     "required": true
+    },
+    "panel": {
+     "required": true
     }
    },
    "variants": {
@@ -9968,7 +10908,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        },
        {
         "tag": "button",
@@ -10016,7 +10957,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ],
       "slot": "list"
@@ -10055,7 +10997,8 @@ export const components = {
         ]
        ]
       ],
-      "children": []
+      "children": [],
+      "sample": true
      },
      {
       "tag": "div",
@@ -10095,7 +11038,8 @@ export const components = {
         true
        ]
       ],
-      "children": []
+      "children": [],
+      "sample": true
      }
     ],
     "dyn": [
@@ -10358,7 +11302,8 @@ export const components = {
       "leading",
       "data-leading"
      ]
-    ]
+    ],
+    "sample": true
    }
   },
   "textarea": {
@@ -10532,7 +11477,8 @@ export const components = {
            ]
           ],
           "children": [],
-          "slot": "time"
+          "slot": "time",
+          "sample": true
          },
          {
           "tag": "p",
@@ -10545,7 +11491,8 @@ export const components = {
            ]
           ],
           "children": [],
-          "slot": "title"
+          "slot": "title",
+          "sample": true
          },
          {
           "tag": "p",
@@ -10558,7 +11505,8 @@ export const components = {
            ]
           ],
           "children": [],
-          "slot": "description"
+          "slot": "description",
+          "sample": true
          }
         ],
         "slot": "content"
@@ -10642,9 +11590,84 @@ export const components = {
     ]
    }
   },
+  "toggle": {
+   "defaultSlot": true,
+   "slots": {},
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    }
+   },
+   "states": {
+    "pressed": {
+     "attr": "aria-pressed",
+     "value": null,
+     "kind": "aria"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "button",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "toggle"
+      ]
+     ],
+     [
+      "type",
+      [
+       "button"
+      ]
+     ],
+     [
+      "aria-pressed",
+      [
+       "false"
+      ]
+     ]
+    ],
+    "children": [],
+    "dyn": [
+     [
+      "size",
+      "data-size"
+     ]
+    ],
+    "sample": true
+   }
+  },
   "toggle-group": {
    "defaultSlot": false,
-   "slots": {},
+   "slots": {
+    "item": {
+     "required": true,
+     "states": {
+      "off": {
+       "attr": "data-state",
+       "value": "off",
+       "kind": "value"
+      },
+      "on": {
+       "attr": "data-state",
+       "value": "on",
+       "kind": "value"
+      }
+     }
+    },
+    "label": {
+     "required": true,
+     "within": "item"
+    }
+   },
    "variants": {
     "mode": {
      "attr": "data-mode",
@@ -10736,7 +11759,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ]
      },
@@ -10793,7 +11817,8 @@ export const components = {
           ]
          ]
         ],
-        "children": []
+        "children": [],
+        "sample": true
        }
       ]
      }
@@ -10878,7 +11903,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "trigger"
+      "slot": "trigger",
+      "sample": true
      },
      {
       "tag": "div",
@@ -10910,7 +11936,8 @@ export const components = {
        ]
       ],
       "children": [],
-      "slot": "content"
+      "slot": "content",
+      "sample": true
      }
     ],
     "dyn": [
@@ -10924,8 +11951,32 @@ export const components = {
   "tree-view": {
    "defaultSlot": false,
    "slots": {
+    "item": {
+     "required": false,
+     "states": {
+      "collapsed": {
+       "attr": "data-state",
+       "value": "collapsed",
+       "kind": "value"
+      },
+      "expanded": {
+       "attr": "data-state",
+       "value": "expanded",
+       "kind": "value"
+      }
+     }
+    },
+    "label": {
+     "required": false,
+     "within": "item"
+    },
+    "toggle": {
+     "required": false,
+     "within": "label"
+    },
     "group": {
-     "required": false
+     "required": false,
+     "within": "item"
     }
    },
    "variants": {},
@@ -11312,11 +12363,5 @@ export const components = {
    }
   }
  },
- "unavailable": {
-  "checkbox": "templates.html has data-ui=\"cluster\" at its root, not \"checkbox\": the reference is a group of samples, not one component",
-  "radio": "templates.html has data-ui=\"radio-group\" at its root, not \"radio\": the reference is a group of samples, not one component",
-  "switch": "templates.html has data-ui=\"cluster\" at its root, not \"switch\": the reference is a group of samples, not one component",
-  "table": "table: boolean prop \"no-resize\" declares an attr but is not a valid prop name",
-  "toggle": "templates.html has data-ui=\"cluster\" at its root, not \"toggle\": the reference is a group of samples, not one component"
- }
+ "unavailable": {}
 };

@@ -22,6 +22,8 @@ export interface Template {
   type: "Template";
   files: string[];
   requires: string[];
+  /** Every component name the output draws through a literal `data-ui`, sorted (§16.1). */
+  uses?: string[];
   body: unknown[];
   partials: Record<string, unknown[]>;
 }

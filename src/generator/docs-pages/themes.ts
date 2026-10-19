@@ -806,7 +806,7 @@ function renderAuthoringPage(ctx: PageContext, themes: ThemeEntry[]): SiteFile {
         table(
           ["Block", "What it records"],
           [
-            [code("seed"), "the seed filled out to every axis — byte-identical to <name>.seed.json"],
+            [code("seed"), `the seed filled out to every axis — byte-identical to ${code("<name>.seed.json")}`],
             [code("axes"), "the fourteen axes the emitted CSS derives back to"],
             [code("generated"), "each file written: kind (theme | document), css, manifest, preview, seed"],
             [code("contrast"), "every text pair, per scheme, with its ratio and whether it passed"],

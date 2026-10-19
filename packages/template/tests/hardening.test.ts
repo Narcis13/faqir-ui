@@ -32,8 +32,8 @@ describe("attribute names", () => {
 
   it("refuses data in srcdoc, style and SVG animation values", () => {
     for (const attr of ["srcdoc", "style", "to", "from", "values", "by", "SRCDOC"]) {
-      expect(codes(`x(${attr}=v)`)).toEqual(["unsafe-attr"]);
-      expect(codes(`x(${attr}='a {{ v }}')`)).toEqual(["unsafe-attr"]);
+      expect(codes(`div(${attr}=v)`)).toEqual(["unsafe-attr"]);
+      expect(codes(`div(${attr}='a {{ v }}')`)).toEqual(["unsafe-attr"]);
     }
     expect(html("div(style='color: red')")).toBe('<div style="color: red"></div>\n');
   });

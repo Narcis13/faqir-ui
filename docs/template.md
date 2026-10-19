@@ -103,13 +103,14 @@ statement  = "doctype" "html"
            | "layout" string
            | "block" name
            | "include" string [ "(" attrs ")" ]
+           | "params" attrs                  (* no parentheses, §10.3 *)
            | "if" expr | "else" "if" expr | "else"
            | "each" ident [ "," ident ] "in" expr
            | "raw" [ expr ] ;
 
 element    = tag [ "#" idname ] [ "(" attrs ")" ] [ " " text ] ;
 call       = "+" name [ "(" attrs ")" ] [ " " text ] ;
-fill       = "@" name [ " " text ] ;
+fill       = "@" name [ "(" attrs ")" ] [ " " text ] ;
 piped      = "|" [ " " text ] ;
 comment    = "//-" { any } | "//" { any } ;
 
@@ -124,6 +125,8 @@ attrname   = ( letter | "_" | ":" | "@" ) { letter | digit | "_" | ":" | "@" | "
 string     = '"' { char } '"' | "'" { char } "'" ;
 ```
 
+`text` may hold inline elements, `#[tag(attrs) text]` (§6.1).
+
 A line's first word decides what it is: a keyword above makes a statement, `+`
 a call, `@` a fill, `|` piped text, `//` a comment, a letter an element. A line
 that is none of these — one starting with `<`, say — is `bad-line`; raw HTML is
@@ -132,8 +135,10 @@ written with `raw` (§12.5).
 Placement rules, each `misplaced` when broken: `doctype` only as the first line
 of a file; `layout` only as the first statement of a file, and then the file
 holds nothing but top-level `block`s; a `block` in a page with a layout only at
-the top level; `@fill` lines only directly under a call; `else` only right after
-an `if`/`else if` branch or an `each` (`orphan-else` otherwise).
+the top level; `params` only as the first statement of a partial; `@fill` lines
+only directly under a call or a fill, or in an `if`/`else`/`each` there (§11.4);
+`else` only right after an `if`/`else if` branch or an `each` (`orphan-else`
+otherwise).
 
 ## 5. Elements and attributes
 
@@ -143,8 +148,12 @@ img(src=user.avatar alt="")
 button(type="button" disabled=form.locked) Save
 ```
 
-- **Tag** — any HTML or custom element name. Void elements (`area base br col
-  embed hr img input link meta param source track wbr`) take no children
+- **Tag** — an HTML, SVG or MathML element name (current or obsolete, in any
+  case), or a custom element name, which has a hyphen. Any other name is
+  `unknown-tag`: it is almost always a line of prose that lost its `|`, and the
+  message says so — `p` over a line `Open the app now` would otherwise render
+  `<p><Open>the app now</Open></p>`. Void elements (`area base br col embed hr
+  img input link meta param source track wbr`) take no children
   (`void-children`) and render without a closing tag.
 - **`#id` shorthand** — sets `id`. It is the only shorthand: identity goes
   through the five protocol attributes and `id`, and `class` is an ordinary
@@ -185,15 +194,41 @@ p
 - **Holes** are `{{ expr }}`. A hole ends at the `}}` that follows a complete
   expression, so a string literal inside a hole may contain `}}`. A `{{` with no
   closing `}}` and an empty hole are `bad-hole`.
-- **`\{{` is the only escape**; it writes a literal `{{`. A backslash anywhere
-  else is literal. Faqir-core writes no `{{`, and manifest templates use single
-  `{placeholder}` braces, so neither collides with holes.
+- **Escapes.** `\{{` writes a literal `{{`, and in element text `\#[` writes a
+  literal `#[` (§6.1). A backslash anywhere else is literal. Faqir-core writes
+  no `{{`, and manifest templates use single `{placeholder}` braces, so neither
+  collides with holes.
 - **Literal text is escaped like data**: `&`, `<` and `>` become entities. Write
-  the character, not an entity — `&mdash;` would render as typed.
+  the character, not an entity: an entity in literal text or a literal
+  attribute value (`&lt;id&gt;`, `&mdash;`, `&#169;`) would render as typed, so
+  it is `literal-entity`, whose message names the character to write. To show an
+  entity's text on purpose, put it in a hole: `{{ "&lt;" }}`. Text inside
+  `script` and `style` is not checked.
 - A hole's value renders if it is a string, a finite number or a boolean.
   Anything else — `null`, a missing value, an object, an array — is the render
   error `not-text` or `missing`, never silent empty text. Ask for an optional
   value with `??` (§8.3).
+
+### 6.1 Inline elements
+
+```
+p Run #[code npm ci], then #[a(href=page.next) read on].
+p
+  | Pass #[code --resume #[em id]] to continue.
+```
+
+Inline text and piped text may hold elements written `#[tag#id(attrs) text]`:
+the head of an element line (§5), then nothing or a space and the element's own
+text — which may hold holes and further inline elements — up to the `]` that
+closes it. Brackets inside it balance, so `#[code a[0]]` is one element.
+
+A line with inline elements becomes a run of Text and Element nodes marked
+`glue`, and a glued node renders on the line before it: the output above is
+`<p>Run <code>npm ci</code>, then <a href="…">read on</a>.</p>`, with no space
+before the comma. Everything an element line is checked for applies to an
+inline element, `unknown-tag` and `event-attr` included. Inside `pre`,
+`textarea`, `script` and `style`, `#[` is literal text (code in a `pre` is
+written as given); elsewhere `\#[` writes it.
 
 ## 7. Comments
 
@@ -369,6 +404,24 @@ include "partials/nav-item.faqir" (href=item.href label=item.label current=page.
   written as attributes: `name=expr`, `name="literal with {{ holes }}"`, or a
   bare `name` meaning `true`.
 - A partial is the only reusable-markup construct: there are no mixins.
+- **`params`** declares a partial's parameters, as its first statement:
+
+  ```
+  //- partials/shot.faqir
+  params src alt phone=false caption=""
+  figure(data-shape=phone ? "phone" : false)
+    img(src=src alt=alt width=phone ? "390" : "1280")
+    if caption
+      figcaption {{ caption }}
+  ```
+
+  A bare name must be passed (`missing-param`); `name=value` gives a default,
+  a literal or an expression evaluated in the partial's scope, where the
+  parameters before it are visible. An include that passes a parameter the
+  partial does not declare is `unknown-param`. Both are found at compile time.
+  A partial without `params` takes any parameters, and reads a missing one as
+  `missing` (ask with `??`). `params` anywhere else — in a page, a layout, or
+  below the first statement — is `misplaced`.
 - An include that reaches back to a file already on its chain is
   `include-cycle`; a chain deeper than 16 includes is `include-depth`. Both are
   found at compile time, so a compiled template cannot recurse.
@@ -397,11 +450,20 @@ needs, and each plugin directive to its file (§11.6).
 
 A component the table cannot describe is listed under `unavailable` with the
 reason, and a call to it is `unknown-component` naming that reason. Three gaps
-put a component there: the IR refuses its manifest; its `templates.html` root is
-another component (a group of samples rather than one component); or two of its
-arguments would share a name. The registry's list is asserted in
-`packages/template/tests/registry.test.ts`, together with the callable
-components whose reference markup fails one named audit rule.
+put a component there: the IR refuses its manifest; its `templates.html` holds
+no element carrying its name; or two of its arguments would share a name. Every
+registry primitive and recipe is callable today, and
+`packages/template/tests/registry.test.ts` holds the list at empty, together
+with the callable components whose reference markup fails one named audit rule.
+
+When a `templates.html` is a group of samples — two checkboxes in a cluster, a
+radio group — the reference tree is one sample: the outermost element below the
+root that holds exactly one element carrying the component's name. That element
+is the component (`self` in the tree, §16.3): it takes the root's arguments
+(states, variants, `id`, passthrough), while the sample around it (a checkbox's
+`<label data-ui="checkbox-label">`) is drawn as the reference ships it. Such a
+component takes no default content; its parts are filled by name
+(`+checkbox(name="terms")` with `@label I agree` under it).
 
 ### 11.2 Calls
 
@@ -423,10 +485,11 @@ Each argument is matched, in this order:
 | Argument | Is | Value |
 |---|---|---|
 | a **variant**, named by its attribute without `data-` (`variant`, `size`, `cols-md`); a group whose attribute another group of the same component already names is named by its manifest group | written on the element the manifest puts it on | a literal checked at compile time, or an expression checked at render time, against the manifest's values (`bad-value`; a bare variant or a literal with a hole is `bad-value` too). The manifest default writes no attribute. |
-| a **state** (manifest `states`, root-applied) or a boolean prop with an `attr` | written on the root as the manifest's attribute | bare, or an expression tested for truthiness (a quoted literal is `bad-value`). Off writes nothing — except an `aria-*` state, which writes `"false"`. Several states writing `data-state`: the first that is on wins, else the reference value. |
+| a **state** (manifest `states`, root-applied) or a boolean prop with an `attr`, named in camelCase (table's `no-resize` is `noResize`) | written on the root as the manifest's attribute | bare, or an expression tested for truthiness (a quoted literal is `bad-value`). Off writes nothing — except an `aria-*` state, which writes `"false"`. Several states writing `data-state`: the first that is on wins, else the reference value. |
 | a **string prop** the reference tree uses (`title`, `triggerText`) | its placeholder's text or attribute | a literal or an expression giving text; unset, the manifest default |
+| `heading`, on a component whose reference tree has headings (card's `h3` title, dialog's `h2`) | the level of those headings, so a card under an `h1` can be an `h2` | a literal `h1` … `h6` (`bad-value` otherwise) |
 | `id` | the component's id; every `{id}` in the reference tree derives from it | unset, the next id of the render (§11.5) |
-| `class`, `role`, `title`, `tabindex`, `hidden`, `lang`, `dir`, `aria-*`, a non-protocol `data-*`, or a faqir-core attribute | passed through onto the root, replacing a reference attribute of the same name | as on a plain element (§5) |
+| `class`, `role`, `title`, `tabindex`, `hidden`, `lang`, `dir`, `name`, `value`, `aria-*`, a non-protocol `data-*`, or a faqir-core attribute | passed through onto the root, replacing a reference attribute of the same name | as on a plain element (§5) |
 
 Anything else is `unknown-arg`, which lists the arguments the component takes.
 `data-ui`, `data-part`, `data-state`, `data-variant` and `data-size` as raw
@@ -436,27 +499,79 @@ names, where they are checked.
 ### 11.4 Slots
 
 - **Named slots** are filled with `@name` lines under the call. A slot is
-  fillable when its part appears on exactly one element of the reference tree,
-  other than the root, and that element is not void; the fill replaces that
-  element's children, and the
-  element itself, with its contract attributes, always renders. Filling any
-  other name is `unknown-slot` (which lists the fillable slots); filling one
-  twice is `duplicate-slot`.
+  fillable when its part appears on at least one element of the reference
+  tree, none of them the root or void. The fill replaces that element's
+  children; the element itself, with its contract attributes, always renders.
+  When the part holds one part-less sample element beside other structure —
+  accordion's trigger, `<span>{label}</span>` beside its `▾` icon — the fill
+  goes into that element and the structure stays. Filling any other name is
+  `unknown-slot` (which lists the fillable slots).
 - **The default slot.** A component whose manifest content model is `inline`,
   `text` or `block` takes plain children (and inline text) as its default slot,
   which replaces the root's reference children. Plain children under any other
   component are `no-default-slot`. A call cannot give both default content and
   named fills (`slot-conflict`).
+- **Fill arguments.** `@name(args)` writes attributes on the part's element:
+  the states the manifest applies to that part, bare or as an expression
+  (`@step(completed)`, `@item(expanded=open)`), and any other attribute as on a
+  plain element (`@item(href=page.url)`), replacing a reference attribute of
+  the same name. Protocol attributes are `protocol-attr`. A part state writes
+  only that part's attribute: where the reference wires it to other parts
+  (accordion's `aria-expanded` and `hidden`), set those through their fills
+  too (`@trigger(aria-expanded="true")`, `@content(hidden=false)`).
+- **Fills of fills.** A fill whose children are fills fills the parts inside its
+  own part: `@item` over `@title` and `@description`. Its children are fills or
+  content, not both (`slot-conflict`).
+- **Repeating fills.** A slot filled more than once, or whose fill sits in an
+  `if` or `each` under the call, repeats its part — once per fill, in the order
+  written:
+
+  ```
+  +tabs
+    each t in page.tabs
+      @trigger {{ t.label }}
+      @panel
+        p {{ t.body }}
+  +breadcrumb
+    @item(href="/") Home
+    @item(href="/docs") Docs
+    @current Settings
+  ```
+
+  What repeats is the part's *unit*: its element, widened to part-less wrappers
+  that hold only it (breadcrumb's `<li>`), with the empty decorations that
+  follow it (breadcrumb's separator). The copies replace every reference
+  occurrence of the unit, where the first one was; a slot whose part repeats in
+  the reference (tabs' triggers) is copied even when filled once. Copies of the
+  slots that share a parent are laid out in the order their fills are written,
+  so `@term`, `@details`, `@term`, `@details` makes a description list.
+  Copy 1 is built from the reference's first occurrence and every later copy
+  from its second, so the first tab is the selected one and the rest are not.
+  An id derived in the unit and numbered like its occurrence
+  (`{id}-tab-1`) takes the copy's number, counted per slot at render time, so
+  trigger N and panel N stay paired through `each` and `if`. A unit with an id
+  it cannot renumber — dialog's `{id}-title` — cannot repeat (`duplicate-slot`).
+  Slots whose units point at each other's numbered ids must be filled the same
+  number of times when both counts are fixed (`fill-count`).
+- **Where a fill goes.** A slot whose part sits inside a part that repeats —
+  accordion's `trigger` in `item` — is filled inside that part's fills, never
+  directly under the call (`nested-slot`, which names the part). So is a slot
+  inside a part this call fills.
 - **Required slots.** A fillable slot the manifest marks required must be filled
   (`missing-slot`) when its reference content is a sample — placeholders the IR
-  drops, like `<div data-part="body">{body}</div>` — or a single prop
-  placeholder, which the call may set instead (`+dialog(title="…")` fills
-  `title`). A required part whose reference content is structure or literal
-  text (dialog's `panel`, its `close` button's `✕`) is already there.
-- Unfilled slots render their reference children, with sample placeholders
-  dropped.
-- A required part that repeats in the reference tree (tabs' triggers and
-  panels) is not fillable; it renders as the reference ships it.
+  drops, like `<div data-part="body">{body}</div>` — or holds one beside
+  structure, or is a single prop placeholder, which the call may set instead
+  (`+dialog(title="…")` fills `title`). A required part whose reference content
+  is structure or literal text (dialog's `panel`, its `close` button's `✕`) is
+  already there. Inside a fill of fills, the slots in its part are required the
+  same way; a repeating part with a required slot in it is required itself.
+- **Unfilled optional parts are left out** when they would render empty: a part
+  whose reference content was a sample, or one prop placeholder the call does
+  not set (with no default), or only such parts — card's `description` and
+  `footer`, callout's `icon`, a card `header` whose title and description are
+  both unset. A part with an id (something may point at it) or with a variant
+  the call sets is kept. Other unfilled parts render their reference children,
+  with sample placeholders dropped.
 
 ### 11.5 Ids
 
@@ -509,7 +624,26 @@ Pug's whitespace rules are a known pain; these are this language's, in full.
    HTML renders as one space between inline content and ignores between blocks.
    Words never run together across lines.
 2. An element whose only child is text renders on one line:
-   `<p>Hello</p>`. Text inside the line is written as given.
+   `<p>Hello</p>`. Text inside the line is written as given. Three things join
+   a node to the line before it instead of starting a new one, so that no space
+   appears where none was meant:
+   - a node of an inline run (§6.1) — an element whose children are all such
+     nodes renders on one line too;
+   - text that starts with closing punctuation, `. , ; : ! ? ) ] } % … » ” ’`;
+   - any node after text that ends with opening punctuation, `( [ { « “ ‘`.
+
+   ```
+   p
+     | Run
+     code npm ci
+     | , then continue (
+     a(href="/docs") docs
+     | ).
+   ```
+
+   renders `Run` on its own line and then
+   `<code>npm ci</code>, then continue (<a href="/docs">docs</a>).` on the next.
+   Straight quotes and dashes, which can open or close, join nothing.
 3. Inside `pre`, `textarea`, `script` and `style`, nothing is added: children are
    written one after another and piped lines joined by `\n`, with no
    indentation.
@@ -589,10 +723,12 @@ errors: when there is any, `ast` is `null`. Codes are stable; messages are not.
 | `bad-indent` | indentation that is not one step deeper than the parent or an enclosing level |
 | `too-deep` | more than 64 nesting levels |
 | `bad-line` | a line that is no construct of §4 |
+| `unknown-tag` | an element name that is no HTML, SVG or MathML element and has no hyphen (§5) |
 | `bad-attr` | a malformed attribute list |
 | `duplicate-attr` | the same attribute twice on one element or call |
 | `bad-string` | an unterminated string literal or an unknown escape |
 | `bad-hole` | an unterminated or empty `{{ }}` |
+| `literal-entity` | an entity in literal text or a literal attribute value (§6) |
 | `bad-expr` | an expression syntax error, or a number that is not finite |
 | `expr-too-deep` | expression nesting deeper than 32 |
 | `forbidden-name` | `__proto__`, `prototype` or `constructor` as a name |
@@ -605,6 +741,8 @@ errors: when there is any, `ast` is `null`. Codes are stable; messages are not.
 | `not-found` | the loader has no such file |
 | `include-cycle` | an include chain that returns to a file on it |
 | `include-depth` | an include chain deeper than 16 |
+| `unknown-param` | an include passing a parameter its partial's `params` does not declare |
+| `missing-param` | an include leaving out a parameter declared without a default |
 | `nested-layout` | a layout that has a layout |
 | `unknown-block` | a page block the layout does not have |
 | `duplicate-block` | the same block twice in one file |
@@ -613,9 +751,11 @@ errors: when there is any, `ast` is `null`. Codes are stable; messages are not.
 | `protocol-attr` | a protocol attribute as a raw call argument |
 | `bad-value` | a literal argument the manifest does not allow |
 | `unknown-slot` | a fill of a slot the component cannot fill |
-| `duplicate-slot` | the same slot filled twice |
+| `duplicate-slot` | a slot filled twice whose part carries an id a copy cannot renumber |
+| `nested-slot` | a fill of a slot that sits in a repeating part, or in a part the call fills, written outside that part's fill |
+| `fill-count` | paired repeating slots (triggers and panels) filled a different number of times |
 | `no-default-slot` | plain children under a component without a default slot |
-| `slot-conflict` | default content and named fills in one call |
+| `slot-conflict` | default content and named fills in one call; content and fills under one fill or in one branch |
 | `missing-slot` | a required slot left unfilled |
 | `unknown-helper` | a call to a helper not declared to `compile` |
 | `json-misplaced` | `json()` anywhere but the whole value of `l-data` |
@@ -727,7 +867,7 @@ error carry `loc: [fileIndex, line, col]`, indexing `Template.files`.
 
 | Node | Shape |
 |---|---|
-| `Template` | `{ type, files: string[], requires: string[], body: Node[], partials: { [name]: Node[] } }` |
+| `Template` | `{ type, files: string[], requires: string[], uses: string[], body: Node[], partials: { [name]: Node[] } }` |
 | `Doctype` | `{ type, loc }` |
 | `Element` | `{ type, tag, attrs: Attr[], children: Node[], loc }` |
 | `Text` | `{ type, parts: Part[], loc }` |
@@ -736,7 +876,15 @@ error carry `loc: [fileIndex, line, col]`, indexing `Template.files`.
 | `If` | `{ type, branches: { test: Expr \| null, body: Node[] }[], loc }` |
 | `Each` | `{ type, names: string[], of: Expr, body: Node[], else: Node[], loc }` |
 | `Include` | `{ type, name, params: { name, value: AttrValue }[], loc }` |
+| `Params` | `{ type, params: { name, value: AttrValue \| null }[], loc }` — a partial's first node (§10.3); `null` is a parameter without a default |
 | `Component` | `{ type, name, id: AttrValue \| null, body: Node[], loc }` |
+| `Copy` | `{ type, slot, bodies: Node[][], loc }` — one fill of a repeating part (§11.4): the Nth copy of `slot` in its component renders `bodies[0]` when N is 1, else the last body |
+
+`uses` lists, sorted, every component name the output draws through a literal
+`data-ui` — calls, the components inside them and plain elements — so a host
+can build a page's CSS without rendering it (`subsetBundle` in
+`@faqir-ui/core/subset`). `Element` and `Text` nodes of an inline run (§6.1)
+carry `glue: true`.
 
 `Attr` is `{ name, value, col? }` — `col`, the attribute's column, is there
 when the attribute was written in the template. `AttrValue` is one of:
@@ -748,8 +896,8 @@ when the attribute was written in the template. `AttrValue` is one of:
   must be one of `allow`; equal to `omit` (the default), the attribute is left out;
 - `{ json: Expr }` — the `l-data` island.
 
-A `Part` is a string, `{ expr: Expr }`, or `{ id: true }` (the enclosing
-`Component`'s id).
+A `Part` is a string, `{ expr: Expr }`, `{ id: true }` (the enclosing
+`Component`'s id), or `{ n: true }` (the number of the enclosing `Copy`).
 
 ### 16.2 Expression nodes
 
@@ -777,16 +925,26 @@ A `Part` is a string, `{ expr: Expr }`, or `{ id: true }` (the enclosing
       states: { open: { attr: "data-state", value: "open", kind: "value" }, … },
       props: { title: { default: "" }, triggerText: { default: "Open" } },
       bools: [],
-      tree: { tag, attrs: [[name, true | { b: arg } | Seg[]]], slot?, dyn?: [[arg, attr]], children: (TreeNode | Seg)[] }
+      heading: "h2",
+      tree: { tag, attrs: [[name, true | { b: arg } | Seg[]]], slot?, dyn?: [[arg, attr]], sample?, self?, children: (TreeNode | Seg)[] }
+    },
+    accordion: {
+      slots: { item: { required: true, states: { expanded: { attr: "data-state", value: "expanded", kind: "value" } } },
+               trigger: { required: true, within: "item" }, … },
+      …
     }
   },
-  unavailable: { table: "…the reason…" }
+  unavailable: {}
 }
 ```
 
 `Seg` is a string or `{ p: arg }`, where `arg` is a string prop or `id`. The tree
 is the bindings IR's reference tree with its prop names turned into argument
-names.
+names; `sample` marks an element whose reference text was only sample
+placeholders, and `self` the component's own element inside a wrapped sample
+(§11.1). A slot's `within` names the repeating part it is filled in, and its
+`states` are the manifest states of its part (§11.4); `heading` is the tag of
+the reference tree's headings, present when it has any (§11.3).
 
 ## 17. Relation to `@faqir-ui/render`
 
@@ -844,6 +1002,21 @@ engine is the layer under it, not a competitor:
     entry is therefore the runtime (about 4 KB minified+gzip, under the 8 KB
     budget); the compiler, with its diagnostics' messages, is about 10 KB and
     has its own entry. Both are zero-dependency and isomorphic.
+13. **Inline elements and punctuation, not whitespace control.** Prose is
+    full of `code` followed by a comma. Inline `#[…]` elements keep a sentence
+    on one line, and the punctuation rule (§12.1) keeps the line-per-node style
+    from putting a space before a comma — with no new syntax. A general
+    "no space here" marker was left out: it is one more thing to learn for the
+    few cases the two do not cover.
+14. **A repeated fill copies the reference, it does not invent markup.** Copy 1
+    is the reference's first occurrence and later copies its second, so the
+    states the reference ships (the selected tab, hidden panels) carry over,
+    and ids are renumbered only where the reference numbers them. A part that
+    has a fixed id refuses to repeat rather than writing it twice.
+15. **Only empty optional parts are left out.** A part is omitted when its
+    reference content was a sample or an unset prop — never a part with an id,
+    never structure — so what a controller or an ARIA reference looks for is
+    still there.
 
 ## 19. Examples
 
@@ -851,6 +1024,7 @@ A partial and its use:
 
 ```
 //- partials/nav-item.faqir
+params href label current=false
 a(data-part="item" href=href aria-label=label aria-current=current ? "page" : false)
   span(data-part="label") {{ label }}
 ```

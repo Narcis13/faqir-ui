@@ -67,6 +67,11 @@ export interface RecipeNode {
    * placeholders that resolution dropped (`<div data-part="body">{body}</div>`).
    */
   sample?: true;
+  /**
+   * Set (only under `focus`) on the component's own element when the tree's
+   * root is a wrapper around it (a checkbox's `<label>`).
+   */
+  self?: true;
 }
 
 /** Options of the reference-tree extraction; the bindings use neither. */
@@ -75,6 +80,15 @@ export interface TreeOptions {
   keepDirectives?: boolean;
   /** Mark elements whose reference text was only dropped sample placeholders. */
   markSamples?: boolean;
+  /**
+   * The component's own `data-ui` names (its name and aliases). When the
+   * template's root is another component — a group of samples, like two
+   * checkboxes in a cluster — the tree becomes ONE sample: the outermost
+   * element below the root that holds exactly one element carrying one of
+   * these names. That element is marked `self`: it is the component itself,
+   * and what the root would otherwise be (it takes the root's variants).
+   */
+  focus?: string[];
 }
 
 export interface RecipeVariantProp {
@@ -223,7 +237,7 @@ function partOf(node: TNode): string | undefined {
 }
 
 /** Build the RecipeNode tree + prop registrations from manifest + template. */
-function extractTree(manifest: Manifest, template: TNode, label: string, options: TreeOptions = {}) {
+function extractTree(manifest: Manifest, template: TNode, label: string, options: TreeOptions = {}, self: TNode = template) {
   const props = manifest.props ?? {};
   const stringProps = new Map<string, string>();
   const boolProps: string[] = [];
@@ -301,8 +315,12 @@ function extractTree(manifest: Manifest, template: TNode, label: string, options
     }, []);
   }
 
-  function convert(node: TNode, isRoot: boolean): RecipeNode {
-    const part = partOf(node) ?? (isRoot ? "root" : undefined);
+  // The RecipeNode of the component's own element (the root, unless `focus`
+  // chose a wrapped sample); root-applied variants are written on it.
+  let selfNode: RecipeNode | undefined;
+
+  function convert(node: TNode): RecipeNode {
+    const part = partOf(node) ?? (node === self ? "root" : undefined);
     const attrs: [string, RecipeAttrVal][] = [];
     const dyn: [string, string][] = [];
 
@@ -338,6 +356,8 @@ function extractTree(manifest: Manifest, template: TNode, label: string, options
     }
 
     const rnode: RecipeNode = { tag: node.tag, attrs, children: [] };
+    if (node === self) selfNode = rnode;
+    if (node === self && self !== template) rnode.self = true;
     if (part && part !== "root" && slotNames.includes(part)) rnode.slot = part;
     if (dyn.length) rnode.dyn = dyn;
 
@@ -348,13 +368,13 @@ function extractTree(manifest: Manifest, template: TNode, label: string, options
         if (options.markSamples && segs.length === 0) rnode.sample = true;
         rnode.children.push(...segs);
       } else {
-        rnode.children.push(convert(c, false));
+        rnode.children.push(convert(c));
       }
     }
     return rnode;
   }
 
-  const tree = convert(template, true);
+  const tree = convert(template);
 
   // Variant groups not consumed by a placeholder still become props when their
   // target element exists exactly once in the template.
@@ -362,7 +382,7 @@ function extractTree(manifest: Manifest, template: TNode, label: string, options
     if (consumedGroups.has(group)) continue;
     const v = manifest.variants[group];
     const target = v.applied_to && v.applied_to !== "root" ? v.applied_to : "root";
-    const rootPart = partOf(template);
+    const rootPart = partOf(self);
     const isRootTarget = target === "root" || target === rootPart;
     if (!isRootTarget && partCount.get(target) !== 1) continue; // caller/controller territory
     const prop = variantPropName(group);
@@ -370,18 +390,18 @@ function extractTree(manifest: Manifest, template: TNode, label: string, options
       throw new Error(`${label}: variant group "${group}" collides on prop "${prop}"`);
     }
     const vp = registerVariant(group, isRootTarget ? "root" : target);
-    (function attach(node: RecipeNode, isRoot: boolean): boolean {
+    (function attach(node: RecipeNode): boolean {
       const nodePart = node.attrs.find(([n]) => n === "data-part")?.[1];
       const nodePartName = Array.isArray(nodePart) && typeof nodePart[0] === "string" ? nodePart[0] : undefined;
-      const hit = isRootTarget ? isRoot : nodePartName === target;
+      const hit = isRootTarget ? node === selfNode : nodePartName === target;
       if (hit) {
         (node.dyn ??= []).push([vp.prop, vp.attr]);
         return true;
       }
       for (const c of node.children)
-        if (typeof c === "object" && "tag" in c && attach(c, false)) return true;
+        if (typeof c === "object" && "tag" in c && attach(c)) return true;
       return false;
-    })(tree, true);
+    })(tree);
   }
 
   // Responsive groups (task 0.8-02): every registered variant prop whose
@@ -436,7 +456,40 @@ function extractTree(manifest: Manifest, template: TNode, label: string, options
  */
 export function manifestTreeIR(manifest: Manifest, label: string, options: TreeOptions = {}) {
   const template = parseTemplate(manifest.templates.html, label);
-  return extractTree(manifest, template, label, options);
+  const names = options.focus;
+  if (!names || names.includes(uiOf(template) ?? "")) return extractTree(manifest, template, label, options);
+  const unit = focusedSample(template, names);
+  if (!unit) {
+    throw new Error(`templates.html has data-ui="${uiOf(template)}" at its root, not "${manifest.name}": the reference is a group of samples, not one component`);
+  }
+  return extractTree(manifest, unit.root, label, options, unit.self);
+}
+
+function uiOf(node: TNode): string | undefined {
+  const entry = node.attrs.find(([n]) => n === "data-ui");
+  return typeof entry?.[1] === "string" ? entry[1] : undefined;
+}
+
+/** Every element below `node` (itself included) whose `data-ui` is one of `names`. */
+function carriers(node: TNode, names: string[]): TNode[] {
+  const own = names.includes(uiOf(node) ?? "") ? [node] : [];
+  return own.concat(node.children.flatMap((c) => (typeof c === "string" ? [] : carriers(c, names))));
+}
+
+/**
+ * One sample out of a group (see `TreeOptions.focus`): descend from the root
+ * into the first child holding the component until that child holds exactly
+ * one; it is the sample, and the element it holds is the component.
+ */
+function focusedSample(template: TNode, names: string[]): { root: TNode; self: TNode } | undefined {
+  let node = template;
+  for (;;) {
+    const child = node.children.find((c): c is TNode => typeof c !== "string" && carriers(c, names).length > 0);
+    if (!child) return undefined;
+    const held = carriers(child, names);
+    if (held.length === 1) return { root: child, self: held[0] };
+    node = child;
+  }
 }
 
 /** Parse a controller source: factory, provides, dispatched events, imports. */
