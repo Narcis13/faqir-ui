@@ -685,22 +685,22 @@
       "name": "quote",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "files": [
         {
           "path": "quote.css",
-          "sha256": "515044881e2a63026fdddaefd4dc49e36ad99fe1d55b07450da4f10df7180ae3"
+          "sha256": "b9231d84e648515a7c77d28c76801c7a78b45e7f1e9ef521ffad242d896a5779"
         },
         {
           "path": "quote.html",
-          "sha256": "28ef4741ab28c59cadbae4a87a0d4ccbe02ea20759a21bc0d278840e10608ae0"
+          "sha256": "5e8d3dca5a85f5f648b44ebbe57d2da6903e6ce4ee0840ee94b3f1056e98f915"
         },
         {
           "path": "quote.manifest.json",
-          "sha256": "5c5579d58e6243e51ab2bc0b76aeb4c3e8214bef1e993541cfbdb26eaa8488f7"
+          "sha256": "f684766bc630cd8c86303fae41046150c962067251779aae0366e5663b41b5b1"
         }
       ],
-      "hash": "22228ba02bc6ee44ef796ea805cef1c7bc4a607f492924b8a14c0ade58094c7a",
+      "hash": "cb923519d1718968594b6117d8989cfe304fc11d5b93f766312efc7f3bb3da59",
       "deps": [
         "avatar",
         "rating"
@@ -2175,7 +2175,7 @@
       "name": "document",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "files": [
         {
           "path": "document-print.html",
@@ -2183,18 +2183,18 @@
         },
         {
           "path": "document.css",
-          "sha256": "32f83279954d0dacf437495b804d163cfe0408a4181941eaea3404a9ca7b9880"
+          "sha256": "1624a93a0fab7e33537b8f7c304448a44f8caa69b3667b725b940b4917f21aa9"
         },
         {
           "path": "document.html",
-          "sha256": "097ac6d15cb425c3ae7e033ebb5189e9224e0d6bdae247dac1133827d20480e5"
+          "sha256": "43ca69093e717f4153188010e4fe2a565e07e2e64658be118acb71adc27df253"
         },
         {
           "path": "document.manifest.json",
-          "sha256": "159d12c2b8468f371e95ee7a108cd236f2792fcdba85707ff3adcafcff6b4090"
+          "sha256": "39f16b778ac71e18a99e88d1bc35be4281015163d1c9fc7230191d604e1d89aa"
         }
       ],
-      "hash": "f6eb177254c52f421900d0c0577adafdf02edbc7b65d89347aa6293419574374",
+      "hash": "f57e930e250505c2964791498598b75206e73365e4b8bbd0d32382786c853bf7",
       "deps": [
         "key-value",
         "table",

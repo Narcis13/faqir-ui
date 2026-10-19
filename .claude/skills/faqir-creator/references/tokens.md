@@ -19,7 +19,7 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-372 tokens in 10 groups:
+393 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
@@ -29,7 +29,7 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 - `motion` (30) — easings, durations and motion personality
 - `semantic` (31) — purpose-based tokens, referenced by components
 - `aliases` (65) — per-component overrides mapping to semantic tokens
-- `document` (42) — structural tokens for document/print rendering
+- `document` (63) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
 ## palette — raw oklch color values, never referenced by components directly
@@ -574,7 +574,7 @@ _`registry/tokens/aliases.css` · 65 tokens_
 
 ## document — structural tokens for document/print rendering
 
-_`registry/tokens/document.css` · 42 tokens_
+_`registry/tokens/document.css` · 63 tokens_
 
 ### Page Geometry
 
@@ -590,6 +590,30 @@ _`registry/tokens/document.css` · 42 tokens_
 | `--doc-running-header-height` | `10mm` |
 | `--doc-running-footer-height` | `8mm` |
 | `--doc-running-gap` | `var(--space-2)` |
+| `--doc-running-header` | `none` |
+| `--doc-running-footer` | `none` |
+| `--doc-page-label` | `"Page "` |
+| `--doc-page-separator` | `" / "` |
+| `--doc-page-suffix` | `""` |
+
+### Business letter (DIN 5008)
+
+| Token | Value | Notes |
+|---|---|---|
+| `--doc-letter-margin-left` | `25mm` | — |
+| `--doc-letter-margin-right` | `20mm` | — |
+| `--doc-fold-mark-1` | `105mm` | — |
+| `--doc-fold-mark-2` | `210mm` | — |
+| `--doc-mark-inset` | `4mm` | from the sheet's left edge |
+| `--doc-mark-length` | `5mm` | — |
+| `--doc-punch-mark-length` | `8mm` | — |
+| `--doc-mark-width` | `0.25mm` | — |
+| `--doc-mark-color` | `var(--doc-print-border-color)` | — |
+| `--doc-window-top` | `45mm` | the address field, from the top edge |
+| `--doc-window-left` | `20mm` | …and from the left edge |
+| `--doc-window-width` | `85mm` | — |
+| `--doc-window-height` | `45mm` | — |
+| `--doc-window-padding` | `5mm` | the address text's indent inside it |
 
 ### Document Typography
 
@@ -600,6 +624,7 @@ _`registry/tokens/document.css` · 42 tokens_
 | `--doc-line-height` | `var(--leading-normal)` | 1.5 |
 | `--doc-heading-font` | `var(--font-heading)` | — |
 | `--doc-heading-weight` | `var(--weight-bold)` | — |
+| `--doc-serif` | `var(--font-serif)` | — |
 | `--doc-heading-size` | `var(--text-xl)` | 20px for doc titles |
 | `--doc-subheading-size` | `var(--text-lg)` | 18px for section titles |
 | `--doc-legal-size` | `var(--text-xs)` | 12px for fine print / legal text |
@@ -644,6 +669,7 @@ _`registry/tokens/document.css` · 42 tokens_
 | Token | Value | Notes |
 |---|---|---|
 | `--doc-max-width` | `210mm` | A4 width for screen preview |
+| `--doc-accent` | `var(--color-primary)` | — |
 | `--doc-bg` | `white` | always white for print |
 | `--doc-fg` | `oklch(0.10 0 0)` | near-black for print |
 | `--doc-print-border-color` | `oklch(0.60 0 0)` | medium gray borders in print |

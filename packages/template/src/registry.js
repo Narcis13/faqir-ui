@@ -7769,6 +7769,15 @@ export const components = {
      ],
      "default": "start"
     },
+    "mark": {
+     "attr": "data-mark",
+     "values": [
+      "above",
+      "hang",
+      "none"
+     ],
+     "default": "above"
+    },
     "size": {
      "attr": "data-size",
      "values": [
@@ -7877,6 +7886,10 @@ export const components = {
      [
       "align",
       "data-align"
+     ],
+     [
+      "mark",
+      "data-mark"
      ]
     ]
    }

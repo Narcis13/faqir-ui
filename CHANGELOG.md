@@ -52,6 +52,79 @@ left out, and text starting with closing punctuation joins the line before it.
   README's package table link to absolute URLs; the CLI README counts
   twenty-five commands and lists `faqir template`.
 
+What building forecraft — a form and report platform whose first user is an
+agent — asked for of 1.2.5.
+
+**Upgrading:** six outputs change under existing markup. A single-page
+`renderForm` form now ends in a submit button (`submit: false` keeps the old
+output) and carries `data-gap="4"`; a date field's `name` moves from the visible
+input to a hidden `[data-part="value"]` input that holds the ISO date, so code
+that read the date by the visible input's name should read `FormData`; a
+`qr-code` draws its modules flush with a 4-module `--qr-quiet` padding (was 2,
+drawn inside), so the code is slightly smaller in the same box; the `document`
+pattern's `@page` rules are named pages, so a page printed with the bundle but
+no document no longer gets its margins or counter; `document-serif` document
+headings set in Georgia instead of Times New Roman; and a classic
+`<script defer>` engine boots on `DOMContentLoaded`, after the deferred scripts
+that follow it. `+file-upload` no longer takes `multiple` (it wrote a broken root
+attribute). The packaged `faqir-core.min.js` gzip budget is 47 KB (was 46);
+`faqir-validate` 4 KB and `faqir-rules` 14 KB (were 3 and 13).
+
+- **Added** — `Faqir.ui(selectorOrElement)`, a component's controller API from
+  plain JavaScript (the same lookup as `$ui`), also the typed ESM export `ui`.
+  A directive registered after boot is applied once to the bound elements that
+  carry it, in their scopes.
+- **Added** — `@faqir-ui/forms`: `rulesFor(schema, ui, opts)` returns the rules
+  definition `renderForm` embeds; `heading: false` and `labelledBy` options; a
+  `scale` widget (`minLabel`/`maxLabel`) and integer enums; `orientation` on
+  radio and checkbox groups; `width` (`full | half | third`) as `data-span`, on a
+  six-track grid from the md tier; `gap` (default `4`).
+- **Added** — `faqir-validate` fires `faqir:valid-submit` (bubbling, cancelable)
+  once per finished submit of a single-page form or a wizard's last step, with
+  the form's data as `detail`; `faqir-rules` adds `Faqir.rules.data(form)`, its
+  reader (wizard-disabled controls in, rule-hidden fields out, coerced).
+- **Added** — `@faqir-ui/template`: `include "x.faqir" depth=N` lets a partial
+  recurse, stopped by `include-depth` at render; an unbudgeted cycle is still
+  `include-cycle`.
+- **Added** — `@faqir-ui/mcp/audit`: `auditHtml(html, opts)` returns the
+  `faqir audit --stdin --json` report in process, on Node 18+.
+- **Added** — `faqir fonts add --role none` (faces without a role) and
+  `--italic` (pinned true italics where the catalog has them; none are pinned
+  yet); a single-weight heading family gets `font-synthesis-weight: none` and a
+  warning when the theme asks for a heavier heading weight.
+- **Added** — `skip-link` primitive (site-header opens with one; give `main`
+  `id="main"`) and base-layer `data-ui="visually-hidden"` (`.sr-only` stays).
+- **Added** — `checkbox-group` is a declared component of `checkbox`.
+- **Added** — `alert-dialog`'s trigger is optional; `command-palette` items take
+  `data-value` and may be `<a href>` links, and `command-select` is cancelable
+  with `detail.value`/`detail.href`; `qr-code` encodes versions 1–40, and both
+  `qr-code` and `barcode` set `data-state="error"` and fire `faqir:error` on a
+  value they cannot encode, with `--qr-quiet` / `--barcode-quiet` padding;
+  `table` takes `data-print-footer="last"`; `progress` takes `data-value` with
+  no `style`.
+- **Added** — `document`: named pages per `data-format` + `data-orientation`,
+  `--doc-accent`, `--doc-serif`, a page counter in the document's language
+  (de, es, fr, it, nl, pt, ro, or `--doc-page-label`/`-separator`/`-suffix`),
+  `data-header="from-page-2"` and `data-running="margin"` running strings, and a
+  DIN 5008 `letter` variant; `quote` takes `data-mark="above|hang|none"` and
+  sizes itself from the document inside one.
+- **Added** — `audit:registry` gate 10 audits every manifest template with the
+  real auditor; the forms tests audit `renderForm` output against the registry.
+- **Fixed** — `landmark` no longer warns for an inline control's non-modal popup
+  (the date-picker calendar) inside `<main>`; `field-wiring` ignores hidden
+  inputs.
+- **Fixed** — `toggle-group` follows a reactive `:checked` binding; a fieldset
+  card's legend no longer notches its border; fields in a group card or a
+  wizard step get the same gap as a flat form; no rhythm gap after a
+  `site-header`; `nav` rows wrap; prose tables in a `div`/`figure` scroll;
+  `key-value` grouped pairs keep the grid; `hero` is transparent in a
+  `backdrop` and honours `--hero-display-size` in every layout; `feature-grid`,
+  `stats-dashboard` and `wizard` headings use the heading voice;
+  `dashboard-shell` no longer opens its sidebar over a phone, and its toggle is
+  hidden from md up; print themes set documents in the project's role fonts.
+- **Fixed** — manifest templates of auth-form, wizard, crud-table,
+  settings-page, search-results, inbox and dashboard-shell audit clean.
+
 ## 1.2.5
 
 The server template language. Full notes: [`docs/release-1.2.5.md`](docs/release-1.2.5.md).

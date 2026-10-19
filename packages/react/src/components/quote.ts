@@ -13,13 +13,18 @@ export type LQuoteSize = "sm" | "md" | "lg";
 /** Allowed `align` values (manifest variant group "align", attr `data-align`). */
 export type LQuoteAlign = "start" | "center";
 
-export interface LQuoteProps extends Omit<ComponentPropsWithoutRef<"figure">, "variant" | "size" | "align" | "text" | "author" | "media" | "name" | "role"> {
+/** Allowed `mark` values (manifest variant group "mark", attr `data-mark`). */
+export type LQuoteMark = "above" | "hang" | "none";
+
+export interface LQuoteProps extends Omit<ComponentPropsWithoutRef<"figure">, "variant" | "size" | "align" | "mark" | "text" | "author" | "media" | "name" | "role"> {
   /** `data-variant`; omitted when unset (manifest default: "plain"). */
   variant?: LQuoteVariant;
   /** `data-size`; omitted when unset (manifest default: "md"). */
   size?: LQuoteSize;
   /** `data-align`; omitted when unset (manifest default: "start"). */
   align?: LQuoteAlign;
+  /** `data-mark`; omitted when unset (manifest default: "above"). */
+  mark?: LQuoteMark;
   /** Projected into `<blockquote data-part="text">` (required part — always rendered). */
   text?: ReactNode;
   /** Projected into `<figcaption data-part="author">`. */
@@ -40,6 +45,7 @@ export const LQuote = createFaqirPrimitive<LQuoteProps>({
     { prop: "variant", attr: "data-variant", values: ["plain", "card", "pull"] },
     { prop: "size", attr: "data-size", values: ["sm", "md", "lg"] },
     { prop: "align", attr: "data-align", values: ["start", "center"] },
+    { prop: "mark", attr: "data-mark", values: ["above", "hang", "none"] },
   ],
   states: [],
   slots: [

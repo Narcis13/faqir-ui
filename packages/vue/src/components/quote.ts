@@ -12,6 +12,9 @@ export type LQuoteSize = "sm" | "md" | "lg";
 /** Allowed `align` values (manifest variant group "align", attr `data-align`). */
 export type LQuoteAlign = "start" | "center";
 
+/** Allowed `mark` values (manifest variant group "mark", attr `data-mark`). */
+export type LQuoteMark = "above" | "hang" | "none";
+
 export interface LQuoteProps {
   /** `data-variant`; omitted when unset (manifest default: "plain"). */
   variant?: LQuoteVariant;
@@ -19,6 +22,8 @@ export interface LQuoteProps {
   size?: LQuoteSize;
   /** `data-align`; omitted when unset (manifest default: "start"). */
   align?: LQuoteAlign;
+  /** `data-mark`; omitted when unset (manifest default: "above"). */
+  mark?: LQuoteMark;
 }
 
 /** `quote` — A quotation and its attribution — testimonial, pull quote or featured endorsement — as a native figure/blockquote/figcaption. Plain, card and editorial pull variants, three sizes, an optional avatar and rating, and a large decorative opening mark in the document language's own quotation glyph. The card variant reads the card aliases, so themes restyle both together. */
@@ -29,6 +34,7 @@ export const LQuote = defineFaqirPrimitive<LQuoteProps>({
     { prop: "variant", attr: "data-variant", values: ["plain", "card", "pull"] },
     { prop: "size", attr: "data-size", values: ["sm", "md", "lg"] },
     { prop: "align", attr: "data-align", values: ["start", "center"] },
+    { prop: "mark", attr: "data-mark", values: ["above", "hang", "none"] },
   ],
   states: [],
   slots: [

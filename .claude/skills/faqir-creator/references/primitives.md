@@ -921,8 +921,9 @@ A quotation and its attribution — testimonial, pull quote or featured endorsem
 | style | `plain`, `card`, `pull` | `plain` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 | align | `start`, `center` | `start` | `data-align` | root |
+| mark | `above`, `hang`, `none` | `above` | `data-mark` | root |
 
-- **Safe transforms:** `change-style`, `change-size`, `change-align`, `add-author`, `remove-author`, `add-avatar-in-media`, `add-rating-before-text`, `change-custom-property-colors`
+- **Safe transforms:** `change-style`, `change-size`, `change-align`, `change-mark`, `add-author`, `remove-author`, `add-avatar-in-media`, `add-rating-before-text`, `change-custom-property-colors`
 - **Unsafe (never do):** `remove-text`, `replace-blockquote-with-a-div`, `type-literal-quotation-marks-in-the-text`, `put-the-attribution-inside-the-blockquote`, `add-data-size-to-the-media-part-instead-of-the-avatar`
 - **Required ARIA:** `the quotation in a <blockquote>, the attribution in the figure's <figcaption>`; `alt text on any image inside the media slot`
 

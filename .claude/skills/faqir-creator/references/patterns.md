@@ -389,6 +389,7 @@ Full-page document container with repeatable print headers, footers, and page co
 ```text
 [data-ui='document']  ·  <article> · content: slots
 ├─ [data-part='doc-header']  <header>  optional  — Canonical running document header; repeats on every printed page
+├─ [data-part='address']  <address>  optional  — letter variant only: the recipient's address, between the letterhead (doc-header) and the body. Printed in the DIN 5008 envelope window (--doc-window-top/-left/-width/-height/-padding).
 ├─ [data-part='body']  <div>  required  — Main document content area
 ├─ [data-part='doc-footer']  <footer>  optional  — Canonical running document footer; repeats on every printed page
 ├─ [data-part='header']  <header>  optional  — Legacy alias for doc-header; supported for non-breaking upgrades
@@ -399,11 +400,14 @@ Full-page document container with repeatable print headers, footers, and page co
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| variant | `invoice`, `form`, `report` | `` | `data-variant` | root |
+| variant | `invoice`, `form`, `report`, `letter` | `` | `data-variant` | root |
 | format | `a4`, `letter` | `a4` | `data-format` | root |
 | orientation | `portrait`, `landscape` | `portrait` | `data-orientation` | root |
+| header | `every-page`, `from-page-2` | `every-page` | `data-header` | root |
+| running | `element`, `margin` | `element` | `data-running` | root |
+| form | `b`, `a` | `b` | `data-form` | root |
 
-- **Safe transforms:** `change-variant`, `change-format`, `change-orientation`, `add-doc-header`, `remove-doc-header`, `add-doc-footer`, `remove-doc-footer`, `change-theme`
+- **Safe transforms:** `change-variant`, `change-format`, `change-orientation`, `change-header`, `change-running`, `change-form`, `add-doc-header`, `remove-doc-header`, `add-doc-footer`, `remove-doc-footer`, `change-theme`
 - **Unsafe (never do):** `remove-body`, `remove-article-semantics`, `remove-aria-label`
 - **Required ARIA:** `article element for document semantics`; `aria-label describing the document type and title`
 

@@ -75,7 +75,7 @@ export type { LPageBreakProps, LPageBreakVariant } from "./components/page-break
 export { LProgress } from "./components/progress.js";
 export type { LProgressProps, LProgressVariant, LProgressSize } from "./components/progress.js";
 export { LQuote } from "./components/quote.js";
-export type { LQuoteProps, LQuoteVariant, LQuoteSize, LQuoteAlign } from "./components/quote.js";
+export type { LQuoteProps, LQuoteVariant, LQuoteSize, LQuoteAlign, LQuoteMark } from "./components/quote.js";
 export { LRadio } from "./components/radio.js";
 export type { LRadioProps, LRadioSize } from "./components/radio.js";
 export { LRating } from "./components/rating.js";
