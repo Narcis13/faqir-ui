@@ -7,7 +7,7 @@
  *
  *   - engine               src/core-src/engine.js         ≤ 14 KB gzip
  *     (directives, reactivity, plugin API — no controllers)
- *   - engine + controllers registry/core/faqir-core.js    ≤ 46 KB gzip
+ *   - engine + controllers registry/core/faqir-core.js    ≤ 47 KB gzip
  *     (the shipped single-file build: engine + every recipe controller)
  *   - dev engine           registry/core/faqir-core.dev.js  no budget
  *     (development build — measured and printed, never enforced; task 0.7-12)
@@ -42,10 +42,10 @@ const KB = 1024;
 //
 // `engineWithControllers` has moved twice before, each time for a named
 // feature and recorded here: 42 → 43 KB for the 29th recipe controller, and
-// 43 → 44 KB for `inspect`/devtools. Wave 2 took it 44 → 45 KB: the shared exit-transition helper the four overlay controllers now wait on (`whenExitDone` — see W2-1's drawer bug), the unscoped-directive sweep that makes `<form l-validate>` bind at all, applying a scope root's own directives, and `$ui('#id')` for reaching another component's controller. Wave 3 took it 45 → 46 KB: `aria-activedescendant` in the four widgets that declared the combobox contract and never implemented it, the dismiss-on-destroy path in twelve overlay controllers, cleanup ownership that survives a detached template (`l-if`/`l-for`/`l-teleport`), `l-model` listener teardown, and the missing-part guards that name the part instead of throwing.
+// 43 → 44 KB for `inspect`/devtools. Wave 2 took it 44 → 45 KB: the shared exit-transition helper the four overlay controllers now wait on (`whenExitDone` — see W2-1's drawer bug), the unscoped-directive sweep that makes `<form l-validate>` bind at all, applying a scope root's own directives, and `$ui('#id')` for reaching another component's controller. Wave 3 took it 45 → 46 KB: `aria-activedescendant` in the four widgets that declared the combobox contract and never implemented it, the dismiss-on-destroy path in twelve overlay controllers, cleanup ownership that survives a detached template (`l-if`/`l-for`/`l-teleport`), `l-model` listener teardown, and the missing-part guards that name the part instead of throwing. The forecraft notes (1.2.5 downstream) took it 46 → 47 KB: QR versions 11–40 — ISO/IEC 18004 Table 9 for every version and ECL, packed one character per value (about 220 B gzip of the move), the computed codeword count and Annex E alignment centres — the qr-code and barcode `data-state="error"` + `faqir:error` reporting, command-palette `<a href>` items and `data-value`, and toggle-group following a `:checked` binding. The binding constraint was `tests/build/core-package.test.ts` (the packaged `faqir-core.min.js`), about 40 B under its 46 KB at the start.
 export const BUDGETS = {
   engine: 14 * KB,
-  engineWithControllers: 46 * KB,
+  engineWithControllers: 47 * KB,
   plugin: 2 * KB,
   // @faqir-ui/template's core entry: the runtime that renders a compiled AST
   // (docs/template.md §15.1). The compiler is its own entry, run at save time.

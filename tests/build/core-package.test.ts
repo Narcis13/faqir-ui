@@ -235,9 +235,10 @@ describe("minified engine artifact", () => {
     // combobox contract without implementing it, dismiss-on-destroy across
     // twelve overlay controllers, cleanup ownership that survives a detached
     // template, `l-model` listener teardown, and the missing-part guards that
-    // name the part instead of throwing. See scripts/check-size.mjs for the ledger.
+    // name the part instead of throwing. 46 → 47 KB for the forecraft notes (QR
+    // versions 11–40 above all). See scripts/check-size.mjs for the ledger.
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
-    expect(gzip).toBeLessThanOrEqual(46 * 1024);
+    expect(gzip).toBeLessThanOrEqual(47 * 1024);
   });
 });
 

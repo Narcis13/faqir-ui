@@ -753,7 +753,7 @@ checked by `bun run size` (`scripts/check-size.mjs`):
 | File | What it is | Minified + gzip | Budget |
 |------|-----------|-----------------|--------|
 | the engine alone | directives, reactivity, store | 10.26 KB | 14 KB |
-| `faqir-core.js` | engine + all 29 recipe controllers | 44.49 KB | 46 KB |
+| `faqir-core.js` | engine + all 29 recipe controllers | 45.79 KB | 47 KB |
 
 `faqir add` installs the *unminified* file so it stays readable in your project;
 for production serve the CDN build or minify it yourself.
