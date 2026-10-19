@@ -384,6 +384,9 @@ describe("legacy inputs keep 1.0's colours", () => {
   /** `<scope>/<token>` → value, where scope is the block the declaration is in. */
   function colourDeclarations(css: string): Map<string, string> {
     const out = new Map<string, string>();
+    // A print companion's primary reads `--doc-accent` (forecraft #32), which
+    // holds what the primary used to: the colour is the same, one hop away.
+    const accents = new Map<string, string>();
     let scope = "root";
     for (const line of css.split("\n")) {
       const text = line.trim();
@@ -391,8 +394,13 @@ describe("legacy inputs keep 1.0's colours", () => {
       else if (/^\[data-theme="auto"\]/.test(text)) scope = "auto";
       else if (/^:root/.test(text) && scope !== "auto") scope = "root";
       const declaration = /^--([\w-]+)\s*:\s*(.+?);$/.exec(text);
+      if (declaration?.[1] === "doc-accent") accents.set(scope, declaration[2].trim());
       if (declaration && /^(palette|color)-/.test(declaration[1])) {
-        out.set(`${scope}/${declaration[1]}`, declaration[2].trim());
+        const value = declaration[2].trim();
+        out.set(
+          `${scope}/${declaration[1]}`,
+          value === "var(--doc-accent)" ? accents.get(scope) ?? value : value,
+        );
       }
     }
     return out;

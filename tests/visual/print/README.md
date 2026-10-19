@@ -20,6 +20,8 @@ the diff.
 | `matrix.ts` | Discovers all `DOCUMENT_SCAFFOLDS` and every registry manifest with `files.print_reference`; assigns explicit expected page counts. |
 | `matrix.test.ts` | Fast Bun meta-test proving the generated matrix includes every independent source-of-truth page. |
 | `print.pw.ts` | Chromium PDF render, Poppler rasterization, page-count assertions, and PNG image diffs. |
+| `forecraft-print.pw.ts` | Print contracts that need no rasteriser: page sizes per named page, the localised counter, page-1 header suppression, footer/counter baseline, DIN 5008 letter marks, quote sizing, and the matrix page counts re-proved — all read from the PDF itself. |
+| `pdf-facts.ts` | Poppler-free reader for Chromium/Skia PDFs: `/MediaBox`, text lines (via `/ToUnicode`), and the sheet's filled rects. |
 | `../../../playwright.print.config.ts` | Dedicated Chromium runner and strict image threshold. |
 
 ## Run locally
@@ -32,6 +34,11 @@ bun test tests/visual/print/matrix.test.ts
 npm run test:visual:print:update  # create machine-local baselines
 npm run test:visual:print         # compare without changing baselines
 ```
+
+`forecraft-print.pw.ts` runs under the same config and needs neither Poppler
+nor baselines (`npx playwright test --config=playwright.print.config.ts
+tests/visual/print/forecraft-print.pw.ts`); its assertions are exact on any
+machine.
 
 Local output is useful for iteration only. Font and PDF rasterization differ by
 platform, so `tests/visual/print/__screenshots__/` is git-ignored; the

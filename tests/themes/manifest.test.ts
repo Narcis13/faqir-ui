@@ -254,7 +254,12 @@ describe("theme manifest · the token surface", () => {
     // 1.1F-19 added ONE: --mono-ligatures. Cascadia Code and JetBrains Mono,
     // both named by --font-mono, ligate by default, and no stylesheet said
     // otherwise; every rule that sets the mono stack now reads this beside it.
-    expect(SURFACE.length).toBe(298);
+    // The print notes (forecraft #32/#33/#38/#39/#40/#47) added twenty-one, all
+    // in tokens/document.css: --doc-accent, --doc-serif, the two running
+    // strings, the three counter labels and the fourteen DIN 5008 letter
+    // geometry tokens (two margins, two folds, five mark, five window).
+    expect(SURFACE.length).toBe(319);
+    expect(SURFACE).toContain("doc-accent");
     expect(SURFACE).toContain("mono-ligatures");
     expect(SURFACE).toContain("disabled-opacity");
     expect(SURFACE).toContain("heading-caps");

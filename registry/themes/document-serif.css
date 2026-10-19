@@ -15,7 +15,9 @@
   --color-fg-subtle:        oklch(0.52 0.018 55);
 
   /* Formal oxblood accent */
-  --color-primary:          oklch(0.32 0.10 25);
+  /* The one print accent (--doc-accent): restate it on :root to re-ink. */
+  --doc-accent:             oklch(0.32 0.10 25);
+  --color-primary:          var(--doc-accent);
   --color-primary-hover:    oklch(0.27 0.11 25);
   --color-primary-active:   oklch(0.22 0.10 25);
   --color-primary-fg:       white;
@@ -110,10 +112,13 @@
      collapses to the bottom side alone, which is what makes `controls.input`
      derive `underline`, and `input`/`textarea`/`select` all read it. */
   --input-border-width:     0 0 var(--border-width) 0;
-  --doc-font:               'Georgia', 'Times New Roman', var(--font-serif);
+  /* The project's role families, which this theme points at its serif
+     palette above: an installed face reaches the paper, and Georgia and
+     Times New Roman are only the fallbacks --font-serif names. */
+  --doc-font:               var(--font-body);
   --doc-font-size:          11pt;
   --doc-line-height:        1.55;
-  --doc-heading-font:       'Times New Roman', 'Georgia', var(--font-serif);
+  --doc-heading-font:       var(--font-heading);
   --doc-heading-weight:     var(--weight-bold);
   --doc-heading-size:       16pt;
   --doc-subheading-size:    13pt;
@@ -149,7 +154,7 @@
     --color-fg-muted:       oklch(0.30 0.012 55);
     --color-border:         oklch(0.58 0.012 55);
     --color-border-strong:  oklch(0.28 0.012 55);
-    --color-primary:        oklch(0.24 0.07 25);
+    --doc-accent:           oklch(0.24 0.07 25);
     --color-destructive:    oklch(0.28 0.12 25);
   }
 }

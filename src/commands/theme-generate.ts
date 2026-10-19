@@ -636,9 +636,17 @@ function renderDocumentCss(
   ramp: AccentStep[],
   declarations: Declaration[],
 ): string {
+  // The companion's one accent is `--doc-accent`, and its primary reads it, so
+  // `:root { --doc-accent: … }` re-inks a printed document without a
+  // regeneration — the same wiring the authored print themes carry.
+  const accented: Declaration[] = declarations.flatMap(([name, value]): Declaration[] =>
+    name === "color-primary"
+      ? [["doc-accent", value], ["color-primary", "var(--doc-accent)"]]
+      : [[name, value]],
+  );
   const root: Declaration[] = [
     ...paletteDeclarations(sourceName, ramp),
-    ...declarations,
+    ...accented,
     ["radius-sm", "0"],
     ["radius-md", "0"],
     ["radius-lg", "0"],
@@ -650,10 +658,12 @@ function renderDocumentCss(
     ["card-shadow", "none"],
     ["input-radius", "0"],
     ["badge-radius", "0.125rem"],
-    ["doc-font", "'Arial', 'Helvetica Neue', var(--font-sans)"],
+    // The project's role families: an installed face reaches the paper, and
+    // the system faces (--font-sans below) are only their fallbacks.
+    ["doc-font", "var(--font-body)"],
     ["doc-font-size", "10pt"],
     ["doc-line-height", "1.4"],
-    ["doc-heading-font", "'Arial', 'Helvetica Neue', var(--font-sans)"],
+    ["doc-heading-font", "var(--font-heading)"],
     ["doc-heading-weight", "var(--weight-bold)"],
     ["doc-heading-size", "14pt"],
     ["doc-subheading-size", "12pt"],
