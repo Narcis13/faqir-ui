@@ -237,10 +237,9 @@ describe("minified engine artifact", () => {
     // template, `l-model` listener teardown, and the missing-part guards that
     // name the part instead of throwing. See scripts/check-size.mjs for the ledger.
     //
-    // 46 → 47 KB for this bundle only (forecraft #28/#10): 1.2.5 left it 15 bytes
-    // under 46 KB, and holding a not-yet-registered directive for a late plugin,
-    // the classic-`defer` boot and `Faqir.ui` cost ~114 bytes gzip. The
-    // `bun run size` budget for the same engine (46 KB) still holds.
+    // 46 → 47 KB for this bundle (the forecraft notes): 1.2.5 left it 15 bytes
+    // under 46 KB; the late-directive hold, the classic-`defer` boot and
+    // `Faqir.ui` (#28/#10) and QR versions 11–40 (#44) need the room.
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
     expect(gzip).toBeLessThanOrEqual(47 * 1024);
   });

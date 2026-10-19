@@ -6,8 +6,9 @@
 //   • createQRCode(root) reads data-value + data-ecl and renders an inline <svg
 //     data-part="svg"> (a white background rect + a black module path) into the
 //     root, before [data-part='caption'] if present. Empty value → no <svg>.
-//   • Data too long for versions 1–10 is swallowed (console.warn, no <svg>) — the
-//     controller never throws out of render.
+//   • Data too long for versions 1–40 is swallowed (data-state="error", a
+//     faqir:error event, console.warn, no <svg>) — the controller never throws
+//     out of render. Versions 11–40 are covered by forecraft-qr-code.test.ts.
 //   • update(value, ecl) rewrites the attributes and re-renders; a direct
 //     data-value / data-ecl attribute change re-renders via a MutationObserver.
 //   • Double init returns the same api; destroy() disconnects the observer and
@@ -34,12 +35,13 @@ import { createQRCode } from "../../registry/recipes/qr-code/qr-code.js";
 const controllers: Array<{ destroy(): void }> = [];
 
 // ── Render + reconstruct the boolean module matrix from the SVG path ──────────
-// matrixToSVG emits one `M${c+quiet},${r+quiet}h1v1h-1z` sub-path per dark
-// module (quiet zone = 2). Invert to dark cells at (r,c); infer size = 4v+17.
+// matrixToSVG emits one `M${c},${r}h1v1h-1z` sub-path per dark module — drawn
+// flush, the quiet zone is CSS padding. Invert to dark cells at (r,c); infer
+// size = 4v+17.
 function matrixFromSVG(svg: SVGElement): number[][] {
   const path = svg.querySelector("[fill='var(--color-fg, #000)']") as SVGPathElement;
   const d = path.getAttribute("d") || "";
-  const quiet = 2;
+  const quiet = 0;
   const cells: Array<[number, number]> = [];
   let maxSpan = 0;
   const re = /M(\d+),(\d+)h1v1h-1z/g;
@@ -51,7 +53,7 @@ function matrixFromSVG(svg: SVGElement): number[][] {
     maxSpan = Math.max(maxSpan, r + 1, c + 1);
   }
   let size = 21;
-  for (let v = 1; v <= 10; v++) {
+  for (let v = 1; v <= 40; v++) {
     const s = v * 4 + 17;
     if (s >= maxSpan) { size = s; break; }
   }
@@ -484,12 +486,19 @@ describe("qr-code controller", () => {
     expect(root.querySelector("[data-part='svg']")).toBeNull();
   });
 
-  it("swallows oversize input (beyond v10) — no throw, no svg", () => {
-    // ~3000 bytes exceeds the v10 capacity for every ECL.
+  it("swallows oversize input (beyond v40) — no throw, no svg", () => {
+    // 3000 bytes exceeds the v40 capacity for every ECL (2953 at L).
     const huge = "A".repeat(3000);
-    expect(() => render(huge)).not.toThrow();
+    const warn = console.warn;
+    console.warn = () => {};
+    try {
+      expect(() => render(huge)).not.toThrow();
+    } finally {
+      console.warn = warn;
+    }
     const root = document.querySelector("[data-ui='qr-code']") as HTMLElement;
     expect(root.querySelector("[data-part='svg']")).toBeNull();
+    expect(root.dataset.state).toBe("error");
   });
 
   // ── update() + reactive attribute observation ──────────────────────────────

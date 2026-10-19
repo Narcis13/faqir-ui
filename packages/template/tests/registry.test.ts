@@ -32,7 +32,6 @@ const EXCEPTIONS: Record<string, RegExp> = {};
  * styles no `trigger` part) asks for it.
  */
 const AUDIT_EXCEPTIONS: Record<string, string> = {
-  "alert-dialog": "trigger-contract:trigger",
   dialog: "trigger-contract:trigger",
   drawer: "trigger-contract:trigger",
   sheet: "trigger-contract:trigger",
