@@ -37,10 +37,18 @@
 //
 // ── What is deliberately NOT here ────────────────────────────────────────────
 //
-// * Italics and the non-Latin subsets. Both are real omissions, not oversights:
-//   a project that needs Cyrillic or a true italic is past what a curated list
-//   can decide for it, and the file layout here (one directory per family, one
-//   `@font-face` per subset) is what a hand-added face slots into.
+// * The non-Latin subsets. A real omission, not an oversight: a project that
+//   needs Cyrillic is past what a curated list can decide for it, and the file
+//   layout here (one directory per family, one `@font-face` per subset) is what
+//   a hand-added face slots into.
+// * Italic PINS. The installer supports true italics (`italics` below, opt-in
+//   with `faqir fonts add <family> --italic`, the same download → hash check →
+//   all-or-nothing write as the upright faces), but no family carries an
+//   `italics` row yet: a pin is only worth something when its hash was taken
+//   from the bytes themselves, by the procedure above, and the rows wait for
+//   that. The files are Fontsource's `…-wght-italic.woff2` (variable) and
+//   `…-<weight>-italic.woff2` (static) beside the upright ones, at the same
+//   version. Until a family has rows, `--italic` refuses it by name.
 // * `size-adjust` / `ascent-override` metrics, which would let a fallback face
 //   occupy the same space as the webfont and remove the layout shift on swap.
 //   They cannot be written by hand — they are measured out of the font's `head`
@@ -104,7 +112,13 @@ interface CatalogFamilyInput {
   class: FontClass;
   roles: readonly FontRole[];
   variable: boolean;
+  /** The upright (`font-style: normal`) faces — what every install gets. */
   files: readonly CatalogFile[];
+  /**
+   * The true-italic faces, installed only on request (`--italic`). Absent or
+   * empty means the catalog pins none for this family yet.
+   */
+  italics?: readonly CatalogFile[];
 }
 
 /** A catalogued family as callers see it: the row plus its resolved fallback. */
@@ -639,7 +653,32 @@ export function roleStack(entry: CatalogEntry): string {
   return `"${entry.family}", ${entry.fallback}`;
 }
 
-/** Total download size of a family, in bytes. */
+/** Total download size of a family's upright faces, in bytes. */
 export function familyBytes(entry: CatalogEntry): number {
   return entry.files.reduce((total, file) => total + file.bytes, 0);
+}
+
+/** The pinned italic faces of a family — empty when the catalog has none for it. */
+export function italicFiles(entry: CatalogEntry): readonly CatalogFile[] {
+  return entry.italics ?? [];
+}
+
+/**
+ * The weights a STATIC family ships, ascending and de-duplicated (`["400", "700"]`
+ * for IBM Plex Serif). A variable family covers a range instead, so it returns
+ * null: any weight inside the range is drawn, never synthesized.
+ */
+export function staticWeights(entry: CatalogEntry): number[] | null {
+  if (entry.variable) return null;
+  return [...new Set(entry.files.map((file) => Number(file.weight)))].sort((a, b) => a - b);
+}
+
+/**
+ * A static family with exactly one weight (Instrument Serif: 400 only). Asked
+ * for a heavier weight — the default heading voice is bold — the browser fakes
+ * one by smearing the outlines, which is the one weight a display face designed
+ * for 400 never wants.
+ */
+export function isSingleWeight(entry: CatalogEntry): boolean {
+  return staticWeights(entry)?.length === 1;
 }

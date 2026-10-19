@@ -730,6 +730,14 @@ OS with no media query of its own.
 downloads WOFF2 files once, verifies each against a SHA-256 pinned in the CLI,
 and writes `ui/fonts/<family>/` plus a managed `ui/fonts.css` that points the
 role tokens (`--font-heading/-body/-ui/-mono`) at it. The theme file is never edited.
+`--role none` installs the faces and their `@font-face` rules without pointing any
+role token at them (the role block stays byte-identical), for a family you set with
+your own `font-family`. A static family with a single weight (Instrument Serif)
+holding the heading role gets `font-synthesis-weight: none`, so headings are drawn
+at its one weight instead of a browser-faked bold, and `add` warns when the active
+theme's heading voice asks for a heavier one. `--italic` also installs a family's
+true-italic faces, hash-pinned like the upright ones, for the families whose italic
+pins the catalog carries (`fonts list` shows them); the catalog has none yet.
 
 **From an agent.** The MCP server exposes the same surface: `faqir_theme_list`
 returns every theme with its axes, `faqir_theme_info` one theme's manifest, and
@@ -969,6 +977,11 @@ carries `rule_id`, `severity` (`critical` · `error` · `warning` · `info`),
 are reported separately from authored ones, and only authored errors gate the
 exit code.
 
+From code, `auditHtml(html, { root, components })` in
+[`@faqir-ui/mcp/audit`](packages/mcp/README.md#programmatic-audit-faqir-uimcpaudit)
+returns the same document as `faqir audit --stdin --json`, without a process
+per call.
+
 A project can ban directives outright. With
 
 ```json
@@ -1003,7 +1016,7 @@ audit does not see it.
 | `token-aware-style` | info | markup vs manifest | Inline style uses hardcoded values instead of tokens |
 | `duplicate-id` | error | HTML document | Every id must be unique within a document |
 | `heading-order` | warning | HTML document | Heading levels must not skip when going deeper |
-| `landmark` | warning | HTML document | A page needs `main`; dialogs not inside it; named navs |
+| `landmark` | warning | HTML document | A page needs `main`; dialogs not inside it (a control's non-modal popup part, like the date-picker calendar, is exempt); named navs |
 | `field-wiring` | error | HTML document | `field-group` ARIA contract: `for`, `aria-describedby`, `aria-invalid` |
 | `unknown-component` | warning | data-ui vs registry | A `data-ui` value must name something Faqir defines |
 | `attribute-vocabulary` | error | vocabulary | A declared attribute carries a value from its set; tier suffix only where responsive |
