@@ -5,7 +5,17 @@ All eight packages (`faqir-ui-cli`, `@faqir-ui/core`, `@faqir-ui/react`,
 `@faqir-ui/mcp`) are versioned in lockstep. The protocol is frozen at [`SPEC-1.0.md`](SPEC-1.0.md);
 every release below is additive under its §8 unless it says otherwise.
 
-## Unreleased
+## 1.3.0
+
+What two applications built on 1.2.5 asked for: a server-rendered manual and
+forecraft, a form and report platform whose first user is an agent. Full notes:
+[`docs/release-1.3.md`](docs/release-1.3.md).
+
+All eight packages ship at 1.3.0. The protocol gains one sanctioned token
+modifier, `data-accent`, additively under SPEC-1.0 §8.2; everything else is a
+new component, plugin, build, option or fix. Each group below opens with its
+**Upgrading** note: read them, because a few outputs change under existing
+markup and a few template mistakes that used to render now fail to compile.
 
 What building a 20-page manual with `@faqir-ui/template` 1.2.5 asked for.
 
@@ -187,6 +197,31 @@ engine is byte-identical.
 - **Fixed** — the three generated print companions no longer differ only in hue.
 - **Fixed** — `fonts add --italic` no longer refuses every family; for Manrope,
   Space Grotesk and Bricolage Grotesque it says their package ships upright only.
+
+The documentation site, brought up to all of the above.
+
+- **Added** — three pages: `accent/` shows every named `data-accent` hue live,
+  a custom-hue dial and nesting, with the vocabulary read out of
+  `src/theme/accent.ts`; `print/` covers named pages, running strings, the
+  letter, printable data components and a voice table read out of the print
+  themes' stylesheets, beside the invoice and report scaffolds; `engine/csp/`
+  runs live directives on `faqir-core.csp.js` under a page-stated policy without
+  `'unsafe-eval'`, and reports the refused `new Function`.
+- **Added** — the home page tells the 1.3 story, with a badge in every named hue
+  and a live chart; the engine page covers `Faqir.ui()`, late directive
+  registration and the `defer` boot; the rules page covers the forms options,
+  layout keys, `faqir:valid-submit` and `rulesFor`; the integrations page
+  carries the strict-CSP CDN tag, `themes.json`, `@faqir-ui/core/csp` and
+  `/subset`, and `@faqir-ui/mcp/audit`; theme authoring and the studio point to
+  the runtime accent.
+- **Fixed** — the site's stylesheet now concatenates the same token files as
+  `faqir bundle`, in the same order: `textures.css` and `accent.css` were
+  missing, so theme textures (aurora's page mesh, for one) never drew on the
+  site and `data-accent` did nothing there. A test holds the two lists equal.
+- **Fixed** — the integrations page lists `@faqir-ui/template` among the
+  packages (eight, not seven), the rules page's widget table matches
+  `@faqir-ui/forms` (`step=any` numbers, integer enums, `scale`), and the home
+  page names every engine plugin, `chart` included.
 
 ## 1.2.5
 
