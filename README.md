@@ -19,6 +19,7 @@ Docs site: **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** · npm: `faqir-u
 
 ## Table of Contents
 
+- [What's new in 1.3: what two real apps asked for](#whats-new-in-13-what-two-real-apps-asked-for)
 - [What's new in 1.2: motion, content and the theme studio](#whats-new-in-12-motion-content-and-the-theme-studio)
 - [What's new in 1.1 "Personality"](#whats-new-in-11-personality)
 - [Quick Start](#quick-start)
@@ -43,6 +44,48 @@ Docs site: **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** · npm: `faqir-u
 - [License](#license)
 
 ---
+
+## What's new in 1.3: what two real apps asked for
+
+Two applications built on 1.2.5 — forecraft, a form and report platform whose
+first user is an agent, and a twenty-page manual rendered on a server with
+`@faqir-ui/template` — each sent back the list of what Faqir could not yet do.
+1.3 is those lists, done. Additive under [`SPEC-1.0.md` §8](SPEC-1.0.md); the
+handful of output changes are listed under **Upgrading** in
+[`CHANGELOG.md`](CHANGELOG.md), and the release notes are
+[`docs/release-1.3.md`](docs/release-1.3.md).
+
+- **A runtime accent.** `data-accent="rose|red|orange|blue|indigo|violet|purple|fuchsia|pink"`
+  on any element re-hues the theme's primary family and focus ring for that
+  subtree, keeping the active theme's lightness and chroma — the fifth sanctioned
+  token modifier. Each named hue clears every `contrast-tokens` pair in all 31
+  themes, light and dark; `custom` takes any other hue from `--accent-hue`. See
+  [`docs/accent.md`](docs/accent.md).
+- **Charts.** The `chart` primitive's `<table data-part="data">` is the chart
+  without JavaScript and prints under the drawing; the opt-in `faqir-chart.js`
+  plugin (4 KB) draws a column, bar or line chart from it as inline SVG, in the
+  theme's colours, with an `aria-label` that reads the numbers.
+- **A strict-CSP engine.** `faqir-core.csp.js` (`@faqir-ui/core/csp`, CDN
+  `dist/faqir-core.csp.min.js`) interprets directive expressions instead of
+  compiling them, so a page needs no `'unsafe-eval'`. See
+  [Strict-CSP build](#strict-csp-build).
+- **Documents that know paper.** Named `@page`s per format and orientation,
+  running headers and footers in the page margins, a page counter in the
+  document's language, a DIN 5008 `letter` variant, a typographic voice for each
+  print theme, and true italics for thirteen catalog fonts
+  (`faqir fonts add <family> --italic`).
+- **Forms that submit.** `renderForm` ends a form in its submit button,
+  `faqir-validate` fires `faqir:valid-submit` with the coerced data, `rulesFor`
+  hands a server the exact definition the page enforces, and the UI schema gains
+  `scale`, `width` and `orientation`.
+- **Templates for real apps.** Inline `#[code …]` elements, repeating fills,
+  fill arguments, partial `params`, every registry component callable, and
+  `@faqir-ui/core/subset` to cut a bundle down to the components a page draws.
+- **For agents.** `Faqir.ui()` reaches a controller from plain JavaScript,
+  `@faqir-ui/mcp/audit` runs the auditor in process, a `skip-link` primitive,
+  and the `unknown-element` audit rule.
+- **The docs site shows all of it live**: a runtime-accent page, a documents &
+  print page, and the strict-CSP engine running under its own policy.
 
 ## What's new in 1.2: motion, content and the theme studio
 
@@ -209,10 +252,10 @@ with no shell, [`@faqir-ui/core`](packages/core/README.md) publishes a prebuilt 
 
 ```html
 <!-- A theme's full CSS bundle: tokens + theme + base + every component -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2/dist/faqir.default.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.3/dist/faqir.default.css">
 
 <!-- The engine, minified — sets window.Faqir and boots on DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2/dist/faqir-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.3/dist/faqir-core.min.js" defer></script>
 ```
 
 Swap the stylesheet to change theme; every theme ships a bundle. Every `dist/`
@@ -770,7 +813,7 @@ active theme's own lightness and chroma, so every theme keeps its character and
 only the hue moves. `--doc-accent`, the print ink, follows it.
 
 ```html
-<html data-theme="auto" data-accent="violet">      <!-- violet · purple · fuchsia · pink -->
+<html data-theme="auto" data-accent="blue">        <!-- rose · red · orange · blue · indigo · violet · purple · fuchsia · pink -->
 <section data-accent="custom" style="--accent-hue: 200">…any other hue…</section>
 ```
 
@@ -1296,7 +1339,9 @@ to report a vulnerability: [docs/security.md](docs/security.md).
 The docs site at **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** is a
 Faqir project and a live proof of the framework: plain HTML built once by
 `bun run build:docs` into `site/dist`, one page per component generated from
-its manifest, a theme gallery with axis filters, and no runtime build step.
+its manifest, a theme gallery with axis filters, a runtime-accent page, a
+documents & print page, the strict-CSP engine running under its own policy, and
+no runtime build step.
 How it is built and deployed: [`docs/docs-site.md`](docs/docs-site.md).
 
 | Document | What it covers |
@@ -1306,7 +1351,9 @@ How it is built and deployed: [`docs/docs-site.md`](docs/docs-site.md).
 | [`docs/layout.md`](docs/layout.md) | Layout primitives, rhythm, density and five page archetypes |
 | [`docs/data-driven-rendering.md`](docs/data-driven-rendering.md) | `l-source`, `apiSource()`, the playground server |
 | [`docs/devtools.md`](docs/devtools.md) | `Faqir.inspect`, the dev engine and the overlay |
-| [`docs/security.md`](docs/security.md) | CSP, threat model, supply chain, reporting |
+| [`docs/security.md`](docs/security.md) | CSP, the strict-CSP build, threat model, supply chain, reporting |
+| [`docs/accent.md`](docs/accent.md) | `data-accent`: the runtime accent, its vocabulary and how each hue was measured |
+| [`docs/template.md`](docs/template.md) | The `@faqir-ui/template` language specification |
 | [`docs/migration-1.0.md`](docs/migration-1.0.md) | Moving a v0.x project to 1.0 |
 | [`docs/remote-registry.md`](docs/remote-registry.md) | Installing components from a remote, hash-verified registry |
 | [`docs/pristine-store.md`](docs/pristine-store.md) | The baseline `diff` and `upgrade` merge against |

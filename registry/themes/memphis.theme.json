@@ -355,7 +355,7 @@
   "preview": "memphis.preview.html",
   "seed": {
     "name": "memphis",
-    "accent": "oklch(0.6 0.22 350)",
+    "accent": "oklch(0.585 0.22 350)",
     "neutral": "tinted",
     "scheme": "light",
     "type": {
@@ -431,7 +431,7 @@
   "distinctiveness": {
     "nearest": "swiss",
     "axis_distance": 11,
-    "token_distance": 0.032
+    "token_distance": 0.0318
   },
   "visual_matrix": false
 }

@@ -1,4 +1,4 @@
-/* @ui:theme neumorph — generated from oklch(0.6 0.2 300) */
+/* @ui:theme neumorph — generated from oklch(0.585 0.2 300) */
 /* @ui:schemes light dark */
 /* @ui:density comfortable */
 /* Deterministic parametric theme. Regenerate instead of editing the accent ramp by hand. */
@@ -7,17 +7,17 @@
    --legacy-blocks for the three-block form if your browser floor predates it. */
 
 :root {
-  --palette-neumorph-50     : oklch(0.96 0.036 300);
-  --palette-neumorph-100    : oklch(0.912 0.064 300);
-  --palette-neumorph-200    : oklch(0.848 0.1 300);
-  --palette-neumorph-300    : oklch(0.78 0.14 300);
-  --palette-neumorph-400    : oklch(0.7 0.176 300);
-  --palette-neumorph-500    : oklch(0.6 0.2 300);
-  --palette-neumorph-600    : oklch(0.528 0.2 300);
-  --palette-neumorph-700    : oklch(0.432 0.184 300);
-  --palette-neumorph-800    : oklch(0.336 0.156 300);
-  --palette-neumorph-900    : oklch(0.24 0.12 300);
-  --palette-neumorph-950    : oklch(0.15 0.084 300);
+  --palette-neumorph-50     : oklch(0.9585 0.036 300);
+  --palette-neumorph-100    : oklch(0.9087 0.064 300);
+  --palette-neumorph-200    : oklch(0.8423 0.1 300);
+  --palette-neumorph-300    : oklch(0.7717 0.14 300);
+  --palette-neumorph-400    : oklch(0.6887 0.176 300);
+  --palette-neumorph-500    : oklch(0.585 0.2 300);
+  --palette-neumorph-600    : oklch(0.5148 0.2 300);
+  --palette-neumorph-700    : oklch(0.4212 0.184 300);
+  --palette-neumorph-800    : oklch(0.3276 0.156 300);
+  --palette-neumorph-900    : oklch(0.234 0.12 300);
+  --palette-neumorph-950    : oklch(0.1462 0.084 300);
   --color-bg                : light-dark(oklch(0.995 0.008 300), oklch(0.13 0.025 300));
   --color-bg-subtle         : light-dark(oklch(0.96 0.008 300), oklch(0.18 0.025 300));
   --color-bg-muted          : light-dark(oklch(0.92 0.01 300), oklch(0.25 0.025 300));
@@ -48,7 +48,7 @@
   --color-info-subtle       : light-dark(var(--palette-neumorph-50), oklch(0.23 0.0528 300));
   --color-border            : light-dark(oklch(0.84 0.015 300), oklch(0.29 0.025 300));
   --color-border-strong     : light-dark(oklch(0.7 0.02 300), oklch(0.38 0.025 300));
-  --color-ring              : light-dark(oklch(0.528 0.2 300), oklch(0.7 0.176 300));
+  --color-ring              : light-dark(oklch(0.5148 0.2 300), oklch(0.6887 0.176 300));
   --shadow-color            : 0 0 0;
   --shadow-xs               : inset 0 1px 1px oklch(var(--shadow-color) / 0.05);
   --shadow-sm               : inset 0 1px 2px oklch(var(--shadow-color) / 0.07);

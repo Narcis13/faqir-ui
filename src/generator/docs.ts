@@ -166,6 +166,7 @@ import {
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 import { buildRegistryContext } from "./registry-context";
 import { SCAFFOLDS, SCAFFOLD_NAMES, scaffoldBody, scaffoldCommand, type ScaffoldDef } from "../scaffolds";
+import { ACCENT_CUSTOM, ACCENT_HUE_TOKEN, ACCENT_HUES } from "../theme/accent";
 // The 1.1 sections. Each module renders one part of the site from its own
 // source of truth and receives the shared `PageContext`; they import the shell
 // and helpers from this file, so nothing from them may be used at top level here.
@@ -363,6 +364,37 @@ export const MOTION_PAGE = "motion/index.html";
  */
 export const STUDIO_PAGE = "studio/index.html";
 
+/**
+ * The runtime accent (1.3): `data-accent`, the fifth sanctioned token modifier,
+ * live in every hue. The hue gallery and the vocabulary table are read out of
+ * `src/theme/accent.ts`, the list the contrast gate measures, so the page cannot
+ * show a hue the gate never cleared.
+ */
+export const ACCENT_PAGE = "accent/index.html";
+
+/**
+ * Documents & print (1.3): the `document` pattern's named pages, running
+ * strings and letter, and the print themes' typographic voices. The voice table
+ * is read out of each print theme's stylesheet and the token defaults.
+ */
+export const PRINT_PAGE = "print/index.html";
+
+/**
+ * The strict-CSP engine (1.3), running on a page whose policy has no
+ * `'unsafe-eval'`. It is the only page that loads {@link CSP_ENGINE_SCRIPT}, and
+ * it states {@link CSP_DEMO_POLICY} in a `<meta http-equiv>` so the proof does
+ * not depend on the host sending a header: a static server, a CDN and
+ * Cloudflare Pages (whose `_headers` policy is enforced beside it) all refuse
+ * `new Function` here.
+ */
+export const CSP_PAGE = "engine/csp/index.html";
+
+/** Where the strict-CSP engine ships, verbatim from the registry. */
+export const CSP_ENGINE_SCRIPT = "scripts/faqir-core.csp.js";
+
+/** The policy the strict-CSP page runs under: scripts from this origin, nothing compiled. */
+export const CSP_DEMO_POLICY = "script-src 'self'; object-src 'none'; base-uri 'self'";
+
 /** Where each official plugin ships, verbatim, so the engine page runs them live. */
 export function pluginScriptPath(file: string): string {
   return `scripts/plugins/${file}`;
@@ -484,6 +516,7 @@ export const SITE_SCRIPTS = [
   "gallery.js",
   "copy-snippet.js",
   "studio.js",
+  "csp-proof.js",
 ] as const;
 
 /** Registry directories that ship documentable components. */
@@ -504,24 +537,38 @@ const LAYER_BLURB: Record<Layer, string> = {
 };
 
 /**
- * Token load order — authoritative, mirrors `registry/tokens/index.css` and the
- * concatenation `faqir init` performs. `index.css` itself is excluded (it is only
- * `@import` statements) and `density.css` declares into `[data-density]` scopes
- * rather than `:root`, so it ships in the stylesheet but contributes no entries
- * to the token reference.
+ * Token load order — mirrors `registry/tokens/index.css` and
+ * `TOKEN_FILES_ORDERED` in `src/utils/bundler.ts`, the concatenation `faqir init`
+ * and `faqir bundle` perform; `tests/generator/docs-release-1-3.test.ts` holds
+ * the two equal. `index.css` itself is excluded (it is only `@import`
+ * statements). Until 1.3 this list had fallen behind the bundler: without
+ * `textures.css` a theme's `--texture-page: var(--texture-mesh)` drew nothing on
+ * this site, and without `accent.css` `data-accent` was a no-op here.
  */
-const TOKEN_FILES = [
+export const TOKEN_FILES = [
   "palette",
   "spacing",
   "typography",
   "effects",
+  "textures",
   "motion",
   "semantic",
   "aliases",
   "document",
   "doc-aliases",
+  "accent",
   "density",
 ] as const;
+
+/**
+ * The files the token reference reads. `density.css` declares into
+ * `[data-density]` scopes and `accent.css` only captures, inside `@supports`, so
+ * neither contributes an entry. `textures.css` is left out on purpose: it is the
+ * material palette — six tiling data URIs outside the themeable surface
+ * (`NON_SURFACE_TOKEN_FILES`) — and the two role tokens a theme re-points,
+ * `--texture-page` and `--texture-surface`, are declared in `aliases.css`.
+ */
+const REFERENCE_TOKEN_FILES = TOKEN_FILES.filter((file) => file !== "textures");
 
 /** Base stylesheets, in cascade order. */
 const BASE_FILES = ["reset", "prose", "rhythm", "motion-presets"] as const;
@@ -1206,7 +1253,7 @@ const DECL_RE = /--([a-z0-9-]+)\s*:\s*([^;]+);/gi;
  */
 export function parseTokenReference(registryRoot: string): TokenEntry[] {
   const seen = new Map<string, TokenEntry>();
-  for (const file of TOKEN_FILES) {
+  for (const file of REFERENCE_TOKEN_FILES) {
     const path = join(registryRoot, "tokens", `${file}.css`);
     if (!existsSync(path)) continue;
     const css = readText(path).replace(/\/\*[^]*?\*\//g, "");
@@ -1489,6 +1536,12 @@ export interface ShellInput {
    * body and reach it through the controller's external `data-open` hook.
    */
   overlays?: string;
+  /**
+   * A Content-Security-Policy stated in a `<meta http-equiv>` ahead of every
+   * script. Only {@link CSP_PAGE} sets it, so the strict-CSP engine is proven
+   * under a policy the page carries itself, whatever the host sends.
+   */
+  csp?: string;
 }
 
 /**
@@ -1520,6 +1573,7 @@ const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
       [SPACING_PAGE, "Spacing & rhythm"],
       [DENSITY_PAGE, "Density"],
       [MOTION_PAGE, "Motion & effects"],
+      [PRINT_PAGE, "Documents & print"],
       ["tokens/index.html", "Design tokens"],
     ],
   },
@@ -1529,6 +1583,7 @@ const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
       [THEMES_PAGE, "Theme gallery"],
       [THEME_AXES_PAGE, "The fourteen axes"],
       [THEME_AUTHORING_PAGE, "Authoring themes"],
+      [ACCENT_PAGE, "Runtime accent"],
       [STUDIO_PAGE, "Theme studio"],
     ],
   },
@@ -1536,6 +1591,7 @@ const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
     heading: "Engine",
     items: [
       [ENGINE_PAGE, "Reactive engine"],
+      [CSP_PAGE, "Strict-CSP engine"],
       [RULES_PAGE, "Rules & validation"],
       [TEMPLATE_PAGE, "Server templates"],
     ],
@@ -1659,11 +1715,11 @@ export function renderShell(input: ShellInput): string {
     const active =
       section === "components"
         ? current.startsWith("components/") ||
-          [ICONS_PAGE, TYPOGRAPHY_PAGE, LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE, MOTION_PAGE, "tokens/index.html"].includes(current)
+          [ICONS_PAGE, TYPOGRAPHY_PAGE, LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE, MOTION_PAGE, PRINT_PAGE, "tokens/index.html"].includes(current)
         : section === "themes"
-          ? current.startsWith("themes/") || current === STUDIO_PAGE
+          ? current.startsWith("themes/") || current === STUDIO_PAGE || current === ACCENT_PAGE
           : section === "engine"
-            ? [ENGINE_PAGE, RULES_PAGE].includes(current) || current.startsWith("template/")
+            ? [ENGINE_PAGE, CSP_PAGE, RULES_PAGE].includes(current) || current.startsWith("template/")
             : section === "tooling"
               ? [CLI_PAGE, AUDIT_PAGE, PLAYGROUND_PAGE, INTEGRATIONS_PAGE].includes(current) ||
                 current.startsWith("scaffolds/")
@@ -1676,7 +1732,9 @@ export function renderShell(input: ShellInput): string {
   return `<!DOCTYPE html>
 <html lang="en" data-theme="auto" data-faqir-docs>
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8">${
+  input.csp ? `\n<meta http-equiv="Content-Security-Policy" content="${escAttr(input.csp)}">` : ""
+}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escAttr(input.title)}</title>
 <meta name="description" content="${escAttr(input.description)}">
@@ -3642,8 +3700,8 @@ function renderHomePage(ctx: {
   themes: DocsTheme[];
   authored: string;
   tokenCount: number;
-  /** `registry/core/plugins`, counted for the numbers row. */
-  pluginCount: number;
+  /** `registry/core/plugins`, counted and named for the numbers row. */
+  plugins: PluginMetadata[];
 }): SiteFile {
   const pagePath = "index.html";
   const counts = LAYERS.map((layer) => ({
@@ -3658,7 +3716,7 @@ function renderHomePage(ctx: {
     [String(ctx.themes.length), "themes", "authored, generated and print companions", THEMES_PAGE],
     [String(ruleCount), "audit rules", "one engine in the CLI, MCP and browser", AUDIT_PAGE],
     [String(ctx.tokenCount), "design tokens", "one semantic cascade", "tokens/index.html"],
-    [String(ctx.pluginCount), "engine plugins", "collapse, intersect, mask, persist, rules, tweak, validate", ENGINE_PAGE],
+    [String(ctx.plugins.length), "engine plugins", ctx.plugins.map((p) => p.name.replace(/^faqir-/, "")).join(", "), ENGINE_PAGE],
     ["0", "runtime dependencies", "plain HTML, CSS and JavaScript", "agents/index.html"],
   ];
   const stats =
@@ -3771,6 +3829,17 @@ function renderHomePage(ctx: {
     `        </div>\n` +
     `      </section>`;
 
+  // The 1.3 story's accent strip: one badge per named hue, from the measured list.
+  const accents =
+    `                <div data-ui="cluster" data-gap="2" data-docs-home-accents>\n` +
+    Object.keys(ACCENT_HUES)
+      .map(
+        (name) =>
+          `                  <span data-ui="badge" data-variant="primary" data-accent="${escAttr(name)}">${esc(name)}</span>`,
+      )
+      .join("\n") +
+    `\n                </div>`;
+
   const inserts = [
     ["<!-- @faqir:home-stats -->", stats],
     ["<!-- @faqir:home-components -->", components],
@@ -3780,6 +3849,9 @@ function renderHomePage(ctx: {
   for (const [marker, content] of inserts) {
     body = body.includes(marker) ? body.replace(marker, content) : `${body}\n${content}`;
   }
+  // Only where the authored page asks for it: a strip of badges appended to the
+  // end of some other home page would mean nothing.
+  body = body.replace("<!-- @faqir:home-accents -->", () => accents);
 
   return {
     path: pagePath,
@@ -3793,6 +3865,10 @@ function renderHomePage(ctx: {
       themes: ctx.themes,
       current: pagePath,
       layout: "home",
+      // The 1.3 story draws a live chart; faqir-chart runs without the engine.
+      scripts: ctx.plugins.some((p) => p.file === "faqir-chart.js") && body.includes('data-ui="chart"')
+        ? [pluginScriptPath("faqir-chart.js")]
+        : [],
     }),
   };
 }
@@ -3909,6 +3985,203 @@ function renderStudioPage(ctx: {
       current: pagePath,
       layout: "wide",
       scripts: ["scripts/faqir-core.js", TWEAK_SCRIPT, "scripts/studio.js"],
+    }),
+  };
+}
+
+/** Markers in `site/content/accent.html`, replaced by the measured vocabulary. */
+const ACCENT_GALLERY_MARKER = "<!-- @faqir:accent-gallery -->";
+const ACCENT_VOCABULARY_MARKER = "<!-- @faqir:accent-vocabulary -->";
+
+/**
+ * The authored runtime-accent page plus one live card per named hue and the
+ * vocabulary table, both from {@link ACCENT_HUES} — the list
+ * `tests/tokens/forecraft-accent.test.ts` holds clean in every theme.
+ */
+function renderAccentPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+}): SiteFile {
+  const pagePath = ACCENT_PAGE;
+  const hues = Object.entries(ACCENT_HUES);
+  const gallery =
+    `          <div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="3" data-gap="4" data-docs-accent-gallery>\n` +
+    hues
+      .map(
+        ([name, hue], i) =>
+          `            <div data-ui="card" data-variant="outlined" data-accent="${escAttr(name)}" data-docs-accent-card>\n` +
+          `              <div data-part="header">\n` +
+          `                <h3 data-part="title"><code>data-accent="${esc(name)}"</code></h3>\n` +
+          `                <p data-part="description">OKLCH hue ${esc(String(hue))}°</p>\n` +
+          `              </div>\n` +
+          `              <div data-part="body">\n` +
+          `                <div data-ui="stack" data-gap="3">\n` +
+          `                  <div data-ui="cluster" data-gap="2" data-align="center">\n` +
+          `                    <button data-ui="button" data-variant="primary" data-size="sm" type="button">Save</button>\n` +
+          `                    <button data-ui="button" data-variant="outline" data-size="sm" type="button">Preview</button>\n` +
+          `                    <span data-ui="badge" data-variant="primary">New</span>\n` +
+          `                  </div>\n` +
+          `                  <div data-ui="progress" role="progressbar" aria-label="${escAttr(
+            `${name} progress`,
+          )}" data-value="${40 + i * 6}" aria-valuenow="${40 + i * 6}" aria-valuemin="0" aria-valuemax="100">\n` +
+          `                    <div data-part="track"><div data-part="fill"></div></div>\n` +
+          `                  </div>\n` +
+          `                  <p><a data-ui="link" href="#accent-vocabulary">A link in ${esc(name)}</a></p>\n` +
+          `                </div>\n` +
+          `              </div>\n` +
+          `            </div>`,
+      )
+      .join("\n") +
+    `\n          </div>`;
+  const vocabulary =
+    table(
+      ["Value", "Hue", "Measured"],
+      [
+        ...hues.map(([name, hue]) => [
+          code(name),
+          `${esc(String(hue))}°`,
+          `every <code>contrast-tokens</code> pair, all ${esc(String(ctx.themes.length))} themes, light and dark`,
+        ]),
+        [code(ACCENT_CUSTOM), `${code(ACCENT_HUE_TOKEN)} on the same element`, "not measured: the theme cannot know your hue"],
+      ],
+      "No accent vocabulary.",
+    );
+  let body = replaceGuideMarker(ctx.authored, ACCENT_GALLERY_MARKER, gallery);
+  body = replaceGuideMarker(body, ACCENT_VOCABULARY_MARKER, vocabulary);
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Runtime accent · ${ctx.config.title}`,
+      description: `data-accent re-hues any subtree in any theme: ${hues
+        .map(([name]) => name)
+        .join(", ")}, or custom with --accent-hue, each measured against every theme's contrast pairs.`,
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+      scripts: ["scripts/faqir-core.js"],
+    }),
+  };
+}
+
+/** Marker in `site/content/print.html`, replaced by the print themes' voices. */
+const PRINT_VOICES_MARKER = "<!-- @faqir:print-voices -->";
+
+/** The document tokens a print theme's voice is made of, in table order. */
+const PRINT_VOICE_TOKENS = [
+  "doc-heading-font",
+  "doc-rule-scale",
+  "doc-rule-strong-scale",
+  "doc-table-num-scale",
+  "doc-table-flush",
+] as const;
+
+/** True for a print theme: a `print` mood and `document` as a word of its name (`ink-document`, `document-serif`). */
+export function isPrintTheme(theme: DocsTheme): boolean {
+  return (
+    (theme.manifest?.mood ?? []).includes("print") && /(^|-)document($|-)/.test(theme.name)
+  );
+}
+
+/**
+ * The authored documents & print page plus a table of every print theme's
+ * voice: the five document tokens it re-declares, read out of its stylesheet,
+ * with the token layer's default where it keeps it.
+ */
+function renderPrintPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+  tokenList: TokenEntry[];
+  plugins: PluginMetadata[];
+}): SiteFile {
+  const pagePath = PRINT_PAGE;
+  const defaults = new Map(ctx.tokenList.map((entry) => [entry.name, entry.value]));
+  const voiceRows = ctx.themes.filter(isPrintTheme).map((theme) => {
+    const css = existsSync(theme.cssPath) ? readText(theme.cssPath) : "";
+    const declared = new Map<string, string>();
+    for (const m of css.matchAll(DECL_RE)) {
+      if (!declared.has(m[1]!)) declared.set(m[1]!, m[2]!.trim());
+    }
+    const cell = (token: string): string => {
+      const own = declared.get(token);
+      if (own !== undefined) return code(own);
+      const fallback = defaults.get(token);
+      return fallback === undefined
+        ? "—"
+        : `<span data-ui="text" data-variant="subtle">${code(fallback)}</span>`;
+    };
+    const pairs = theme.manifest?.pairs_with ?? [];
+    return [
+      `<a data-ui="link" href="${escAttr(relUrl(pagePath, themeDetailPath(theme.name)))}">${esc(theme.name)}</a>`,
+      pairs.length ? pairs.map(code).join(" ") : "—",
+      ...PRINT_VOICE_TOKENS.map(cell),
+    ];
+  });
+  const voices = table(
+    ["Print theme", "Pairs with", ...PRINT_VOICE_TOKENS.map((token) => `--${token}`)],
+    voiceRows,
+    "No print themes in this registry.",
+  );
+  const body = replaceGuideMarker(ctx.authored, PRINT_VOICES_MARKER, voices);
+  const chart = ctx.plugins.find((p) => p.file === "faqir-chart.js");
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Documents & print · ${ctx.config.title}`,
+      description:
+        "Faqir's document pattern on paper: named pages per format and orientation, running headers and footers, a localised page counter, the DIN 5008 letter, and a typographic voice for each print theme.",
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+      scripts: chart ? [pluginScriptPath(chart.file)] : [],
+    }),
+  };
+}
+
+/** Marker in `site/content/csp.html`, replaced by the policy the page runs under. */
+const CSP_POLICY_MARKER = "<!-- @faqir:csp-policy -->";
+
+/**
+ * The strict-CSP engine, live: the authored page under {@link CSP_DEMO_POLICY},
+ * stated in the page itself, with the interpreter build instead of the default
+ * engine and a proof script that reports what the policy refused.
+ */
+function renderCspPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+}): SiteFile {
+  const pagePath = CSP_PAGE;
+  const policy = `      <pre tabindex="0" data-docs-csp-policy><code>Content-Security-Policy: ${esc(
+    CSP_DEMO_POLICY,
+  )}</code></pre>`;
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Strict-CSP engine · ${ctx.config.title}`,
+      description:
+        "faqir-core.csp.js running live under a Content-Security-Policy without 'unsafe-eval': directive expressions interpreted by a Pratt parser, never compiled.",
+      body: replaceGuideMarker(ctx.authored, CSP_POLICY_MARKER, policy),
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+      scripts: [CSP_ENGINE_SCRIPT, "scripts/csp-proof.js"],
+      csp: CSP_DEMO_POLICY,
     }),
   };
 }
@@ -5370,7 +5643,7 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       themes,
       authored: existsSync(authoredHome) ? readText(authoredHome).trim() : "",
       tokenCount: tokenList.length,
-      pluginCount: loadPluginMetadata(join(registryRoot, "core", "plugins")).length,
+      plugins: loadPluginMetadata(join(registryRoot, "core", "plugins")),
     }),
   );
   files.push(renderComponentIndex({ config, components, themes, registryRoot }));
@@ -5489,6 +5762,38 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
     }),
   );
 
+  // The 1.3 pages: the runtime accent, documents & print, and the strict-CSP
+  // engine running under a policy without 'unsafe-eval'.
+  const authoredAccent = join(siteRoot, "content", "accent.html");
+  files.push(
+    renderAccentPage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredAccent) ? readText(authoredAccent).trim() : "",
+    }),
+  );
+  const authoredPrint = join(siteRoot, "content", "print.html");
+  files.push(
+    renderPrintPage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredPrint) ? readText(authoredPrint).trim() : "",
+      tokenList,
+      plugins: loadPluginMetadata(join(registryRoot, "core", "plugins")),
+    }),
+  );
+  const authoredCsp = join(siteRoot, "content", "csp.html");
+  files.push(
+    renderCspPage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredCsp) ? readText(authoredCsp).trim() : "",
+    }),
+  );
+
   const authoredSeed = join(siteRoot, "content", "playground.html");
   files.push(
     renderPlaygroundPage({
@@ -5592,6 +5897,11 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   const corePath = join(registryRoot, "core", "faqir-core.js");
   if (existsSync(corePath)) {
     files.push({ path: "scripts/faqir-core.js", content: readText(corePath) });
+  }
+  // The strict-CSP twin, verbatim; only the strict-CSP page loads it.
+  const cspCorePath = join(registryRoot, "core", "faqir-core.csp.js");
+  if (existsSync(cspCorePath)) {
+    files.push({ path: CSP_ENGINE_SCRIPT, content: readText(cspCorePath) });
   }
   // Every official plugin, verbatim — the same files `faqir add` copies. The
   // engine page runs them all; the theme studio runs `faqir-tweak`.

@@ -52,7 +52,7 @@ export const INTEGRATIONS_PAGE = "integrations/index.html";
 const CLI_PACKAGE = "faqir-ui-cli";
 
 /** The publishable packages, in the order the family table lists them. */
-const PACKAGE_DIRS = ["core", "forms", "mcp", "react", "rules", "vue"] as const;
+const PACKAGE_DIRS = ["core", "forms", "mcp", "react", "rules", "template", "vue"] as const;
 
 // ---------------------------------------------------------------------------
 // Command documentation — the flags each handler actually parses
@@ -817,7 +817,18 @@ function renderMcpSection(ctx: PageContext): string {
     `<div data-docs-tooling-tools>\n${toolCards}\n</div>\n` +
     `<h3 id="mcp-resources">Resources</h3>\n` +
     `<p>Pinned into a host's context so an agent can author correct markup offline.</p>\n` +
-    resourceTable
+    resourceTable +
+    `\n<h3 id="mcp-audit">The auditor, in process</h3>\n` +
+    `<p>${code("@faqir-ui/mcp/audit")} exports ${code("auditHtml(html, opts)")}, which resolves to the same report ${code("faqir audit --stdin --json")} prints, on Node 18 or newer and with no server or child process. Both call one function over the same inputs, and the test suite holds the two equal for every audit fixture; ${code("report.passed")} is the CLI's exit code.</p>\n` +
+    pre(
+      [
+        'import { auditHtml } from "@faqir-ui/mcp/audit";',
+        "",
+        "const report = await auditHtml(html);                          // against the registry",
+        "const report = await auditHtml(html, { root: process.cwd() }); // + a project's components",
+        "if (!report.passed) console.error(report.results);",
+      ].join("\n"),
+    )
   );
 }
 
@@ -948,6 +959,18 @@ function renderCdnSection(ctx: PageContext): string {
     `\n<p>Swap the stylesheet to change theme. Bundles shipped at this pin: ${themes.map((t) => code(`faqir.${t}.css`)).join(", ")}.</p>\n` +
     `<p>Official plugins are self-registering scripts under ${code("dist/plugins/")}; load any of them after the engine: ${plugins.map((p) => code(p)).join(", ")}. ` +
     `A definition carrying ${code("validate")} rules needs ${code("faqir-validate.js")} on the page alongside ${code("faqir-rules.js")}.</p>\n` +
+    (pin.integrity["faqir-core.csp.min.js"]
+      ? `<p>Under a Content-Security-Policy without ${code("'unsafe-eval'")}, swap the engine tag for the strict-CSP build, which interprets directive expressions instead of compiling them (<a data-ui="link" href="${escAttr(
+          relUrl(INTEGRATIONS_PAGE, "engine/csp/index.html"),
+        )}">running live here</a>). Load one engine or the other, never both:</p>\n` +
+        pre(
+          `<script src="${pin.base}faqir-core.csp.min.js"\n        integrity="${pin.integrity["faqir-core.csp.min.js"]}"\n        crossorigin="anonymous" defer></script>`,
+        ) +
+        "\n"
+      : "") +
+    (pin.integrity["themes.json"]
+      ? `<p>${code("dist/themes.json")} (${code("@faqir-ui/core/themes.json")}) lists every bundle's theme with its density, so a tool can choose a stylesheet without opening one.</p>\n`
+      : "") +
     `<p>Every file in ${code("dist/")} has a SHA-384 hash in ${code("dist/sri.json")}; the hashes above come from the same source.</p>`
   );
 }
@@ -995,6 +1018,17 @@ function renderCoreSection(ctx: PageContext): string {
         "// or, tree-shaken at the import site",
         'import { start, reactive, store } from "@faqir-ui/core";',
         "start();",
+      ].join("\n"),
+    ) +
+    `\n<p>Two more entries ship beside it. ${code('import Faqir from "@faqir-ui/core/csp"')} is the strict-CSP engine with the same exports, for a page whose policy refuses ${code("'unsafe-eval'")}. ` +
+    `${code("@faqir-ui/core/subset")} cuts a theme bundle down to the components a page draws; the bundle's ${code("/* === path === */")} section markers are its stable contract, and a stylesheet that would forge one is refused at build time.</p>\n` +
+    pre(
+      [
+        'import { readFileSync } from "node:fs";',
+        'import { subsetBundle } from "@faqir-ui/core/subset";',
+        "",
+        'const bundle = readFileSync("node_modules/@faqir-ui/core/dist/faqir.default.css", "utf8");',
+        'const css = subsetBundle(bundle, ["button", "card", "field-group", "input"]);',
       ].join("\n"),
     )
   );
@@ -1044,7 +1078,7 @@ function renderFamilySection(ctx: PageContext): string {
     }),
   ];
   return (
-    `<p>Seven publishable packages, one version line. Versions and descriptions are read from each ${code("package.json")} at build time.</p>\n` +
+    `<p>${esc(String(rows.length))} publishable packages, one version line. Versions and descriptions are read from each ${code("package.json")} at build time.</p>\n` +
     table(["Package", "Version", "Purpose", "Source"], rows, "No packages.")
   );
 }

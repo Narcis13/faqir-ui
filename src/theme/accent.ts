@@ -25,12 +25,21 @@ export const ACCENT_CUSTOM = "custom";
  * the degree — were re-hued into every shipped theme, light and dark, and run
  * through every pair the `contrast-tokens` gate checks, under both gamut models
  * (per-channel clipping, which the gate uses, and chroma reduction at constant
- * lightness, which CSS Color 4 specifies). These four were the only ones with no
- * failure under either model; the other thirteen are listed with their worst
- * pair in `tests/tokens/forecraft-accent.test.ts`. Adding a hue is additive
- * under SPEC-1.0 §8.2 — and has to clear that same test.
+ * lightness, which CSS Color 4 specifies). The first round kept four, violet to
+ * pink; a retune of the four themes that bound the rest (neumorph, memphis,
+ * aurora and paper — a darker light-scheme primary, by 0.005–0.013 OKLCH
+ * lightness) admitted rose, red, orange, blue and indigo, each clearing the
+ * muted plate by at least the 4.59:1 the first four did. Both rounds' numbers,
+ * and the hues still out, are in `tests/tokens/forecraft-accent.test.ts`.
+ * Adding a hue is additive under SPEC-1.0 §8.2 — and has to clear that same
+ * test. Removing one is not.
  */
 export const ACCENT_HUES: Readonly<Record<string, number>> = Object.freeze({
+  rose: 16,
+  red: 25,
+  orange: 48,
+  blue: 260,
+  indigo: 277,
   violet: 293,
   purple: 304,
   fuchsia: 322,

@@ -154,9 +154,10 @@ describe("docs site coverage", () => {
     // integrations, Night Shift, the fourteen axes, theme authoring (7) — plus
     // one specimen page per theme (see src/generator/docs-pages/) — and the
     // motion page and the theme studio (2) — and the six pages of the Server
-    // templates section, rendered by @faqir-ui/template (6, on 1.2.5).
+    // templates section, rendered by @faqir-ui/template (6, on 1.2.5) — and the
+    // runtime accent, documents & print, and the strict-CSP engine (3, on 1.3).
     expect(shellPages.length).toBe(
-      components.length + 18 + 7 + 2 + 6 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 18 + 7 + 2 + 6 + 3 + SCAFFOLD_NAMES.length + themes.length,
     );
     // one gallery frame per theme, and one live document per scaffold
     expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);
@@ -175,7 +176,10 @@ describe("docs site coverage", () => {
         // The rules definition schema, verbatim beside its page (1.1B-07).
         "rules/rules.schema.json",
         "scripts/copy-snippet.js",
+        // The strict-CSP page's engine and its proof (1.3).
+        "scripts/csp-proof.js",
         "scripts/faqir-audit.js",
+        "scripts/faqir-core.csp.js",
         "scripts/faqir-core.js",
         "scripts/faqir-manifests.js",
         "scripts/gallery.js",

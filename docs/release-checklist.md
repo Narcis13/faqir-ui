@@ -105,6 +105,19 @@ They wake up on their own if CI returns.
       `bun run build:core-package`, `bun run build:audit-browser` and
       `bun run build:rules-plugin`, and commit all of it together.
 
+## 1.3.0
+
+No package is new on npm: all eight move from 1.2.5 to 1.3.0. The versions
+already read 1.3.0 on the release branch, so after the merge the real run takes
+the version explicitly and only publishes: `node scripts/release.mjs 1.3.0`.
+Two things to check by hand, because nothing on this machine gates them:
+
+- [ ] The docs site's `engine/csp/` page, served for real (`bun run deploy:site`
+      or any static server), reports `new Function` as refused and its
+      counters respond: it is the strict-CSP engine's live proof.
+- [ ] `npm view @faqir-ui/core@1.3.0 exports` lists `./csp`, `./subset` and
+      `./themes.json`.
+
 ## New on npm in 1.2.5
 
 `@faqir-ui/template` is the one package 1.2.5 adds: the server-side template

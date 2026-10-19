@@ -1,0 +1,59 @@
+/* ── Runtime accent (accent/) ──
+   Same rules as docs.css: attribute selectors and tokens only. The accent
+   itself is the registry's tokens/accent.css; nothing here re-hues anything. */
+
+[data-docs-accent] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
+}
+
+[data-docs-accent-intro] {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-inline-size: var(--measure-content);
+  padding-block-start: var(--space-8);
+}
+
+[data-docs-accent-intro] h1,
+[data-docs-accent-intro] p,
+[data-docs-accent-intro] pre {
+  margin: 0;
+}
+
+[data-docs-accent-intro] h1 {
+  text-wrap: balance;
+}
+
+[data-docs-accent-intro] pre {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  font-size: var(--text-xs);
+}
+
+/* The cards are specimens: their titles are code, sized like a label. */
+[data-docs-accent-card] [data-part="title"] code,
+[data-docs-accent-custom-target] [data-part="title"] code,
+[data-docs-accent-nest] [data-part="title"] code {
+  font-size: var(--text-sm);
+}
+
+[data-docs-accent-card] p,
+[data-docs-accent-nest] p {
+  margin: 0;
+}
+
+/* Without the engine the custom card still shows a custom hue: the dial's
+   :style binding overrides this stylesheet value once it runs. */
+[data-docs-accent-custom-target] {
+  --accent-hue: 200;
+}
+
+[data-docs-accent-custom] {
+  align-items: start;
+}
+
+[data-docs-accent-nest-inner] {
+  background: var(--color-bg-subtle);
+}

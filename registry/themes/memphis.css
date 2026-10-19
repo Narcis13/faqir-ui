@@ -1,20 +1,20 @@
-/* @ui:theme memphis — generated from oklch(0.6 0.22 350) */
+/* @ui:theme memphis — generated from oklch(0.585 0.22 350) */
 /* @ui:schemes light */
 /* @ui:density comfortable */
 /* Deterministic parametric theme. Regenerate instead of editing the accent ramp by hand. */
 
 :root {
-  --palette-memphis-50      : oklch(0.96 0.0396 350);
-  --palette-memphis-100     : oklch(0.912 0.0704 350);
-  --palette-memphis-200     : oklch(0.848 0.11 350);
-  --palette-memphis-300     : oklch(0.78 0.154 350);
-  --palette-memphis-400     : oklch(0.7 0.1936 350);
-  --palette-memphis-500     : oklch(0.6 0.22 350);
-  --palette-memphis-600     : oklch(0.528 0.22 350);
-  --palette-memphis-700     : oklch(0.432 0.2024 350);
-  --palette-memphis-800     : oklch(0.336 0.1716 350);
-  --palette-memphis-900     : oklch(0.24 0.132 350);
-  --palette-memphis-950     : oklch(0.15 0.0924 350);
+  --palette-memphis-50      : oklch(0.9585 0.0396 350);
+  --palette-memphis-100     : oklch(0.9087 0.0704 350);
+  --palette-memphis-200     : oklch(0.8423 0.11 350);
+  --palette-memphis-300     : oklch(0.7717 0.154 350);
+  --palette-memphis-400     : oklch(0.6887 0.1936 350);
+  --palette-memphis-500     : oklch(0.585 0.22 350);
+  --palette-memphis-600     : oklch(0.5148 0.22 350);
+  --palette-memphis-700     : oklch(0.4212 0.2024 350);
+  --palette-memphis-800     : oklch(0.3276 0.1716 350);
+  --palette-memphis-900     : oklch(0.234 0.132 350);
+  --palette-memphis-950     : oklch(0.1462 0.0924 350);
   --color-bg                : oklch(1 0.008 350);
   --color-bg-subtle         : oklch(0.96 0.008 350);
   --color-bg-muted          : oklch(0.92 0.01 350);
@@ -45,7 +45,7 @@
   --color-info-subtle       : var(--palette-memphis-50);
   --color-border            : oklch(0.78 0.0175 350);
   --color-border-strong     : oklch(0.52 0.02 350);
-  --color-ring              : oklch(0.528 0.22 350);
+  --color-ring              : oklch(0.5148 0.22 350);
   --shadow-color            : 0 0 0;
   --shadow-xs               : 1px 1px 0 oklch(var(--shadow-color) / 0.9);
   --shadow-sm               : 2px 2px 0 oklch(var(--shadow-color) / 0.9);

@@ -24,16 +24,20 @@ registry copy with one extra component in it.
 | Path | Written by | What it is |
 |---|---|---|
 | `site/site.config.json` | you | Title, tagline, description, canonical URL, theme, footer. |
-| `site/content/home.html` | you | Hand-written homepage: hero and specimen, the 1.1 release story, the agent loop, the site map and quick start. The theme runway with its spec plate, the numbers row and the scaffold frames are inserted at markers. |
+| `site/content/home.html` | you | Hand-written homepage: hero and specimen, the 1.3, 1.2 and 1.1 release stories, the agent loop, the site map and quick start. The theme runway with its spec plate, the numbers row, the scaffold frames and the 1.3 accent badges are inserted at markers. |
 | `site/content/responsive.html` | you | Hand-written responsive layout lab (published at `responsive/`). |
 | `site/content/engine.html` | you | Hand-written reactive-engine guide; the vocabulary tables are inserted at markers, read out of the engine itself. |
 | `site/content/motion.html` | you | Hand-written motion & effects page (published at `motion/`): live demos of reveal, highlight, backdrop, glow, marquee, quote, rating, timeline, scroll-progress, the additive effect properties and the `l-transition` presets. The choreography token table is inserted at a marker from `registry/tokens/motion.css` and the manifests' `tokens_used`. |
 | `site/content/studio.html` | you | Hand-written theme studio (published at `studio/`): the `faqir-tweak` plugin's `<aside l-tweak>` beside a board of registry components. |
+| `site/content/accent.html` | you | Hand-written runtime-accent page (published at `accent/`, 1.3): the custom-hue dial, nesting and the five re-pointed tokens. The hue gallery and the vocabulary table are inserted at markers from `src/theme/accent.ts`. |
+| `site/content/print.html` | you | Hand-written documents & print page (published at `print/`, 1.3): the invoice and report scaffolds in frames, named pages, running strings, the letter, a live chart. The print themes' voice table is inserted at a marker, read out of their stylesheets. |
+| `site/content/csp.html` | you | Hand-written strict-CSP page (published at `engine/csp/`, 1.3): live directives on `faqir-core.csp.js` under a `<meta http-equiv>` policy without `'unsafe-eval'`, which the generator states and inserts at a marker. |
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
 | `site/styles/docs.css` | you | Documentation presentation layer: attribute selectors, tokens, responsive rules, reduced-motion fallback. |
 | `site/lib/playground.js` | you | The playground and live-preview wiring. |
 | `site/lib/gallery.js` | you | Shared theme persistence, frame sync, mobile navigation, component/icon filters, the theme gallery's axis filter, icon copying, and preview controls. |
 | `site/lib/copy-snippet.js` | you | The copy-for-agents button. |
+| `site/lib/csp-proof.js` | you | On the strict-CSP page only: reports the policy it found, that `new Function` was refused, and the engine running. |
 | `site/lib/studio.js` | you | Mounts the theme studio once the theme stylesheet has settled, and reloads the studio page on a theme switch (the dials scale the theme's computed values). |
 | `site/lib/faqir-audit.js` | generated | The audit engine, compiled for the browser. **Committed** — `bun run build:audit-browser`. |
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |
@@ -57,6 +61,9 @@ responsive/index.html             the responsive lab: live, resizable demos
 engine/index.html                 faqir-core: directives, magics, plugins
 motion/index.html                 choreography tokens, entrances, ambient loops, effects
 studio/index.html                 the faqir-tweak theme studio, live
+accent/index.html                 data-accent, every measured hue live (1.3)
+print/index.html                  documents & print: named pages, letters, print voices (1.3)
+engine/csp/index.html             faqir-core.csp.js under a policy without 'unsafe-eval' (1.3)
 layouts/index.html                signpost for the retired responsive-lab URL
 tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
@@ -91,6 +98,8 @@ _headers                          security baseline + machine-file content types
 styles/faqir.css                  tokens + base + every component CSS
 styles/themes/<name>.css          one per registry theme — the swappable link
 scripts/faqir-core.js             the registry engine
+scripts/faqir-core.csp.js         the strict-CSP engine, verbatim; loaded by engine/csp/ only
+scripts/csp-proof.js              the strict-CSP page's evidence
 scripts/faqir-tweak.js            the theme-studio plugin, verbatim from the registry
 scripts/faqir-audit.js            the audit engine, compiled for the browser
 scripts/faqir-manifests.js        every manifest as one global
@@ -195,6 +204,9 @@ Page-specific JavaScript is kept explicit:
 | `scripts/faqir-tweak.js` | The registry's theme-studio plugin, verbatim; loaded only by `studio/`. |
 | `scripts/studio.js` | Mounts `<aside l-tweak>` after the theme stylesheet settles; reloads `studio/` on a theme switch. |
 | `scripts/copy-snippet.js` | Clipboard enhancement on component contract pages. |
+| `scripts/faqir-core.csp.js` | The strict-CSP engine, on `engine/csp/` instead of `faqir-core.js`. |
+| `scripts/csp-proof.js` | The strict-CSP page's evidence: the policy, the refused compile, the engine. |
+| `scripts/plugins/faqir-chart.js` | Also loaded by the home page and `print/`, which draw a chart; it runs without the engine. |
 
 Nothing on the site fetches application data. **The audit runs in the page**,
 which is why the playground needs no server, no API, and nothing deployed but

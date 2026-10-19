@@ -1,0 +1,178 @@
+<!--
+  The strict-CSP engine, live (1.3). This page alone loads
+  scripts/faqir-core.csp.js instead of scripts/faqir-core.js, and the generator
+  states the policy in a <meta http-equiv> ahead of every script, so `new
+  Function` is refused here on any host. Every l-* expression below therefore
+  runs through the interpreter (src/core-src/csp-evaluator.js). The generator
+  replaces @faqir:csp-policy with that policy; scripts/csp-proof.js fills in
+  the three results.
+-->
+      <div data-docs-csp>
+        <header data-docs-csp-intro>
+          <span data-ui="badge" data-variant="primary">New in 1.3</span>
+          <h1>The reactive engine, under a policy <span data-ui="highlight">without unsafe-eval</span>.</h1>
+          <p>
+            The default engine compiles each directive expression with <code>new Function</code>, so its
+            pages need <code>'unsafe-eval'</code>. <code>faqir-core.csp.js</code> is the same engine, the same
+            directives, controllers and API, with one region swapped: expressions go through a tokenizer,
+            a Pratt parser and a tree-walking evaluator. No string ever becomes code. This page runs on it.
+          </p>
+        </header>
+
+        <section aria-labelledby="csp-proof-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Live</span>
+            <h2 id="csp-proof-heading">What this page is running under.</h2>
+            <p>The policy is stated in the page itself, so the proof does not depend on the host:</p>
+          </div>
+<!-- @faqir:csp-policy -->
+          <dl data-ui="key-value" data-docs-csp-proof>
+            <dt data-part="label">Policy found</dt>
+            <dd data-part="value" data-docs-csp-result="policy">needs JavaScript</dd>
+            <dt data-part="label"><code>new Function("return 1")</code></dt>
+            <dd data-part="value" data-docs-csp-result="eval">needs JavaScript</dd>
+            <dt data-part="label">Engine</dt>
+            <dd data-part="value" data-docs-csp-result="engine">needs JavaScript</dd>
+          </dl>
+          <p>
+            The browser logs the refused compile as a policy violation in the console; that line is the
+            evidence, not a fault.
+          </p>
+        </section>
+
+        <section aria-labelledby="csp-demos-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Live</span>
+            <h2 id="csp-demos-heading">Directives, interpreted.</h2>
+            <p>
+              Under this policy the default engine would load and every expression would quietly yield
+              <code>undefined</code>. These run.
+            </p>
+          </div>
+          <div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="4" data-docs-csp-demos>
+            <div data-ui="card" data-variant="outlined" l-data="{ count: 0 }">
+              <div data-part="header">
+                <h3 data-part="title">Events and bindings</h3>
+                <p data-part="description"><code>@click="count++"</code>, a ternary and a template literal.</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-gap="3">
+                  <p data-ui="text" data-size="2xl" data-weight="bold" role="status" l-text="`${count} ${count === 1 ? 'click' : 'clicks'}`">0 clicks</p>
+                  <div data-ui="cluster" data-gap="2">
+                    <button data-ui="button" data-variant="primary" data-size="sm" type="button" @click="count++">Add one</button>
+                    <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="count += 10">Add ten</button>
+                    <button data-ui="button" data-variant="ghost" data-size="sm" type="button" :disabled="count === 0" @click="count = 0">Reset</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="card" data-variant="outlined" l-data="{ q: '', cities: ['Bucharest', 'Berlin', 'Lisbon', 'Lyon', 'Bologna', 'Bergen', 'Ljubljana'], get shown() { return this.cities.filter((c) => c.toLowerCase().includes(this.q.trim().toLowerCase())); } }">
+              <div data-part="header">
+                <h3 data-part="title">A getter, an arrow and a keyed list</h3>
+                <p data-part="description"><code>l-model</code> into a getter that filters with an arrow function.</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-gap="3">
+                  <div data-ui="field-group">
+                    <label data-part="label" for="csp-filter">Filter cities</label>
+                    <input data-ui="input" data-part="input" id="csp-filter" type="search" autocomplete="off" l-model="q">
+                  </div>
+                  <p data-ui="text" data-variant="muted" role="status" l-text="`${shown.length} of ${cities.length}`">7 of 7</p>
+                  <ul data-docs-csp-list>
+                    <template l-for="city in shown" l-key="city"><li l-text="city"></li></template>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="card" data-variant="outlined" l-data="{ seats: 3, yearly: true, price() { return this.seats * (this.yearly ? 380 : 39 * 12); } }">
+              <div data-part="header">
+                <h3 data-part="title">Methods, models and <code>l-show</code></h3>
+                <p data-part="description">A method on the scope, a number model and a switch.</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-gap="3">
+                  <div data-ui="field-group">
+                    <label data-part="label" for="csp-seats">Seats</label>
+                    <input data-ui="input" data-part="input" id="csp-seats" type="number" min="1" max="50" value="3" l-model.number="seats">
+                  </div>
+                  <label data-ui="switch-label" for="csp-yearly">
+                    <button type="button" data-ui="switch" id="csp-yearly" role="switch" aria-checked="true" data-state="on" l-model="yearly"><span data-part="thumb"></span></button>
+                    <span data-part="label">Bill yearly</span>
+                  </label>
+                  <p data-ui="text" data-weight="bold" role="status" l-text="'€' + price().toLocaleString('en') + ' a year'">€1,140 a year</p>
+                  <p data-ui="text" data-variant="muted" l-show="yearly">Yearly billing saves about 19%.</p>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <h3 data-part="title">Outside the subset, it says so</h3>
+                <p data-part="description">An unsupported construct fails like any expression error, naming it.</p>
+              </div>
+              <div data-part="body">
+                <pre tabindex="0"><code>&lt;div l-data="{ n: 1 }"
+     l-text&#61;"(() =&gt; { switch (n) { case 1: return 'one' } })()"&gt;
+&lt;/div&gt;
+<span data-ui="text" data-variant="muted">// console: [Faqir] Expression error: … Unsupported syntax "switch"</span></code></pre>
+                <p>The development twin, <code>faqir-core.csp.dev.js</code>, records it with the element's markup and says the strict-CSP subset is the reason.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="csp-subset-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <h2 id="csp-subset-heading">The subset directive expressions use.</h2>
+            <p>
+              Taken from what the registry, this site and the docs actually write. Every expression in
+              them parses, and a test keeps it that way.
+            </p>
+          </div>
+          <div data-docs-table tabindex="0">
+            <table>
+              <thead><tr><th scope="col">Supported</th><th scope="col">Not supported</th></tr></thead>
+              <tbody>
+                <tr><td>member, computed and optional access, calls, <code>new</code>, spread arguments</td><td>classes, generators, <code>async</code>/<code>await</code>, <code>import()</code></td></tr>
+                <tr><td>number, string, template and regex literals; arrays and objects with spread, shorthand, computed keys, methods and getters</td><td>destructuring, default parameters, tagged templates, labels</td></tr>
+                <tr><td>every unary, binary and logical operator, <code>??</code>, <code>typeof</code>, <code>in</code>, <code>instanceof</code>, the ternary</td><td><code>switch</code>, <code>try</code>/<code>catch</code>, <code>throw</code>, <code>while</code>, <code>do</code>, classic <code>for (;;)</code></td></tr>
+                <tr><td><code>=</code> and every compound assignment, <code>++</code> and <code>--</code></td><td>function declarations as statements</td></tr>
+                <tr><td>blocks, <code>if</code>/<code>else</code>, <code>return</code>, <code>let</code>/<code>const</code>/<code>var</code>, <code>for…of</code>, <code>for…in</code>, <code>break</code>, <code>continue</code>; arrow and <code>function</code> expressions</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>constructor</code>, <code>__proto__</code> and <code>prototype</code> are not reachable from an
+            expression, which closes the classic reach from any value to <code>Function</code>. It is not a
+            sandbox: an <code>l-*</code> value is still code, in either build. The interpreter weighs about
+            4.7 KB gzip more than the default engine, under a budget of its own.
+          </p>
+        </section>
+
+        <section aria-labelledby="csp-load-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">In your own page</span>
+            <h2 id="csp-load-heading">Swap one file. Load one engine, never both.</h2>
+          </div>
+          <div data-docs-table tabindex="0">
+            <table>
+              <thead><tr><th scope="col">Where</th><th scope="col">File</th></tr></thead>
+              <tbody>
+                <tr><td><code>faqir init</code></td><td><code>core/faqir-core.csp.js</code>, beside <code>faqir-core.js</code></td></tr>
+                <tr><td>CDN</td><td><code>dist/faqir-core.csp.min.js</code> of <code>@faqir-ui/core</code>, with its SRI hash in <code>cdn.json</code></td></tr>
+                <tr><td>npm</td><td><code>import Faqir from "@faqir-ui/core/csp"</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <pre tabindex="0"><code>Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
+
+&lt;script src="core/faqir-core.csp.js" defer&gt;&lt;/script&gt;</code></pre>
+          <p>The official plugins work unchanged on either build.</p>
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../index.html">The engine guide</a>
+            <a data-ui="link" data-effect="arrow" href="../../integrations/index.html#cdn">The pinned CDN tags</a>
+          </div>
+        </section>
+      </div>

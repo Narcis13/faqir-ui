@@ -198,7 +198,18 @@ export const TOKEN_MODIFIERS: readonly TokenModifier[] = Object.freeze([
     attr: "data-accent",
     purpose:
       "Re-hues the five accent tokens for a subtree, keeping the active theme's own lightness and chroma.",
-    values: Object.freeze(["violet", "purple", "fuchsia", "pink", "custom"]),
+    values: Object.freeze([
+      "rose",
+      "red",
+      "orange",
+      "blue",
+      "indigo",
+      "violet",
+      "purple",
+      "fuchsia",
+      "pink",
+      "custom",
+    ]),
     scope:
       "Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. `custom` takes its hue from `--accent-hue`.",
     owner: "author" as AttributeOwner,
