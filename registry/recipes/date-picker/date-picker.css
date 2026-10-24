@@ -1,11 +1,12 @@
 /* @ui:component date-picker */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-ring shadow-lg radius-md radius-lg space-1 space-2 space-3 space-4 space-8 space-6 space-10 text-xs text-sm text-base z-dropdown duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-ring color-destructive color-border-strong color-bg-muted shadow-lg radius-md radius-lg radius-full space-1 space-2 space-3 space-4 space-8 space-6 space-10 text-xs text-sm text-base text-lg z-dropdown duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset focus-shadow input-height input-border-width input-radius input-fill input-font control-height-sm control-height-lg control-height-md */
 /* The month grid inside the popup is the `calendar` recipe — see calendar.css */
 
 /* ── Root ── */
 [data-ui="date-picker"] {
   position: relative;
   display: inline-block;
+  max-inline-size: 100%;
 }
 
 /* ── Trigger ── */
@@ -41,6 +42,10 @@
   border-color: var(--color-primary);
 }
 
+[data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="input"][data-state="invalid"] {
+  border-color: var(--color-destructive);
+}
+
 /* ── Icon ── */
 [data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="icon"] {
   position: absolute;
@@ -52,12 +57,152 @@
   font-size: var(--text-sm);
 }
 
+/* ── Field: one box holding typed input(s), the clear button and the trigger ── */
+[data-ui="date-picker"] > [data-part="field"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  /* Two date fields side by side outgrow a phone's column: shrink, don't spill. */
+  max-inline-size: 100%;
+  min-block-size: var(--input-height, 40px);
+  padding-inline: var(--space-3) var(--space-1);
+  border-style: solid;
+  border-color: var(--color-border);
+  border-width: var(--input-border-width);
+  border-radius: var(--input-radius, var(--radius-md));
+  background: var(--input-fill);
+  color: var(--color-fg);
+  font-family: var(--input-font, var(--font-ui));
+  font-size: var(--text-sm);
+  transition: border-color var(--duration-fast) var(--ease-default),
+              box-shadow var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="date-picker"] > [data-part="field"]:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* The ring replaces the border, as on the input primitive. */
+[data-ui="date-picker"] > [data-part="field"]:focus-within {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--input-border-width));
+  box-shadow: var(--focus-shadow);
+  border-color: transparent;
+}
+
+[data-ui="date-picker"] > [data-part="field"]:has(> [data-state="invalid"]) {
+  border-color: var(--color-destructive);
+}
+
+[data-ui="date-picker"] > [data-part="field"]:focus-within:has(> [data-state="invalid"]) {
+  outline-color: var(--color-destructive);
+}
+
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input"],
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input-end"] {
+  flex: 1 1 auto;
+  inline-size: 10.5em;
+  min-inline-size: 0;
+  padding: var(--space-2) 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1.5;
+}
+
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input"]:focus-visible,
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input-end"]:focus-visible {
+  outline: none;
+}
+
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input"]::placeholder,
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input-end"]::placeholder {
+  color: var(--color-fg-muted);
+}
+
+/* A read-only field opens the calendar when clicked. */
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input"]:read-only,
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="input-end"]:read-only {
+  cursor: pointer;
+}
+
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="separator"] {
+  color: var(--color-fg-muted);
+  user-select: none;
+}
+
+/* The icon buttons: the calendar trigger inside a field, and clear */
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="trigger"],
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="clear"],
+[data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="clear"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: var(--control-height-sm, 32px);
+  block-size: var(--control-height-sm, 32px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-fg-muted);
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default),
+              color var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="trigger"]:hover,
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="clear"]:hover,
+[data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="clear"]:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-fg);
+}
+
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="trigger"]:focus-visible,
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="clear"]:focus-visible,
+[data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="clear"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+[data-ui="date-picker"] > :where([data-part="field"]) > [data-part="clear"] {
+  inline-size: var(--space-6, 1.5rem);
+  block-size: var(--space-6, 1.5rem);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+}
+
+/* A clear button inside the classic trigger sits before the icon. */
+[data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="clear"] {
+  position: absolute;
+  inset-inline-end: var(--space-8, 2rem);
+  inline-size: var(--space-6, 1.5rem);
+  block-size: var(--space-6, 1.5rem);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+}
+
+/* ── Error message (shown while a typed field is invalid) ── */
+[data-ui="date-picker"] > [data-part="error"] {
+  margin-block: var(--space-1) 0;
+  margin-inline: 0;
+  font-size: var(--text-xs);
+  color: var(--color-destructive);
+}
+
 /* ── Calendar popup ── */
 [data-ui="date-picker"] > [data-part="calendar"] {
   position: absolute;
   top: 100%;
   inset-inline-start: 0;
   z-index: var(--z-dropdown);
+  /* As wide as its content (two months and a preset rail), not as the field —
+     an absolutely positioned box shrinks to its containing block, which would
+     stack the months — but never wider than the viewport. */
+  inline-size: max-content;
+  max-inline-size: calc(100vw - var(--space-8));
   margin-top: var(--space-1);
   padding: var(--space-3);
   border: var(--border-width) solid var(--color-border);
@@ -75,11 +220,46 @@
   transform: translateY(0);
 }
 
+/* The calendar fills the popup: no stray inline gap under it. */
+[data-ui="date-picker"] > :where([data-part="calendar"]) > [data-ui="calendar"] {
+  vertical-align: top;
+}
+
+/* ── Inline: the calendar in the flow, always shown ── */
+[data-ui="date-picker"][data-variant="inline"] {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+[data-ui="date-picker"][data-variant="inline"] > [data-part="calendar"] {
+  position: static;
+  z-index: auto;
+  margin-top: 0;
+  max-inline-size: 100%;
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+}
+
 /* ── Size: Small ── */
 [data-ui="date-picker"][data-size="sm"] > :where([data-part="trigger"]) > [data-part="input"] {
   padding: var(--space-1) var(--space-2);
   padding-inline-end: var(--space-6, 2rem);
   font-size: var(--text-xs, 0.75rem);
+}
+
+[data-ui="date-picker"][data-size="sm"] > [data-part="field"] {
+  min-block-size: var(--control-height-sm, 32px);
+  padding-inline-start: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+[data-ui="date-picker"][data-size="sm"] > :where([data-part="field"]) > [data-part="trigger"] {
+  inline-size: var(--space-6, 1.5rem);
+  block-size: var(--space-6, 1.5rem);
+  font-size: var(--text-sm);
 }
 
 /* ── Size: Large ── */
@@ -89,10 +269,26 @@
   font-size: var(--text-base, 1rem);
 }
 
+[data-ui="date-picker"][data-size="lg"] > [data-part="field"] {
+  min-block-size: var(--control-height-lg, 48px);
+  padding-inline-start: var(--space-4);
+  font-size: var(--text-base);
+}
+
+[data-ui="date-picker"][data-size="lg"] > :where([data-part="field"]) > [data-part="trigger"] {
+  inline-size: var(--control-height-md, 40px);
+  block-size: var(--control-height-md, 40px);
+  font-size: var(--text-lg);
+}
+
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
   [data-ui="date-picker"] > [data-part="calendar"],
-  [data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="input"] {
+  [data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="input"],
+  [data-ui="date-picker"] > [data-part="field"],
+  [data-ui="date-picker"] > :where([data-part="field"]) > [data-part="trigger"],
+  [data-ui="date-picker"] > :where([data-part="field"]) > [data-part="clear"],
+  [data-ui="date-picker"] > :where([data-part="trigger"]) > [data-part="clear"] {
     transition: none;
   }
 }

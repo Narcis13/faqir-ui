@@ -32,11 +32,11 @@ export interface LCalendarProps extends Omit<ComponentPropsWithoutRef<"div">, "i
   onCalendarChange?: FaqirEventHandler;
 }
 
-/** `calendar` — Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max/disabled dates, and single or range selection — extracted from date-picker so availability grids and range pickers can use it directly Emits: `onCalendarChange` (payload: `(detail, event)`). Exposes via ref: `getValue()`, `setValue()`, `clear()`, `navigate()`, `selectDate()`, `focusDate()`, `setMin()`, `setMax()`, `setDisabledDates()`. */
+/** `calendar` — Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max/disabled dates, and single or range selection — range mode adds a hover/focus preview of the span, preset ranges, range length bounds and 1–3 months side by side; extracted from date-picker so availability grids and range pickers can use it directly Emits: `onCalendarChange` (payload: `(detail, event)`). Exposes via ref: `getValue()`, `setValue()`, `clear()`, `navigate()`, `selectDate()`, `focusDate()`, `setMin()`, `setMax()`, `setDisabledDates()`, `setMonths()`, `isDisabled()`. */
 export const LCalendar = createFaqirRecipe<LCalendarProps>({
   name: "calendar",
   create: createCalendar,
-  methods: ["getValue", "setValue", "clear", "navigate", "selectDate", "focusDate", "setMin", "setMax", "setDisabledDates"],
+  methods: ["getValue", "setValue", "clear", "navigate", "selectDate", "focusDate", "setMin", "setMax", "setDisabledDates", "setMonths", "isDisabled"],
   events: ["calendar-change"],
   slots: ["header", "nav-prev", "nav-next", "month-label", "grid", "grid-body"],
   stringProps: [],

@@ -5,7 +5,7 @@
 // Assembled by scripts/build-core.mjs (task 0.3-03) from:
 //   engine:      src/core-src/engine.js
 //   core helper: registry/core/menu-navigation.js
-//   controllers: 29 recipe factories → accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
+//   controllers: 35 recipe factories → accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, composer, context-menu, date-picker, dialog, drawer, dropdown, file-upload, image-compare, input-otp, knob, lightbox, list, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view, video-player
 //
 // PRODUCTION BUILD — dev-only diagnostics stripped at assembly time.
 // Load faqir-core.dev.js instead while developing for full warnings.
@@ -2937,16 +2937,17 @@ function createBarcode(root) {
   // ── calendar ── (registry/recipes/calendar/calendar.js)
   var createCalendar = controllerRegistry["calendar"] = (function() {
 // @ui:controller calendar
-// @ui:provides getValue setValue clear navigate selectDate focusDate setMin setMax setDisabledDates destroy
+// @ui:provides getValue setValue clear navigate selectDate focusDate setMin setMax setDisabledDates setMonths isDisabled destroy
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const DAY_MS = 864e5;
 
-const DAY_NAMES = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-];
+// The words a day's name and the summary add to the locale-formatted dates.
+// "today" and the day count come from Intl, so they follow the page language.
+const RANGE_START = "range start";
+const RANGE_END = "range end";
+const IN_RANGE = "in range";
+const UNAVAILABLE = "unavailable";
+const PICK_END = "select an end date";
 
 function parseISO(str) {
   if (!str) return null;
@@ -2954,14 +2955,34 @@ function parseISO(str) {
   return isNaN(d.getTime()) ? null : d;
 }
 
+const pad = (n) => String(n).padStart(2, "0");
+const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/** Local midnight of `d`, moved `n` days. */
+const addDays = (d, n = 0) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+/** Months since year 0: month views compare and shift without Date overflow. */
+const monthIndex = (d) => d.getFullYear() * 12 + d.getMonth();
+
+/** The nearest `lang` (else the browser's language): the locale of every label. */
+function localeOf(el) {
+  const lang = el.closest("[lang]")?.lang || navigator.language;
+  try {
+    new Intl.DateTimeFormat(lang);
+    return lang;
+  } catch {
+    return "en-US";
+  }
+}
+
 function createCalendar(root) {
   // Prevent double-init
   if (root._faqirCalendar) return root._faqirCalendar;
 
-  const navPrev = root.querySelector("[data-part='nav-prev']");
-  const navNext = root.querySelector("[data-part='nav-next']");
-  const monthLabel = root.querySelector("[data-part='month-label']");
-  const gridBody = root.querySelector("[data-part='grid-body']");
+  const part = (name) => root.querySelector(`[data-part='${name}']`);
+  const navPrev = part("nav-prev");
+  const navNext = part("nav-next");
+  const monthLabel = part("month-label");
+  const gridBody = part("grid-body");
+  const summary = part("summary");
 
   // `grid-body` is the one part every render writes into: without it the first
   // `render()` throws on `gridBody.innerHTML`, taking the date-picker that
@@ -2983,14 +3004,28 @@ function createCalendar(root) {
       setMin() {},
       setMax() {},
       setDisabledDates() {},
+      setMonths() {},
+      isDisabled: () => false,
       destroy() {},
     };
     root._faqirCalendar = inert;
     return inert;
   }
 
-  const today = new Date();
+  const presets = [...root.querySelectorAll("[data-part='preset']")];
+  const locale = localeOf(root);
+  const fmt = (opts) => new Intl.DateTimeFormat(locale, { calendar: "gregory", ...opts });
+  const fullDate = fmt({ weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const monthYear = fmt({ month: "long", year: "numeric" });
+  const shortDate = fmt({ month: "short", day: "numeric", year: "numeric" });
+  const todayWord = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(0, "day");
+  const dayCount = new Intl.NumberFormat(locale, { style: "unit", unit: "day", unitDisplay: "long" });
+
+  const today = addDays(new Date());
   const mode = root.dataset.mode === "range" ? "range" : "single";
+  // Range length bounds, inclusive day counts (a 3-night stay is 4 days).
+  const minRange = parseInt(root.dataset.minRange, 10) || 0;
+  const maxRange = parseInt(root.dataset.maxRange, 10) || 0;
 
   let minDate = parseISO(root.dataset.min);
   let maxDate = parseISO(root.dataset.max);
@@ -3004,6 +3039,8 @@ function createCalendar(root) {
       const parts = root.dataset.value.split(",");
       rangeStart = parseISO(parts[0] && parts[0].trim());
       rangeEnd = parseISO(parts[1] && parts[1].trim());
+      // As setValue(): an end before the start is no end.
+      if (!rangeStart || (rangeEnd && rangeEnd < rangeStart)) rangeEnd = null;
     } else {
       selectedDate = parseISO(root.dataset.value);
     }
@@ -3013,6 +3050,20 @@ function createCalendar(root) {
   let viewMonth = initialView.getMonth();
   let viewYear = initialView.getFullYear();
   let focusedDate = null;
+  // The day a pending range would end on (pointer hover or keyboard focus), as a time.
+  let previewAt = 0;
+
+  // Multi-month: one grid body per visible month. The authored grid is the
+  // first; data-months > 1 wraps it in a generated [data-part="months"] row of
+  // [data-part="month"] panels, each a title plus a copy of the grid.
+  const gridEl = gridBody.closest("[data-part='grid']") || gridBody;
+  let bodies = [];
+  let titles = [];
+  let months = null;
+  const idleSummary = summary ? summary.textContent : "";
+
+  // Month changes are announced politely, the way the APG date picker does it.
+  if (monthLabel && !monthLabel.hasAttribute("aria-live")) monthLabel.setAttribute("aria-live", "polite");
 
   function parseDateList(str) {
     const set = new Set();
@@ -3024,179 +3075,263 @@ function createCalendar(root) {
     return set;
   }
 
-  function formatDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
+  /** Outside [min, max] or listed in data-disabled-dates. */
+  function blocked(date) {
+    return !!((minDate && date < minDate) || (maxDate && date > maxDate) || disabledDates.has(toISO(date)));
   }
 
-  function formatAriaLabel(date) {
-    return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  /**
+   * [a, b] is a range that can be chosen: its inclusive day count respects
+   * data-min-range / data-max-range, and no disabled date lies inside it —
+   * a stay cannot cross a booked night.
+   */
+  function spanOk(a, b) {
+    const n = Math.round((b - a) / DAY_MS) + 1;
+    if (n < Math.max(minRange, 1) || (maxRange && n > maxRange)) return false;
+    const lo = toISO(a);
+    const hi = toISO(b);
+    for (const iso of disabledDates) if (iso >= lo && iso <= hi) return false;
+    return true;
   }
 
-  function isSameDay(a, b) {
-    if (!a || !b) return false;
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
-  }
+  /** While a range waits for its end: a later day that cannot end it. */
+  const badEnd = (date) =>
+    mode === "range" && rangeStart && !rangeEnd && date > rangeStart && !spanOk(rangeStart, date);
 
-  function isToday(date) {
-    return isSameDay(date, today);
-  }
-
-  function isDisabled(date) {
-    if (minDate && date.getTime() < minDate.getTime()) return true;
-    if (maxDate && date.getTime() > maxDate.getTime()) return true;
-    return disabledDates.has(formatDate(date));
+  function stateOf(date) {
+    if (mode !== "range" || !rangeStart) return "";
+    if (+date === +rangeStart) return "range-start";
+    if (!rangeEnd) return "";
+    if (+date === +rangeEnd) return "range-end";
+    return date > rangeStart && date < rangeEnd ? "in-range" : "";
   }
 
   function clampToRange(date) {
-    if (minDate && date.getTime() < minDate.getTime()) return new Date(minDate);
-    if (maxDate && date.getTime() > maxDate.getTime()) return new Date(maxDate);
+    if (minDate && date < minDate) return new Date(minDate);
+    if (maxDate && date > maxDate) return new Date(maxDate);
     return date;
   }
 
-  function buildGrid() {
-    // First day of the displayed month
-    const firstDay = new Date(viewYear, viewMonth, 1);
-    const startDow = firstDay.getDay(); // 0=Sun
+  function setView(index) {
+    viewYear = Math.floor(index / 12);
+    viewMonth = index - viewYear * 12;
+  }
 
-    // Last day of the displayed month
-    const lastDay = new Date(viewYear, viewMonth + 1, 0);
-    const totalDays = lastDay.getDate();
+  const dayButton = (date) => root.querySelector(`[data-part='day'][data-date="${toISO(date)}"]`);
 
-    // Previous month trailing days
-    const prevMonthLast = new Date(viewYear, viewMonth, 0);
-    const prevMonthDays = prevMonthLast.getDate();
+  function dayCell(date, outside) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("data-part", "day");
+    // The button is the grid cell (its <td> is presentational), so
+    // aria-selected sits on a role that allows it.
+    btn.setAttribute("role", "gridcell");
+    btn.dataset.date = toISO(date);
+    btn.textContent = date.getDate();
+    const words = [fullDate.format(date)];
 
-    // Update label
-    if (monthLabel) monthLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+    if (outside) btn.dataset.outside = "true";
+    if (+date === +today) {
+      btn.dataset.today = "true";
+      words.push(todayWord);
+    }
+
+    const state = stateOf(date);
+    if (state) {
+      btn.dataset.state = state;
+      btn.setAttribute("aria-selected", "true");
+      words.push(state === "range-start" ? RANGE_START : state === "range-end" ? RANGE_END : IN_RANGE);
+      if (state === "range-start" && rangeEnd && +rangeEnd === +date) words.push(RANGE_END);
+    } else if (mode !== "range" && selectedDate && +date === +selectedDate) {
+      btn.setAttribute("aria-selected", "true");
+    }
+
+    if (blocked(date) || badEnd(date)) {
+      // aria-disabled (not the native attribute) keeps the cell reachable by
+      // the roving tabindex while blocking selection
+      btn.setAttribute("aria-disabled", "true");
+      btn.dataset.disabled = "true";
+      words.push(UNAVAILABLE);
+    }
+
+    btn.setAttribute("aria-label", words.join(", "));
+    btn.tabIndex = focusedDate && +date === +focusedDate ? 0 : -1;
+    return btn;
+  }
+
+  function fill(body, first, multi, title) {
+    const y = first.getFullYear();
+    const m = first.getMonth();
+    if (title) title.textContent = monthYear.format(first);
+    const lead = first.getDay(); // 0 = Sunday, the first column
+    const cells = Math.ceil((lead + new Date(y, m + 1, 0).getDate()) / 7) * 7;
+
+    body.innerHTML = "";
+    let row = null;
+    for (let i = 0; i < cells; i++) {
+      if (i % 7 === 0) row = body.appendChild(document.createElement("tr"));
+      const td = row.appendChild(document.createElement("td"));
+      td.setAttribute("role", "presentation");
+      const date = new Date(y, m, 1 - lead + i);
+      const outside = date.getMonth() !== m;
+      // Months side by side show each date once: their leading and trailing
+      // cells stay empty.
+      if (!(outside && multi)) td.appendChild(dayCell(date, outside));
+    }
+  }
+
+  function render() {
+    const n = bodies.length;
+    const first = new Date(viewYear, viewMonth, 1);
+    const label = n > 1
+      ? monthYear.formatRange(first, new Date(viewYear, viewMonth + n - 1, 1))
+      : monthYear.format(first);
+    if (monthLabel && monthLabel.textContent !== label) monthLabel.textContent = label;
 
     // A whole adjacent month out of bounds means its nav button is a dead end
-    if (navPrev) navPrev.disabled = !!(minDate && prevMonthLast.getTime() < minDate.getTime());
-    if (navNext) navNext.disabled = !!(maxDate && new Date(viewYear, viewMonth + 1, 1).getTime() > maxDate.getTime());
+    if (navPrev) navPrev.disabled = !!(minDate && new Date(viewYear, viewMonth, 0) < minDate);
+    if (navNext) navNext.disabled = !!(maxDate && new Date(viewYear, viewMonth + n, 1) > maxDate);
 
-    // Clear existing
-    gridBody.innerHTML = "";
+    bodies.forEach((body, i) => fill(body, new Date(viewYear, viewMonth + i, 1), n > 1, titles[i]));
 
-    let dayCount = 1;
-    let nextMonthDay = 1;
-    const totalCells = Math.ceil((startDow + totalDays) / 7) * 7;
-    let row = null;
-
-    for (let i = 0; i < totalCells; i++) {
-      // Start a new row every 7 cells
-      if (i % 7 === 0) {
-        row = document.createElement("tr");
-        gridBody.appendChild(row);
-      }
-
-      const td = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.setAttribute("data-part", "day");
-      btn.type = "button";
-
-      let date;
-      let isOutside = false;
-
-      if (i < startDow) {
-        // Previous month
-        const day = prevMonthDays - startDow + 1 + i;
-        date = new Date(viewYear, viewMonth - 1, day);
-        btn.textContent = day;
-        isOutside = true;
-      } else if (dayCount <= totalDays) {
-        // Current month
-        date = new Date(viewYear, viewMonth, dayCount);
-        btn.textContent = dayCount;
-        dayCount++;
-      } else {
-        // Next month
-        date = new Date(viewYear, viewMonth + 1, nextMonthDay);
-        btn.textContent = nextMonthDay;
-        nextMonthDay++;
-        isOutside = true;
-      }
-
-      btn.dataset.date = formatDate(date);
-      btn.setAttribute("aria-label", formatAriaLabel(date));
-
-      if (isOutside) {
-        btn.dataset.outside = "true";
-      }
-
-      if (isToday(date)) {
-        btn.dataset.today = "true";
-      }
-
-      if (isDisabled(date)) {
-        // aria-disabled (not the native attribute) keeps the cell reachable by
-        // the roving tabindex while blocking selection
-        btn.setAttribute("aria-disabled", "true");
-        btn.dataset.disabled = "true";
-      }
-
-      if (mode === "range") {
-        if (isSameDay(date, rangeStart)) {
-          btn.dataset.state = "range-start";
-          btn.setAttribute("aria-selected", "true");
-        } else if (isSameDay(date, rangeEnd)) {
-          btn.dataset.state = "range-end";
-          btn.setAttribute("aria-selected", "true");
-        } else if (
-          rangeStart && rangeEnd &&
-          date.getTime() > rangeStart.getTime() &&
-          date.getTime() < rangeEnd.getTime()
-        ) {
-          btn.dataset.state = "in-range";
-        }
-      } else if (isSameDay(date, selectedDate)) {
-        btn.setAttribute("aria-selected", "true");
-      }
-
-      if (isSameDay(date, focusedDate)) {
-        btn.tabIndex = 0;
-      } else {
-        btn.tabIndex = -1;
-      }
-
-      td.appendChild(btn);
-      row.appendChild(td);
-    }
-
-    // If no focused date set, make the selected or first-of-month focusable
-    if (!focusedDate) {
+    // Exactly one day in the tab order: the focused one when it is in view,
+    // else the selection (or range start) when that is, else the 1st.
+    if (!root.querySelector("[data-part='day'][tabindex='0']")) {
       const anchor = mode === "range" ? rangeStart : selectedDate;
-      const defaultFocusDate = anchor &&
-        anchor.getMonth() === viewMonth && anchor.getFullYear() === viewYear
-        ? anchor
-        : new Date(viewYear, viewMonth, 1);
-      const defaultBtn = gridBody.querySelector(
-        `[data-date="${formatDate(defaultFocusDate)}"]`
-      );
-      if (defaultBtn) defaultBtn.tabIndex = 0;
+      const btn = (anchor && dayButton(anchor)) || dayButton(first);
+      if (btn) btn.tabIndex = 0;
+    }
+
+    paintPreview();
+    syncPresets();
+    syncSummary();
+  }
+
+  // ── Range preview ───────────────────────────────────────────────────────────
+
+  /** Preview the span a pending range would have if it ended on `date`. */
+  function preview(date) {
+    const at = date && mode === "range" && rangeStart && !rangeEnd && date > rangeStart &&
+      spanOk(rangeStart, date) && !blocked(date) ? +date : 0;
+    if (at === previewAt) return;
+    previewAt = at;
+    paintPreview();
+  }
+
+  function paintPreview() {
+    const end = rangeStart && !rangeEnd ? previewAt : 0;
+    for (const btn of root.querySelectorAll("[data-part='day']")) {
+      const state = btn.dataset.state;
+      if (state && !state.startsWith("preview")) continue;
+      const t = +parseISO(btn.dataset.date);
+      if (end && t > rangeStart && t <= end) btn.dataset.state = t === end ? "preview-end" : "preview";
+      else if (state) delete btn.dataset.state;
     }
   }
 
-  function dayButton(date) {
-    return gridBody.querySelector(`[data-date="${formatDate(date)}"]`);
+  // ── Presets ─────────────────────────────────────────────────────────────────
+
+  /**
+   * A preset's [start, end], clamped to [min, max]; null when it cannot be
+   * picked here (empty after clamping, outside the range length bounds, or a
+   * span in single mode). data-value: today, yesterday, tomorrow,
+   * last-N-days, next-N-days, this|last|next-week|month|year; or explicit
+   * data-start / data-end.
+   */
+  function presetRange(btn) {
+    const v = btn.dataset.value || "";
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    let start = parseISO(btn.dataset.start);
+    let end = parseISO(btn.dataset.end) || start;
+    let match;
+    if (v === "today") start = end = today;
+    else if (v === "yesterday") start = end = addDays(today, -1);
+    else if (v === "tomorrow") start = end = addDays(today, 1);
+    else if ((match = /^(last|next)-(\d+)-days$/.exec(v))) {
+      const n = +match[2];
+      if (match[1] === "last") [start, end] = [addDays(today, 1 - n), today];
+      else [start, end] = [today, addDays(today, n - 1)];
+    } else if ((match = /^(this|last|next)-(week|month|year)$/.exec(v))) {
+      const k = match[1] === "this" ? 0 : match[1] === "last" ? -1 : 1;
+      if (match[2] === "week") {
+        start = addDays(today, 7 * k - today.getDay());
+        end = addDays(start, 6);
+      } else if (match[2] === "month") {
+        start = new Date(y, m + k, 1);
+        end = new Date(y, m + k + 1, 0);
+      } else {
+        start = new Date(y + k, 0, 1);
+        end = new Date(y + k, 11, 31);
+      }
+    }
+    if (!start || !end) return null;
+    if (minDate && start < minDate) start = minDate;
+    if (maxDate && end > maxDate) end = maxDate;
+    if (end < start || blocked(start) || blocked(end)) return null;
+    if (mode === "range" ? !spanOk(start, end) : +start !== +end) return null;
+    return [start, end];
   }
+
+  function syncPresets() {
+    for (const btn of presets) {
+      const r = presetRange(btn);
+      btn.disabled = !r;
+      const on = !!r && (mode === "range"
+        ? !!rangeEnd && +r[0] === +rangeStart && +r[1] === +rangeEnd
+        : !!selectedDate && +r[0] === +selectedDate);
+      btn.setAttribute("aria-pressed", on);
+    }
+  }
+
+  function applyPreset(btn) {
+    const r = presetRange(btn);
+    if (!r) return;
+    const [start, end] = r;
+    const preset = btn.dataset.value || null;
+    let detail;
+    if (mode === "range") {
+      rangeStart = start;
+      rangeEnd = end;
+      detail = { ...rangeDetail(), preset };
+    } else {
+      selectedDate = start;
+      detail = { date: toISO(start), dateObj: new Date(start), preset };
+    }
+    // Show the end month, and as much before it as the view holds.
+    setView(Math.max(monthIndex(start), monthIndex(end) - bodies.length + 1));
+    commit(start, detail);
+  }
+
+  function syncSummary() {
+    if (!summary) return;
+    const from = mode === "range" ? rangeStart : selectedDate;
+    const text = !from
+      ? idleSummary
+      : mode !== "range"
+        ? fullDate.format(from)
+        : !rangeEnd
+          ? `${shortDate.format(from)} – ${PICK_END}`
+          : `${shortDate.formatRange(from, rangeEnd)} · ${dayCount.format(Math.round((rangeEnd - from) / DAY_MS) + 1)}`;
+    if (summary.textContent !== text) summary.textContent = text;
+  }
+
+  // ── Focus & selection ───────────────────────────────────────────────────────
 
   function focusDate(date) {
-    const target = clampToRange(new Date(date));
+    const target = clampToRange(addDays(new Date(date)));
     focusedDate = target;
 
-    if (target.getMonth() !== viewMonth || target.getFullYear() !== viewYear) {
-      viewMonth = target.getMonth();
-      viewYear = target.getFullYear();
-      buildGrid();
+    const first = viewYear * 12 + viewMonth;
+    const at = monthIndex(target);
+    if (at < first || at >= first + bodies.length) {
+      // Bring the month into view: as the first month going back, as the last
+      // going forward, so focus moves seamlessly across a multi-month view.
+      setView(at < first ? at : at - bodies.length + 1);
+      render();
     } else {
-      // Update roving tabindex in the current grid
-      gridBody.querySelectorAll("[data-part='day']").forEach((btn) => {
+      // Update roving tabindex in the current grid(s)
+      root.querySelectorAll("[data-part='day']").forEach((btn) => {
         btn.tabIndex = -1;
       });
       const btn = dayButton(target);
@@ -3205,13 +3340,12 @@ function createCalendar(root) {
 
     const btn = dayButton(target);
     if (btn) btn.focus();
+    preview(target);
   }
 
   function moveFocus(days) {
     if (!focusedDate) return;
-    const next = new Date(focusedDate);
-    next.setDate(next.getDate() + days);
-    focusDate(next);
+    focusDate(addDays(focusedDate, days));
   }
 
   /** Move focus ±N months (PageUp/Down), clamping the day to the target month's length. */
@@ -3223,59 +3357,61 @@ function createCalendar(root) {
     focusDate(target);
   }
 
-  function selectDate(date) {
-    const chosen = new Date(date);
-    if (isDisabled(chosen)) return;
+  const rangeDetail = () => ({
+    start: toISO(rangeStart),
+    end: toISO(rangeEnd),
+    startObj: new Date(rangeStart),
+    endObj: new Date(rangeEnd),
+  });
 
-    // buildGrid() replaces the focused button — restore focus before emitting,
-    // so change listeners (e.g. date-picker closing the popup) keep the final
-    // word on where focus lands.
+  // render() replaces the focused button — restore focus before emitting, so
+  // change listeners (e.g. date-picker closing the popup) keep the final word
+  // on where focus lands. Focus on a preset is left where it is.
+  function commit(focusOn, detail) {
     const hadFocus = root.contains(document.activeElement);
-    focusedDate = chosen;
+    focusedDate = focusOn;
+    previewAt = 0;
+    render();
+    if (hadFocus && !root.contains(document.activeElement)) {
+      const btn = dayButton(focusOn);
+      if (btn) btn.focus();
+    }
+    if (detail) {
+      root.dispatchEvent(new CustomEvent("faqir:calendar-change", { detail, bubbles: true }));
+    }
+  }
+
+  function selectDate(date) {
+    const chosen = addDays(new Date(date));
+    if (blocked(chosen)) return;
 
     let detail = null;
-
     if (mode === "range") {
-      if (!rangeStart || rangeEnd || chosen.getTime() < rangeStart.getTime()) {
+      if (!rangeStart || rangeEnd || chosen < rangeStart) {
         // First click, restart after a complete range, or backwards pick
         rangeStart = chosen;
         rangeEnd = null;
+      } else if (!spanOk(rangeStart, chosen)) {
+        return; // shorter than data-min-range or longer than data-max-range
       } else {
         rangeEnd = chosen;
-        detail = {
-          start: formatDate(rangeStart),
-          end: formatDate(rangeEnd),
-          startObj: new Date(rangeStart),
-          endObj: new Date(rangeEnd),
-        };
+        detail = rangeDetail();
       }
     } else {
       selectedDate = chosen;
-      detail = { date: formatDate(selectedDate), dateObj: new Date(selectedDate) };
+      detail = { date: toISO(chosen), dateObj: new Date(chosen) };
     }
-
-    buildGrid();
-
-    if (hadFocus) {
-      const btn = dayButton(chosen);
-      if (btn) btn.focus();
-    }
-
-    if (detail) {
-      root.dispatchEvent(
-        new CustomEvent("faqir:calendar-change", { detail, bubbles: true })
-      );
-    }
+    commit(chosen, detail);
   }
 
   function getValue() {
     if (mode === "range") {
       return {
-        start: rangeStart ? formatDate(rangeStart) : null,
-        end: rangeEnd ? formatDate(rangeEnd) : null,
+        start: rangeStart ? toISO(rangeStart) : null,
+        end: rangeEnd ? toISO(rangeEnd) : null,
       };
     }
-    return selectedDate ? formatDate(selectedDate) : null;
+    return selectedDate ? toISO(selectedDate) : null;
   }
 
   /** Silent set — updates selection and view without emitting a change event. */
@@ -3286,33 +3422,30 @@ function createCalendar(root) {
       const end = parseISO(parts[1] && parts[1].trim());
       if (!start) return;
       rangeStart = start;
-      rangeEnd = end && end.getTime() >= start.getTime() ? end : null;
-      viewMonth = start.getMonth();
-      viewYear = start.getFullYear();
-      buildGrid();
-      return;
+      rangeEnd = end && end >= start ? end : null;
+      setView(monthIndex(start));
+    } else {
+      const parsed = parseISO(value);
+      if (!parsed) return;
+      selectedDate = parsed;
+      setView(monthIndex(parsed));
     }
-
-    const parsed = parseISO(value);
-    if (!parsed) return;
-    selectedDate = parsed;
-    viewMonth = parsed.getMonth();
-    viewYear = parsed.getFullYear();
-    buildGrid();
+    previewAt = 0;
+    render();
   }
 
   function clear() {
     selectedDate = null;
     rangeStart = null;
     rangeEnd = null;
-    buildGrid();
+    previewAt = 0;
+    render();
   }
 
   function navigate(month, year) {
-    viewMonth = month;
-    viewYear = year;
+    setView(year * 12 + month);
     focusedDate = new Date(viewYear, viewMonth, 1);
-    buildGrid();
+    render();
 
     const btn = dayButton(focusedDate);
     if (btn) btn.focus();
@@ -3320,31 +3453,67 @@ function createCalendar(root) {
 
   function setMin(value) {
     minDate = parseISO(value);
-    buildGrid();
+    render();
   }
 
   function setMax(value) {
     maxDate = parseISO(value);
-    buildGrid();
+    render();
   }
 
   function setDisabledDates(list) {
     disabledDates = parseDateList(Array.isArray(list) ? list.join(",") : list);
-    buildGrid();
+    render();
+  }
+
+  /** Show 1–3 consecutive months side by side; they wrap to a stack when the row is too narrow. */
+  function setMonths(count) {
+    const n = Math.min(3, Math.max(1, count | 0));
+    if (n === bodies.length) return;
+    if (months) {
+      months.before(gridEl);
+      gridEl.removeAttribute("aria-labelledby");
+      months.remove();
+      months = null;
+    }
+    bodies = [gridBody];
+    titles = [];
+    if (n > 1) {
+      const div = (name) => {
+        const el = document.createElement("div");
+        el.dataset.part = name;
+        return el;
+      };
+      months = div("months");
+      gridEl.before(months);
+      for (let i = 0; i < n; i++) {
+        const title = div("month-title");
+        title.id = uid("faqir-month");
+        const grid = i ? gridEl.cloneNode(true) : gridEl;
+        if (i) {
+          grid.removeAttribute("id");
+          bodies.push(grid.matches("[data-part='grid-body']") ? grid : grid.querySelector("[data-part='grid-body']"));
+        }
+        // Each month is its own APG grid, named by its own title.
+        grid.setAttribute("aria-labelledby", title.id);
+        months.appendChild(div("month")).append(title, grid);
+        titles.push(title);
+      }
+    }
+    render();
+  }
+
+  /** Whether a date (Date or YYYY-MM-DD) is outside min/max or listed as disabled. */
+  function isDisabled(date) {
+    const d = typeof date === "string" ? parseISO(date) : date && addDays(new Date(date));
+    return !d || blocked(d);
   }
 
   /** Show an adjacent month without moving DOM focus (nav-button clicks). */
   function shiftView(delta) {
-    viewMonth += delta;
-    if (viewMonth < 0) {
-      viewMonth = 11;
-      viewYear--;
-    } else if (viewMonth > 11) {
-      viewMonth = 0;
-      viewYear++;
-    }
+    setView(viewYear * 12 + viewMonth + delta);
     focusedDate = clampToRange(new Date(viewYear, viewMonth, 1));
-    buildGrid();
+    render();
   }
 
   function onPrevClick() {
@@ -3355,11 +3524,28 @@ function createCalendar(root) {
     shiftView(1);
   }
 
-  function onGridClick(e) {
+  function onClick(e) {
     const dayBtn = e.target.closest("[data-part='day']");
-    if (dayBtn && dayBtn.dataset.date && dayBtn.getAttribute("aria-disabled") !== "true") {
-      selectDate(parseISO(dayBtn.dataset.date));
+    if (dayBtn) {
+      if (dayBtn.dataset.date && dayBtn.getAttribute("aria-disabled") !== "true") {
+        selectDate(parseISO(dayBtn.dataset.date));
+      }
+      return;
     }
+    const preset = e.target.closest("[data-part='preset']");
+    if (preset && presets.includes(preset)) applyPreset(preset);
+  }
+
+  // Hovering a day previews the pending range up to it; the pointer leaving the
+  // grids (or the calendar) clears it.
+  function onPointerOver(e) {
+    const dayBtn = e.target.closest("[data-part='day']");
+    if (dayBtn) preview(parseISO(dayBtn.dataset.date));
+    else if (!e.target.closest("[data-part='grid']")) preview(null);
+  }
+
+  function onPointerLeave() {
+    preview(null);
   }
 
   function onKeyDown(e) {
@@ -3367,7 +3553,7 @@ function createCalendar(root) {
     const dayBtn = e.target.closest ? e.target.closest("[data-part='day']") : null;
     if (!dayBtn) return;
 
-    if (dayBtn.dataset.date && !isSameDay(focusedDate, parseISO(dayBtn.dataset.date))) {
+    if (dayBtn.dataset.date && !(focusedDate && dayBtn.dataset.date === toISO(focusedDate))) {
       focusedDate = parseISO(dayBtn.dataset.date);
     }
 
@@ -3398,19 +3584,11 @@ function createCalendar(root) {
         break;
       case "PageUp":
         e.preventDefault();
-        if (e.shiftKey) {
-          moveFocusMonths(-12);
-        } else {
-          moveFocusMonths(-1);
-        }
+        moveFocusMonths(e.shiftKey ? -12 : -1);
         break;
       case "PageDown":
         e.preventDefault();
-        if (e.shiftKey) {
-          moveFocusMonths(12);
-        } else {
-          moveFocusMonths(1);
-        }
+        moveFocusMonths(e.shiftKey ? 12 : 1);
         break;
       case "Enter":
       case " ":
@@ -3422,16 +3600,22 @@ function createCalendar(root) {
 
   navPrev?.addEventListener("click", onPrevClick);
   navNext?.addEventListener("click", onNextClick);
-  gridBody?.addEventListener("click", onGridClick);
+  root.addEventListener("click", onClick);
   root.addEventListener("keydown", onKeyDown);
+  root.addEventListener("pointerover", onPointerOver);
+  root.addEventListener("pointerleave", onPointerLeave);
 
-  buildGrid();
+  setMonths(parseInt(root.dataset.months, 10) || 1);
 
   function destroy() {
     navPrev?.removeEventListener("click", onPrevClick);
     navNext?.removeEventListener("click", onNextClick);
-    gridBody?.removeEventListener("click", onGridClick);
+    root.removeEventListener("click", onClick);
     root.removeEventListener("keydown", onKeyDown);
+    root.removeEventListener("pointerover", onPointerOver);
+    root.removeEventListener("pointerleave", onPointerLeave);
+    // Put the authored grid back where it was, without the generated months.
+    setMonths(1);
     delete root._faqirCalendar;
   }
 
@@ -3445,6 +3629,8 @@ function createCalendar(root) {
     setMin,
     setMax,
     setDisabledDates,
+    setMonths,
+    isDisabled,
     destroy,
   };
   root._faqirCalendar = api;
@@ -4239,6 +4425,202 @@ function createCommandPalette(root) {
     return createCommandPalette;
   })();
 
+  // ── composer ── (registry/recipes/composer/composer.js)
+  var createComposer = controllerRegistry["composer"] = (function() {
+// @ui:controller composer
+// @ui:provides send clear focus setValue addFiles removeFile getFiles destroy
+
+/**
+ * Message composer. The textarea grows with its text up to
+ * --composer-max-lines and then scrolls — CSS `field-sizing: content` where
+ * the browser has it, a scrollHeight measurement where it does not. Enter
+ * sends and Shift+Enter breaks the line (data-enter="newline" swaps them for
+ * long-form input: Enter breaks, Ctrl/Cmd+Enter sends), and an Enter that
+ * commits an IME composition never sends. The send button is live only while
+ * there is something to send. Files come from the attach button's picker, a
+ * paste or a drop, and show as removable chips. Sending fires a cancelable
+ * `faqir:send` { text, files }; unless a listener cancels it, the composer
+ * clears and takes focus back.
+ */
+function createComposer(root) {
+  if (root._faqirComposer) return root._faqirComposer;
+
+  const [input] = ownParts(root, "input");
+  const [sendButton] = ownParts(root, "send");
+  const [attach] = ownParts(root, "attach");
+  const [picker] = ownParts(root, "file");
+  // The tray sits directly in the root.
+  const tray = root.querySelector(":scope > [data-part='attachments']");
+  const measure = !globalThis.CSS?.supports?.("field-sizing", "content");
+  let files = [];
+
+  const node = (tag, attrs, text) => {
+    const el = document.createElement(tag);
+    for (const name in attrs) el.setAttribute(name, attrs[name]);
+    if (text) el.textContent = text;
+    return el;
+  };
+  const bytes = (n) =>
+    n < 1024 ? n + " B" : n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB";
+
+  function sync() {
+    const ready = Boolean(input?.value.trim()) || files.length > 0;
+    root.dataset.state = ready ? "ready" : "empty";
+    if (sendButton) sendButton.disabled = !ready;
+    if (measure && input) {
+      input.style.height = "auto";
+      input.style.height = input.scrollHeight + "px";
+    }
+  }
+
+  function render() {
+    if (tray) {
+      tray.replaceChildren(
+        ...files.map((file) => {
+          const chip = node("span", { "data-ui": "chip", "data-size": "sm", role: "listitem" });
+          chip.append(
+            node("span", { "data-part": "label" }, `${file.name} · ${bytes(file.size)}`),
+            node("button", { type: "button", "data-part": "dismiss", "aria-label": `Remove ${file.name}` }, "×"),
+          );
+          return chip;
+        }),
+      );
+      tray.hidden = files.length === 0;
+    }
+    sync();
+  }
+
+  function addFiles(list) {
+    for (const file of list ?? []) {
+      const known = files.some((f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified);
+      if (!known) files.push(file);
+    }
+    render();
+    return files.length;
+  }
+
+  function removeFile(index) {
+    if (!(index >= 0 && index < files.length)) return false;
+    files.splice(index, 1);
+    render();
+    return true;
+  }
+
+  function getFiles() {
+    return [...files];
+  }
+
+  function setValue(text) {
+    if (input) input.value = text;
+    sync();
+  }
+
+  function clear() {
+    files = [];
+    if (input) input.value = "";
+    render();
+  }
+
+  function focus() {
+    input?.focus();
+  }
+
+  function send() {
+    const text = input?.value.trim() ?? "";
+    if (!text && !files.length) return false;
+    const event = new CustomEvent("faqir:send", {
+      bubbles: true,
+      cancelable: true,
+      detail: { text, files: [...files] },
+    });
+    if (!root.dispatchEvent(event)) return false;
+    clear();
+    focus();
+    return true;
+  }
+
+  function onKeyDown(event) {
+    if (event.target !== input || event.key !== "Enter") return;
+    if (event.isComposing || event.keyCode === 229) return;
+    const mod = event.ctrlKey || event.metaKey;
+    const sends = root.dataset.enter === "newline" ? mod : !event.shiftKey;
+    if (!sends) return;
+    event.preventDefault();
+    send();
+  }
+
+  function onClick(event) {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    if (sendButton?.contains(target)) {
+      event.preventDefault();
+      send();
+    } else if (attach?.contains(target)) {
+      picker?.click();
+    } else {
+      const chip = target.closest("[data-part='dismiss']")?.closest("[data-ui='chip']");
+      if (!chip || chip.parentElement !== tray) return;
+      const index = [...tray.children].indexOf(chip);
+      if (!removeFile(index)) chip.remove();
+      const next = tray.children[Math.min(index, tray.children.length - 1)];
+      (next?.querySelector("[data-part='dismiss']") ?? attach ?? input)?.focus();
+    }
+  }
+
+  function onInput(event) {
+    if (event.target === input) sync();
+  }
+
+  function onChange(event) {
+    if (event.target !== picker) return;
+    addFiles(picker.files);
+    picker.value = "";
+  }
+
+  function onSubmit(event) {
+    event.preventDefault();
+    send();
+  }
+
+  function onPaste(event) {
+    if (event.target === input && event.clipboardData?.files?.length) addFiles(event.clipboardData.files);
+  }
+
+  function onDragOver(event) {
+    if (event.dataTransfer?.types?.includes("Files")) event.preventDefault();
+  }
+
+  function onDrop(event) {
+    if (!event.dataTransfer?.files?.length) return;
+    event.preventDefault();
+    addFiles(event.dataTransfer.files);
+  }
+
+  const listeners = {
+    keydown: onKeyDown,
+    click: onClick,
+    input: onInput,
+    change: onChange,
+    submit: onSubmit,
+    paste: onPaste,
+    dragover: onDragOver,
+    drop: onDrop,
+  };
+  for (const [type, fn] of Object.entries(listeners)) root.addEventListener(type, fn);
+
+  function destroy() {
+    for (const [type, fn] of Object.entries(listeners)) root.removeEventListener(type, fn);
+    delete root._faqirComposer;
+  }
+
+  const api = { send, clear, focus, setValue, addFiles, removeFile, getFiles, destroy };
+  root._faqirComposer = api;
+  sync();
+  return api;
+}
+    return createComposer;
+  })();
+
   // ── context-menu ── (registry/recipes/context-menu/context-menu.js)
   var createContextMenu = controllerRegistry["context-menu"] = (function() {
 // @ui:controller context-menu
@@ -4366,24 +4748,39 @@ function createContextMenu(root) {
 // @ui:controller date-picker
 // @ui:provides open close getValue setValue clear navigate selectDate destroy
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+// Arabic-Indic, extended Arabic-Indic and full-width digits: each one's low
+// four bits are its value, so typed dates read the same in every script.
+const DIGITS = /[٠-٩۰-۹０-９]/g;
+const FIELD = { day: "dd", month: "mm", year: "yyyy" };
+const DAY_MS = 864e5;
+
+function parseISO(str) {
+  if (!str) return null;
+  const d = new Date(str + "T00:00:00");
+  return isNaN(d.getTime()) ? null : d;
+}
+
+const pad = (n) => String(n).padStart(2, "0");
+const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 function createDatePicker(root) {
   // Prevent double-init
   if (root._faqirDatePicker) return root._faqirDatePicker;
 
-  const trigger = root.querySelector("[data-part='trigger']");
-  const input = root.querySelector("[data-part='input']");
-  const popup = root.querySelector("[data-part='calendar']");
+  const part = (name) => root.querySelector(`[data-part='${name}']`);
+  const trigger = part("trigger");
+  const input = part("input");
+  const inputEnd = part("input-end");
+  const popup = part("calendar");
+  const clearBtn = part("clear");
+  const error = part("error");
   // The submitted value. The visible input shows "October 15, 2026"; a form
   // must send 2026-10-15, so a picker inside one carries a hidden input with
   // the field's `name`, and this controller keeps it holding the ISO date.
   // Optional: without it the picker works as before, the ISO date on
-  // `input.dataset.value`.
+  // `input.dataset.value`. A range carries a second one for its end.
   const valueInput = root.querySelector(":scope > [data-part='value']");
+  const valueEnd = root.querySelector(":scope > [data-part='value-end']");
 
   // The month grid is the standalone `calendar` recipe. Canonical markup nests
   // [data-ui="calendar"] inside the popup; legacy flat markup (grid parts
@@ -4414,49 +4811,220 @@ function createDatePicker(root) {
     root._faqirDatePicker = inert;
     return inert;
   }
+
+  // data-mode="range" on the picker is the calendar's mode too.
+  const range = (root.dataset.mode || calendarRoot.dataset.mode) === "range";
+  if (range) calendarRoot.dataset.mode = "range";
+  // Inline: the calendar sits in the flow, always shown — there is no popup.
+  const inline = root.dataset.variant === "inline";
   const calendar = createCalendar(calendarRoot);
+  const wantMonths = parseInt(calendarRoot.dataset.months, 10) || 1;
+
+  // The visible fields: the start (or only) date, then a range's end. A range
+  // shown in one field is display-only; typing needs the two.
+  const fields = range && inputEnd ? [input, inputEnd] : [input];
+  const hiddens = [valueInput, valueEnd];
+  const typed = fields.some((f) => !f.readOnly) && (!range || !!inputEnd);
+  const combos = fields.filter((f) => f === input || f.getAttribute("role") === "combobox");
 
   const today = new Date();
   let outsideClickCleanup = null;
 
-  function formatDisplay(date) {
-    return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  // ── Locale: display, field order and month names, from the nearest lang ──
+  let locale = root.closest("[lang]")?.lang || navigator.language;
+  try {
+    new Intl.DateTimeFormat(locale);
+  } catch {
+    locale = "en-US";
+  }
+  const fmt = (opts) => new Intl.DateTimeFormat(locale, { calendar: "gregory", ...opts });
+  const longDate = fmt({ year: "numeric", month: "long", day: "numeric" });
+  const shape = fmt({}).formatToParts(new Date(2026, 11, 31));
+  const order = shape.map((p) => p.type).filter((t) => t in FIELD);
+  const monthNames = [];
+  // Stand-alone names ("март") and the form a full date uses ("17 марта"):
+  // they differ in Slavic and Finnic languages, and the field must read back
+  // the text it displays.
+  for (const month of ["long", "short"]) {
+    const alone = fmt({ month });
+    const inDate = fmt({ day: "numeric", month });
+    for (let m = 0; m < 12; m++) {
+      const date = new Date(2026, m, 1);
+      const part = inDate.formatToParts(date).find((p) => p.type === "month");
+      for (const name of [alone.format(date), part && part.value]) {
+        if (name) monthNames.push([name.toLowerCase().replace(/\.$/, ""), m + 1]);
+      }
+    }
+  }
+  // A typed field with no placeholder shows the page's own numeric pattern.
+  if (typed) {
+    for (const f of fields) if (!f.placeholder) f.placeholder = shape.map((p) => FIELD[p.type] || p.value).join("");
+  }
+  if (!inline) {
+    if (!popup.id) popup.id = uid("faqir-date");
+    for (const f of combos) f.setAttribute("aria-controls", popup.id);
+  } else {
+    popup.hidden = false;
   }
 
-  // `dateObj` null is no date. The submitted value is announced the way typing
+  function formatDisplay(date) {
+    return longDate.format(date);
+  }
+
+  /**
+   * A typed date, read in the page's own field order (`formatToParts`), with
+   * ISO and any year-first entry always accepted: 1–2 digit day and month (or
+   * a month name), 2 or 4 digit year, any separators. Null if it is not a real
+   * date.
+   */
+  function parse(text) {
+    const s = text.replace(DIGITS, (c) => c.charCodeAt(0) & 15).toLowerCase();
+    const nums = s.match(/\d+/g) || [];
+    let month = 0;
+    for (const word of s.match(/[\p{L}\p{M}]+/gu) || []) {
+      const hit = monthNames.find(([name]) => name === word) ||
+        (word.length > 2 && monthNames.find(([name]) => name.startsWith(word)));
+      if (hit) {
+        month = hit[1];
+        break;
+      }
+    }
+    let slots = nums[0] && nums[0].length > 2 ? ["year", "month", "day"] : order;
+    if (month) slots = slots.filter((f) => f !== "month");
+    if (nums.length !== slots.length) return null;
+    const v = { month };
+    slots.forEach((f, i) => (v[f] = nums[i]));
+    if (!/^\d{1,2}$/.test(v.day) || !/^\d{1,2}$/.test(v.month) || !/^(\d\d|\d{4})$/.test(v.year)) return null;
+    let y = +v.year;
+    // Two-digit years land within 20 years ahead, else the century before.
+    if (v.year.length === 2) y += y + 2000 > today.getFullYear() + 20 ? 1900 : 2000;
+    const d = new Date(y, v.month - 1, +v.day);
+    return d.getFullYear() === y && d.getMonth() === v.month - 1 && d.getDate() === +v.day ? d : null;
+  }
+
+  /** "" for an empty field, a Date for a valid one, null for one that is not. */
+  function read(field) {
+    const text = field.value.trim();
+    if (!text) return "";
+    const current = parseISO(field.dataset.value);
+    if (current && text === formatDisplay(current)) return current;
+    const d = parse(text);
+    return d && !calendar.isDisabled(d) ? d : null;
+  }
+
+  function spanOk(a, b) {
+    const n = Math.round((b - a) / DAY_MS) + 1;
+    const min = parseInt(calendarRoot.dataset.minRange, 10) || 1;
+    const max = parseInt(calendarRoot.dataset.maxRange, 10) || 0;
+    return b >= a && n >= min && (!max || n <= max);
+  }
+
+  // `date` null is no date. The submitted value is announced the way typing
   // into a field would be — `input` then `change`, bubbling — so l-model,
   // faqir-validate and faqir-rules all see the new answer; not when it did not
-  // change, and not on the `silent` sync at start-up.
-  function syncInput(dateStr, dateObj, silent) {
-    input.value = dateObj ? formatDisplay(dateObj) : "";
-    input.dataset.value = dateStr;
-    if (valueInput && valueInput.value !== dateStr) {
-      valueInput.value = dateStr;
+  // change, and not on the `silent` sync at start-up. `keep` leaves the text a
+  // person typed in place (an invalid entry is never wiped).
+  function put(i, date, silent, keep) {
+    const field = fields[i];
+    const hidden = hiddens[i];
+    const iso = date ? toISO(date) : "";
+    if (field) {
+      if (!keep) field.value = date ? formatDisplay(date) : "";
+      field.dataset.value = iso;
+    }
+    if (hidden && hidden.value !== iso) {
+      hidden.value = iso;
       if (!silent) {
-        for (const type of ["input", "change"]) valueInput.dispatchEvent(new Event(type, { bubbles: true }));
+        for (const type of ["input", "change"]) hidden.dispatchEvent(new Event(type, { bubbles: true }));
       }
     }
   }
 
+  /** Show [start, end] in the field(s) and the value part(s). */
+  function sync(start, end, silent, keep = []) {
+    put(0, start, silent, keep[0]);
+    if (range) put(1, end, silent, keep[1]);
+    // One display-only field shows the whole range ("March 10 – 15, 2026").
+    if (range && fields.length === 1 && start) {
+      input.value = end ? longDate.formatRange(start, end) : formatDisplay(start);
+    }
+    updateClear();
+  }
+
+  function updateClear() {
+    if (clearBtn) clearBtn.hidden = !fields.some((f) => f.value);
+  }
+
+  function mark(field, bad) {
+    if (bad) {
+      field.setAttribute("aria-invalid", "true");
+      field.dataset.state = "invalid";
+    } else {
+      field.removeAttribute("aria-invalid");
+      delete field.dataset.state;
+    }
+    if (error) error.hidden = !fields.some((f) => f.dataset.state === "invalid");
+  }
+
+  function emit(detail) {
+    root.dispatchEvent(new CustomEvent("faqir:date-change", { detail, bubbles: true }));
+  }
+
+  const detailOf = (start, end) =>
+    range
+      ? { start: start && toISO(start), end: end && toISO(end), startObj: start, endObj: end }
+      : { date: start && toISO(start), dateObj: start };
+
+  /**
+   * Commit what was typed (blur, Enter, opening the calendar): valid fields
+   * take the canonical display, an invalid one keeps its text and is marked
+   * aria-invalid / data-state="invalid", and the value parts carry only the
+   * valid dates. Emits faqir:date-change once the selection is complete and new.
+   */
+  function commitTyped() {
+    if (!typed) return;
+    const before = fields.map((f) => f.dataset.value).join();
+    const vals = fields.map(read);
+    const [start, end] = vals;
+    // An end before the start, or a span outside the length bounds, is the end's fault.
+    const badSpan = range && start && end && !spanOk(start, end);
+    const bad = vals.map((v, i) => v === null || (i === 1 && !!badSpan));
+    bad.forEach((b, i) => mark(fields[i], b));
+    const s = start || null;
+    const e = (!badSpan && end) || null;
+    if (s) calendar.setValue(range ? toISO(s) + (e ? "," + toISO(e) : "") : toISO(s));
+    else calendar.clear();
+    sync(s, e, false, bad);
+    if (fields.map((f) => f.dataset.value).join() !== before && s && (!range || e)) emit(detailOf(s, e));
+  }
+
+  function expand(on) {
+    for (const f of combos) f.setAttribute("aria-expanded", on);
+  }
+
   function open() {
     root.dataset.state = "open";
-    popup.hidden = false;
-    input.setAttribute("aria-expanded", "true");
+    commitTyped();
+    if (!inline) {
+      popup.hidden = false;
+      expand(true);
+      // Two months side by side when the viewport has room for them.
+      if (wantMonths > 1) calendar.setMonths(window.matchMedia?.("(min-width: 48rem)").matches ? wantMonths : 1);
+      if (outsideClickCleanup) outsideClickCleanup();
+      outsideClickCleanup = onOutsideClick(root, close);
+    }
 
-    // Focus the selected day, or the first of the current month
+    // Focus the selected day (a range's start), or the first of the current month
     const value = calendar.getValue();
-    const target = value
-      ? new Date(value + "T00:00:00")
-      : new Date(today.getFullYear(), today.getMonth(), 1);
-    calendar.focusDate(target);
-
-    outsideClickCleanup = onOutsideClick(root, close);
+    const at = parseISO(range ? value && value.start : value);
+    calendar.focusDate(at || new Date(today.getFullYear(), today.getMonth(), 1));
   }
 
   function close() {
     root.dataset.state = "closed";
+    if (inline) return;
     popup.hidden = true;
-    input.setAttribute("aria-expanded", "false");
+    expand(false);
 
     if (outsideClickCleanup) {
       outsideClickCleanup();
@@ -4474,22 +5042,27 @@ function createDatePicker(root) {
     return calendar.getValue();
   }
 
-  function setValue(dateStr) {
-    show(dateStr);
+  /** YYYY-MM-DD, or for a range "start,end" / { start, end }; anything that is not a date is ignored. */
+  function setValue(value) {
+    show(value);
   }
 
-  function show(dateStr, silent) {
-    const parsed = new Date(dateStr + "T00:00:00");
-    if (!isNaN(parsed.getTime())) {
-      calendar.setValue(dateStr);
-      syncInput(dateStr, parsed, silent);
-    }
+  function show(value, silent) {
+    const pair = value && typeof value === "object" ? [value.start, value.end] : String(value).split(",");
+    const start = parseISO(pair[0] && pair[0].trim());
+    if (!start) return;
+    let end = range ? parseISO(pair[1] && pair[1].trim()) : null;
+    if (end && end < start) end = null;
+    calendar.setValue(range ? toISO(start) + (end ? "," + toISO(end) : "") : toISO(start));
+    for (const f of fields) mark(f, false);
+    sync(start, end, silent);
   }
 
-  // No date: the calendar, the visible input and the submitted value all empty.
+  // No date: the calendar, the visible input(s) and the submitted value(s) all empty.
   function clear() {
     calendar.clear();
-    syncInput("", null);
+    for (const f of fields) mark(f, false);
+    sync(null, null);
   }
 
   function navigate(month, year) {
@@ -4498,45 +5071,69 @@ function createDatePicker(root) {
 
   // Event: calendar selection committed
   function onCalendarChange(e) {
-    if (!e.detail || !e.detail.date) return;
-    syncInput(e.detail.date, e.detail.dateObj);
-    close();
-    input.focus();
-
-    root.dispatchEvent(
-      new CustomEvent("faqir:date-change", {
-        detail: { date: e.detail.date, dateObj: e.detail.dateObj },
-        bubbles: true,
-      })
-    );
+    const d = e.detail;
+    if (!d || !(range ? d.end : d.date)) return;
+    for (const f of fields) mark(f, false);
+    sync(range ? d.startObj : d.dateObj, range ? d.endObj : null);
+    if (!inline) {
+      close();
+      input.focus();
+    }
+    emit({ ...d });
   }
 
   // Event: trigger/input click
   function onTriggerClick() {
-    if (root.dataset.state === "open") {
+    if (root.dataset.state === "open" && !inline) {
       close();
     } else {
       open();
     }
   }
 
-  // Event: escape on root (bubbles up from the calendar grid too)
+  // A read-only field outside the trigger opens the calendar like the trigger.
+  function onRootClick(e) {
+    if (fields.includes(e.target) && e.target.readOnly && !trigger?.contains(e.target) && !inline) onTriggerClick();
+  }
+
+  // The clear button empties everything and hands focus back to the field.
+  function onClear(e) {
+    // Inside the trigger it must not toggle the popup as well.
+    e.stopPropagation();
+    const had = fields.some((f) => f.dataset.value);
+    clear();
+    input.focus();
+    if (had) emit(detailOf(null, null));
+  }
+
   function onRootKeyDown(e) {
-    if (e.key === "Escape" && root.dataset.state === "open") {
+    if (e.key === "Escape" && root.dataset.state === "open" && !inline) {
       e.preventDefault();
       // Closing the calendar popup is the whole action — a date picker inside a
       // dialog must not take the dialog down with it. [W3-2]
       e.stopPropagation();
       close();
       input.focus();
+      return;
+    }
+    const field = e.target;
+    if (!fields.includes(field)) return;
+    // The APG combobox date picker: ArrowDown (Alt+ArrowDown) opens the grid; a
+    // read-only field opens on Enter/Space too, a typed one commits on Enter.
+    if (e.key === "ArrowDown" || (field.readOnly && (e.key === "Enter" || e.key === " "))) {
+      e.preventDefault();
+      open();
+    } else if (e.key === "Enter") {
+      commitTyped();
     }
   }
 
   // Start-up: a value the server rendered into the hidden input is the
   // selection — the calendar shows it and the visible input reads it as a
   // person would. Silent: nothing changed.
-  const initialValue = valueInput ? valueInput.value : "";
-  if (initialValue) show(initialValue, true);
+  const initialValue = [valueInput ? valueInput.value : "", valueEnd ? valueEnd.value : ""].join(",");
+  if (initialValue !== ",") show(initialValue, true);
+  else updateClear();
 
   // A form reset puts the visible input back to its default text but never
   // touches a hidden input, so the rendered value is restored here — after
@@ -4545,10 +5142,16 @@ function createDatePicker(root) {
   let resetTimer;
   function onFormReset() {
     clearTimeout(resetTimer);
-    resetTimer = setTimeout(() => (initialValue ? setValue(initialValue) : clear()));
+    resetTimer = setTimeout(() => (initialValue !== "," ? setValue(initialValue) : clear()));
   }
 
   trigger?.addEventListener("click", onTriggerClick);
+  clearBtn?.addEventListener("click", onClear);
+  for (const f of fields) {
+    f.addEventListener("change", commitTyped);
+    f.addEventListener("input", updateClear);
+  }
+  root.addEventListener("click", onRootClick);
   root.addEventListener("faqir:calendar-change", onCalendarChange);
   root.addEventListener("keydown", onRootKeyDown);
   form?.addEventListener("reset", onFormReset);
@@ -4559,6 +5162,12 @@ function createDatePicker(root) {
     // `context-menu` is the model — it has always closed itself here. [W3-2]
     close();
     trigger?.removeEventListener("click", onTriggerClick);
+    clearBtn?.removeEventListener("click", onClear);
+    for (const f of fields) {
+      f.removeEventListener("change", commitTyped);
+      f.removeEventListener("input", updateClear);
+    }
+    root.removeEventListener("click", onRootClick);
     root.removeEventListener("faqir:calendar-change", onCalendarChange);
     root.removeEventListener("keydown", onRootKeyDown);
     form?.removeEventListener("reset", onFormReset);
@@ -5438,6 +6047,134 @@ function createFileUpload(root) {
     return createFileUpload;
   })();
 
+  // ── image-compare ── (registry/recipes/image-compare/image-compare.js)
+  var createImageCompare = controllerRegistry["image-compare"] = (function() {
+// @ui:controller image-compare
+// @ui:provides setPosition getPosition destroy
+
+/**
+ * image-compare — a before/after comparison with a draggable divider.
+ *
+ * The two pictures are stacked; "before" is clipped at --image-compare-pos (a
+ * percentage the controller writes on the root, authored inline so the static
+ * page splits too). The divider's handle is the keyboard- and screen-reader-
+ * facing control: role="slider", 0–100, with aria-valuetext naming both sides.
+ *
+ * A press anywhere on the picture moves the divider there and drags it;
+ * data-mode="hover" makes it follow the pointer without a press.
+ * data-orientation="vertical" stacks the halves top and bottom. RTL mirrors a
+ * horizontal compare: "before" is on the inline-start side.
+ */
+function createImageCompare(root) {
+  if (root._faqirImageCompare) return root._faqirImageCompare;
+
+  const [handle] = ownParts(root, "handle");
+  if (!handle) return null;
+
+  const num = (v, d) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  const vertical = root.dataset.orientation === "vertical";
+  const follow = root.dataset.mode === "hover";
+  const step = num(root.dataset.step, 1);
+  const rtl = () => !vertical && getComputedStyle(root).direction === "rtl";
+  let pos = clamp(num(root.dataset.position, num(handle.getAttribute("aria-valuenow"), 50)), 0, 100);
+  let dragging = false;
+
+  handle.setAttribute("aria-orientation", vertical ? "vertical" : "horizontal");
+
+  function render() {
+    const p = Math.round(pos);
+    root.style.setProperty("--image-compare-pos", pos + "%");
+    handle.setAttribute("aria-valuenow", String(p));
+    handle.setAttribute("aria-valuetext", p + "% before, " + (100 - p) + "% after");
+  }
+
+  function set(next) {
+    next = clamp(Math.round(next * 100) / 100, 0, 100);
+    if (next === pos) return;
+    pos = next;
+    render();
+    root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { position: pos } }));
+  }
+
+  function at(e) {
+    const r = root.getBoundingClientRect();
+    const f = vertical ? (e.clientY - r.top) / (r.height || 1) : (e.clientX - r.left) / (r.width || 1);
+    return (rtl() ? 1 - f : f) * 100;
+  }
+
+  function onPointerDown(e) {
+    if (e.button > 0) return;
+    dragging = true;
+    root.setPointerCapture?.(e.pointerId);
+    root.dataset.state = "dragging";
+    handle.focus({ preventScroll: true });
+    e.preventDefault();
+    set(at(e));
+  }
+  function onPointerMove(e) {
+    if (dragging || (follow && e.pointerType !== "touch")) set(at(e));
+  }
+  function onPointerUp() {
+    dragging = false;
+    delete root.dataset.state;
+  }
+
+  function onKeyDown(e) {
+    const back = rtl() ? "ArrowRight" : "ArrowLeft";
+    const fwd = rtl() ? "ArrowLeft" : "ArrowRight";
+    // The divider moves the way the arrow points; a horizontal slider also
+    // takes Up as "more", as every slider does.
+    const up = vertical ? -step : step;
+    const next = {
+      [fwd]: pos + step,
+      [back]: pos - step,
+      ArrowUp: pos + up,
+      ArrowDown: pos - up,
+      PageUp: pos + step * 10,
+      PageDown: pos - step * 10,
+      Home: 0,
+      End: 100,
+    }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    set(next);
+  }
+
+  root.addEventListener("pointerdown", onPointerDown);
+  root.addEventListener("pointermove", onPointerMove);
+  root.addEventListener("pointerup", onPointerUp);
+  root.addEventListener("pointercancel", onPointerUp);
+  handle.addEventListener("keydown", onKeyDown);
+  render();
+
+  /** Move the divider to `percent` (0–100) of the way across. */
+  function setPosition(percent) {
+    set(Number(percent));
+  }
+  /** Where the divider is, 0–100. */
+  function getPosition() {
+    return pos;
+  }
+  function destroy() {
+    root.removeEventListener("pointerdown", onPointerDown);
+    root.removeEventListener("pointermove", onPointerMove);
+    root.removeEventListener("pointerup", onPointerUp);
+    root.removeEventListener("pointercancel", onPointerUp);
+    handle.removeEventListener("keydown", onKeyDown);
+    onPointerUp();
+    delete root._faqirImageCompare;
+  }
+
+  const api = { setPosition, getPosition, destroy };
+  root._faqirImageCompare = api;
+  return api;
+}
+    return createImageCompare;
+  })();
+
   // ── input-otp ── (registry/recipes/input-otp/input-otp.js)
   var createInputOTP = controllerRegistry["input-otp"] = (function() {
 // @ui:controller input-otp
@@ -5857,6 +6594,992 @@ function clampInt(raw, fallback, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
     return createInputOTP;
+  })();
+
+  // ── knob ── (registry/recipes/knob/knob.js)
+  var createKnob = controllerRegistry["knob"] = (function() {
+// @ui:controller knob
+// @ui:provides setValue getValue stepBy reset setFormatter destroy
+
+/**
+ * knob — a rotary control over a real `<input type="range">`.
+ *
+ * The native range IS the control: it carries `name`/`min`/`max`/`step`/`value`
+ * (so it submits with its form and resets with it), it is the element keyboard
+ * focus and assistive technology land on (implicit `role="slider"`, native
+ * `aria-valuenow`), and it is what `l-model` binds. The controller only draws
+ * the dial — `--knob-pos` (and `--knob-origin` for a bipolar knob) on the root,
+ * read by the stylesheet's SVG arc and indicator — and turns pointer drags,
+ * wheel notches and keys into writes on the input, each followed by the
+ * `input`/`change` events a user's own edit would fire.
+ *
+ * Programmatic writes (`input.value = …`, which is how `l-model` pushes a model
+ * change into an input) are picked up by an instance-level `value` accessor
+ * that defers to the prototype's and then repaints, so model → dial needs no
+ * engine support. A form reset repaints too (and fires `input` so a bound model
+ * follows the restored value).
+ */
+function createKnob(root) {
+  if (root._faqirKnob) return root._faqirKnob;
+
+  const [input] = ownParts(root, "input");
+  const [control] = ownParts(root, "control");
+  const [output] = ownParts(root, "output");
+  if (!input || !control) return null;
+
+  const num = (v, d) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  const min = num(input.min, 0);
+  const max = Math.max(num(input.max, 100), min);
+  const span = max - min || 1;
+  // `step="any"` is continuous: keys move 1% and nothing snaps.
+  const step = input.step === "any" ? 0 : num(input.step, 1) > 0 ? num(input.step, 1) : 1;
+  const keyStep = step || span / 100;
+  const pageStep = num(root.dataset.pageStep, keyStep * 10);
+  const origin = root.dataset.origin != null ? clamp(num(root.dataset.origin, min), min, max) : null;
+  const angular = root.dataset.drag === "angular";
+  const suffix = root.dataset.valueSuffix || "";
+  // Decimal places of a number, exponent notation included (1e-7 → 7).
+  const places = (n) => {
+    const [mantissa, exp] = String(n).split("e");
+    return Math.max(0, (mantissa.split(".")[1] || "").length - Number(exp || 0));
+  };
+  // The grid is min + k·step, so a value needs the places of both.
+  const decimals = step ? Math.max(places(step), places(min)) : 2;
+  let formatter = null;
+
+  const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  const read = () => num(native.get.call(input), min);
+  const frac = (v) => (v - min) / span;
+
+  /** Snap onto the step grid (based at `min`, like the native range) and clamp. */
+  function snap(v) {
+    const s = step ? min + Math.round((v - min) / step) * step : v;
+    return Number(clamp(s, min, max).toFixed(decimals));
+  }
+
+  function text(v) {
+    if (formatter) return String(formatter(v));
+    // A typographic minus, and an explicit plus either side of a bipolar origin.
+    return (origin != null && v > origin ? "+" : "") + String(v).replace("-", "−") + suffix;
+  }
+
+  function render() {
+    const v = read();
+    root.style.setProperty("--knob-pos", String(frac(v)));
+    if (origin != null) root.style.setProperty("--knob-origin", String(frac(origin)));
+    const t = text(v);
+    input.setAttribute("aria-valuetext", t);
+    if (output) output.textContent = t;
+  }
+
+  function fire(type) {
+    input.dispatchEvent(new Event(type, { bubbles: true }));
+    if (type === "change") {
+      root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { value: read() } }));
+    }
+  }
+
+  /** The one write path: snap, store, repaint, and tell listeners. */
+  function commit(next, done) {
+    const v = snap(next);
+    const changed = v !== read();
+    if (changed) native.set.call(input, String(v));
+    render();
+    if (changed) fire("input");
+    if (changed && done) fire("change");
+    return changed;
+  }
+
+  // model → dial: an own `value` accessor in front of the prototype's.
+  Object.defineProperty(input, "value", {
+    configurable: true,
+    get: () => native.get.call(input),
+    set: (v) => {
+      native.set.call(input, v);
+      render();
+    },
+  });
+
+  // ── Keyboard ───────────────────────────────────────────────────────────────
+  // Handled here rather than natively so PageUp/PageDown honour data-page-step
+  // and every key commits through the same snap → events path.
+  function onKeyDown(e) {
+    const v = read();
+    const next = {
+      ArrowUp: v + keyStep,
+      ArrowRight: v + keyStep,
+      ArrowDown: v - keyStep,
+      ArrowLeft: v - keyStep,
+      PageUp: v + pageStep,
+      PageDown: v - pageStep,
+      Home: min,
+      End: max,
+    }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    commit(next, true);
+  }
+
+  // ── Pointer ────────────────────────────────────────────────────────────────
+  // Linear: drag up or right to turn clockwise, 200px for the full sweep,
+  // ten times finer with Shift. The raw (unsnapped) value is carried between
+  // moves so a fine drag still accumulates across steps.
+  let drag = null;
+
+  function fromAngle(e) {
+    const r = control.getBoundingClientRect();
+    const deg =
+      (Math.atan2(e.clientX - r.left - r.width / 2, r.top + r.height / 2 - e.clientY) * 180) / Math.PI;
+    // The gap at the bottom of the dial pins to whichever end the drag was near.
+    const f = Math.abs(deg) > 135 ? (frac(read()) > 0.5 ? 1 : 0) : (deg + 135) / 270;
+    commit(min + f * span);
+  }
+
+  function onPointerDown(e) {
+    if (input.disabled || e.button > 0) return;
+    e.preventDefault();
+    input.focus({ preventScroll: true });
+    control.setPointerCapture?.(e.pointerId);
+    drag = { x: e.clientX, y: e.clientY, raw: read(), from: read() };
+    root.dataset.state = "dragging";
+    if (angular) fromAngle(e);
+  }
+
+  function onPointerMove(e) {
+    if (!drag) return;
+    if (angular) return fromAngle(e);
+    const travel = drag.y - e.clientY + e.clientX - drag.x;
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+    drag.raw = clamp(drag.raw + (travel * span) / (e.shiftKey ? 2000 : 200), min, max);
+    commit(drag.raw);
+  }
+
+  function onPointerUp() {
+    if (!drag) return;
+    const moved = read() !== drag.from;
+    drag = null;
+    delete root.dataset.state;
+    if (moved) fire("change");
+  }
+
+  // ── Wheel ──────────────────────────────────────────────────────────────────
+  // Only once the knob has focus (a click gives it focus), so a page scrolled
+  // past a knob under the pointer keeps scrolling.
+  let wheelRaw = null;
+  function onWheel(e) {
+    if (input.disabled || document.activeElement !== input) return;
+    e.preventDefault();
+    if (wheelRaw === null || snap(wheelRaw) !== read()) wheelRaw = read();
+    const delta = -(e.deltaY || e.deltaX) * (e.deltaMode === 1 ? 33 : 1);
+    wheelRaw = clamp(wheelRaw + (delta * span) / (e.shiftKey ? 20000 : 2000), min, max);
+    commit(wheelRaw, true);
+  }
+
+  function onDblClick() {
+    if (!input.disabled) commit(num(input.defaultValue, min), true);
+  }
+
+  // A form reset restores the default AFTER the reset event, and without a
+  // value write we could see — so repaint on the next task, and fire `input`
+  // so an l-model bound to the knob follows.
+  let resetTimer = 0;
+  function onReset() {
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      render();
+      fire("input");
+    });
+  }
+
+  const form = input.form;
+  input.addEventListener("keydown", onKeyDown);
+  input.addEventListener("input", render);
+  control.addEventListener("pointerdown", onPointerDown);
+  control.addEventListener("pointermove", onPointerMove);
+  control.addEventListener("pointerup", onPointerUp);
+  control.addEventListener("pointercancel", onPointerUp);
+  control.addEventListener("wheel", onWheel, { passive: false });
+  control.addEventListener("dblclick", onDblClick);
+  form?.addEventListener("reset", onReset);
+
+  // Normalise an off-grid authored value onto the grid, silently.
+  native.set.call(input, String(snap(read())));
+  render();
+
+  // ── Public API ─────────────────────────────────────────────────────────────
+  /** Set the value (snapped and clamped); fires `input` and `change`. */
+  function setValue(value) {
+    commit(Number(value), true);
+  }
+  /** The current value as a number. */
+  function getValue() {
+    return read();
+  }
+  /** Move by `n` steps (negative turns anticlockwise). */
+  function stepBy(n) {
+    commit(read() + keyStep * (Number(n) || 0), true);
+  }
+  /** Return to the authored default (the input's `value` attribute). */
+  function reset() {
+    commit(num(input.defaultValue, min), true);
+  }
+  /** Format the readout and aria-valuetext: `fn(value) → string`, or null. */
+  function setFormatter(fn) {
+    formatter = typeof fn === "function" ? fn : null;
+    render();
+  }
+
+  function destroy() {
+    input.removeEventListener("keydown", onKeyDown);
+    input.removeEventListener("input", render);
+    control.removeEventListener("pointerdown", onPointerDown);
+    control.removeEventListener("pointermove", onPointerMove);
+    control.removeEventListener("pointerup", onPointerUp);
+    control.removeEventListener("pointercancel", onPointerUp);
+    control.removeEventListener("wheel", onWheel);
+    control.removeEventListener("dblclick", onDblClick);
+    form?.removeEventListener("reset", onReset);
+    clearTimeout(resetTimer);
+    delete input.value;
+    delete root.dataset.state;
+    delete root._faqirKnob;
+  }
+
+  const api = { setValue, getValue, stepBy, reset, setFormatter, destroy };
+  root._faqirKnob = api;
+  return api;
+}
+    return createKnob;
+  })();
+
+  // ── lightbox ── (registry/recipes/lightbox/lightbox.js)
+  var createLightbox = controllerRegistry["lightbox"] = (function() {
+// @ui:controller lightbox
+// @ui:provides open close show next prev zoomIn zoomOut resetZoom destroy
+
+/**
+ * lightbox — a gallery whose items open a modal viewer with zoom and pan.
+ *
+ * Each item is a link to the full-size picture (`href`), wrapping its
+ * thumbnail, so without script a click simply opens the picture. With the
+ * controller a click (or Enter) opens the viewer on that picture instead: a
+ * role="dialog" panel over a dark overlay, focus trapped inside it and handed
+ * back to the item on close. Arrows, Home/End and the prev/next buttons move
+ * through the gallery (wrapping); +/−/0, the wheel, a double-click and the
+ * zoom buttons zoom up to 4×; a drag pans a zoomed picture, and the arrows pan
+ * it too. A swipe navigates at 1×. Escape, the close button, the overlay or a
+ * click on the empty stage closes.
+ *
+ * The same dialog contract as `dialog`: data-state closed | open | closing on
+ * the root, the panel's exit motion awaited before it is hidden.
+ */
+function createLightbox(root) {
+  if (root._faqirLightbox) return root._faqirLightbox;
+
+  const part = (name) => ownParts(root, name)[0] || null;
+  // Items may also live outside the root — `[data-open="{lightbox-id}"]`, the
+  // external-trigger hook dialog uses — so a page can keep the gallery in its
+  // content flow and the viewer beside <main>, where overlays belong.
+  const items = ownParts(root, "item").concat(
+    root.id ? [...document.querySelectorAll(`[data-open="${root.id}"]`)] : []
+  );
+  const overlay = part("overlay");
+  const panel = part("panel");
+  const stage = part("stage");
+  const image = part("image");
+  const caption = part("caption");
+  const counter = part("counter");
+  const status = part("status");
+  const prevBtn = part("prev");
+  const nextBtn = part("next");
+  const zoomInBtn = part("zoom-in");
+  const zoomOutBtn = part("zoom-out");
+  const closeButtons = ownParts(root, "close");
+  if (!panel || !stage || !image) return null;
+  if (!panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
+
+  const MAX = 4;
+  let index = 0;
+  let zoom = 1;
+  let x = 0;
+  let y = 0;
+  let release = null;
+  let opener = null;
+  let cancelExit = null;
+  let drag = null;
+  let tap = false;
+  const rtl = () => getComputedStyle(root).direction === "rtl";
+
+  function paint() {
+    panel.style.setProperty("--lightbox-zoom", String(zoom));
+    panel.style.setProperty("--lightbox-x", x + "px");
+    panel.style.setProperty("--lightbox-y", y + "px");
+    if (zoom > 1) image.dataset.state = "zoomed";
+    else delete image.dataset.state;
+    zoomInBtn?.setAttribute("aria-disabled", String(zoom >= MAX));
+    zoomOutBtn?.setAttribute("aria-disabled", String(zoom <= 1));
+  }
+
+  /** Keep a zoomed picture covering the stage: no panning past its edges. */
+  function bound() {
+    const mx = Math.max(0, (image.offsetWidth * zoom - stage.clientWidth) / 2);
+    const my = Math.max(0, (image.offsetHeight * zoom - stage.clientHeight) / 2);
+    x = clamp(x, -mx, mx);
+    y = clamp(y, -my, my);
+  }
+
+  /** Zoom to `z`, keeping the stage point (px from its centre) under the pointer. */
+  function zoomTo(z, cx = 0, cy = 0) {
+    const target = clamp(z, 1, MAX);
+    const k = target / zoom;
+    x = cx - (cx - x) * k;
+    y = cy - (cy - y) * k;
+    zoom = target;
+    if (zoom === 1) x = y = 0;
+    bound();
+    paint();
+  }
+
+  function pan(dx, dy) {
+    x += dx;
+    y += dy;
+    bound();
+    paint();
+  }
+
+  function onLoad() {
+    stage.dataset.state = "loaded";
+  }
+
+  function onError() {
+    stage.dataset.state = "error";
+    if (status) status.textContent = "This picture could not be loaded";
+  }
+
+  function show(i) {
+    if (!items.length) return;
+    index = ((Number(i) || 0) % items.length + items.length) % items.length;
+    const item = items[index];
+    const thumb = item.querySelector("img");
+    const alt = thumb ? thumb.alt : "";
+    stage.dataset.state = "loading";
+    image.alt = alt;
+    image.src = item.getAttribute("href") || (thumb ? thumb.currentSrc || thumb.src : "");
+    if (image.complete && image.naturalWidth) onLoad();
+    const text = item.title || alt;
+    if (caption) {
+      caption.textContent = text;
+      caption.hidden = !text;
+    }
+    const n = items.length;
+    if (counter) counter.textContent = index + 1 + " / " + n;
+    if (status) status.textContent = "Image " + (index + 1) + " of " + n + (alt ? ": " + alt : "");
+    for (const b of [prevBtn, nextBtn]) if (b) b.hidden = n < 2;
+    zoom = 1;
+    x = y = 0;
+    paint();
+    root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { index } }));
+  }
+
+  function open(i, from) {
+    if (root.dataset.state === "open" && release) return show(i ?? index);
+    cancelExit?.();
+    cancelExit = null;
+    if (!release) opener = from || document.activeElement;
+    root.dataset.state = "open";
+    if (overlay) overlay.hidden = false;
+    panel.hidden = false;
+    if (!release) release = trapFocus(panel);
+    show(i ?? 0);
+    panel.focus();
+  }
+
+  function finish() {
+    cancelExit?.();
+    cancelExit = null;
+    root.dataset.state = "closed";
+    if (overlay) overlay.hidden = true;
+    panel.hidden = true;
+    release?.();
+    release = null;
+  }
+
+  function close() {
+    const s = root.dataset.state;
+    if (s === "closed" || s === "closing") return;
+    root.dataset.state = "closing";
+    cancelExit = whenExitDone(panel, null, () => {
+      cancelExit = null;
+      const active = document.activeElement;
+      finish();
+      returnFocus(root, opener, active);
+    });
+  }
+
+  // ── Events ─────────────────────────────────────────────────────────────────
+  function onItemClick(e) {
+    if (e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey) return; // let new-tab gestures through
+    e.preventDefault();
+    open(items.indexOf(e.currentTarget), e.currentTarget);
+  }
+
+  function onKeyDown(e) {
+    if (root.dataset.state !== "open") return;
+    const step = stage.clientWidth / 10;
+    const back = rtl() ? "ArrowRight" : "ArrowLeft";
+    switch (e.key) {
+      case "Escape":
+        e.stopPropagation();
+        close();
+        break;
+      case "ArrowLeft":
+      case "ArrowRight":
+        if (zoom > 1) pan(e.key === "ArrowLeft" ? step : -step, 0);
+        else show(index + (e.key === back ? -1 : 1));
+        break;
+      case "ArrowUp":
+      case "ArrowDown":
+        if (zoom === 1) return;
+        pan(0, e.key === "ArrowUp" ? step : -step);
+        break;
+      case "Home":
+        show(0);
+        break;
+      case "End":
+        show(items.length - 1);
+        break;
+      case "+":
+      case "=":
+        zoomTo(zoom + 0.5);
+        break;
+      case "-":
+        zoomTo(zoom - 0.5);
+        break;
+      case "0":
+        zoomTo(1);
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+  }
+
+  const fromCentre = (e) => {
+    const r = stage.getBoundingClientRect();
+    return [e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2];
+  };
+
+  function onWheel(e) {
+    e.preventDefault();
+    zoomTo(zoom * Math.exp(-e.deltaY * 0.002), ...fromCentre(e));
+  }
+
+  // Capture only while panning: a captured press would retarget the click to
+  // the stage, and a click on the bare stage closes.
+  function onPointerDown(e) {
+    if (e.button > 0) return;
+    drag = { sx: e.clientX, sy: e.clientY, x, y, moved: false, bare: e.target === stage };
+    if (zoom > 1) stage.setPointerCapture?.(e.pointerId);
+  }
+  function onPointerMove(e) {
+    if (!drag) return;
+    const dx = e.clientX - drag.sx;
+    const dy = e.clientY - drag.sy;
+    if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+    if (zoom > 1) {
+      x = drag.x + dx;
+      y = drag.y + dy;
+      bound();
+      paint();
+    }
+  }
+  function onPointerUp(e) {
+    if (!drag) return;
+    const dx = e.clientX - drag.sx;
+    // A horizontal swipe at 1× moves through the gallery.
+    if (zoom === 1 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(e.clientY - drag.sy)) {
+      show(index + ((dx < 0) !== rtl() ? 1 : -1));
+    }
+    tap = drag.bare && !drag.moved;
+    drag = null;
+  }
+
+  function onStageClick() {
+    // A click on the empty stage — not on the picture, not the end of a pan.
+    if (tap) close();
+    tap = false;
+  }
+
+  function onDblClick(e) {
+    zoom > 1 ? zoomTo(1) : zoomTo(2.5, ...fromCentre(e));
+  }
+
+  /** The previous picture (wrapping). */
+  function prev() {
+    show(index - 1);
+  }
+  /** The next picture (wrapping). */
+  function next() {
+    show(index + 1);
+  }
+  /** Zoom in half a step, up to 4×. */
+  function zoomIn() {
+    zoomTo(zoom + 0.5);
+  }
+  /** Zoom out half a step, down to 1×. */
+  function zoomOut() {
+    zoomTo(zoom - 0.5);
+  }
+  /** Back to 1×, centred. */
+  function resetZoom() {
+    zoomTo(1);
+  }
+
+  const bindings = [
+    ...items.map((el) => [el, "click", onItemClick]),
+    [overlay, "click", close],
+    ...closeButtons.map((el) => [el, "click", close]),
+    [prevBtn, "click", prev],
+    [nextBtn, "click", next],
+    [zoomInBtn, "click", zoomIn],
+    [zoomOutBtn, "click", zoomOut],
+    [root, "keydown", onKeyDown],
+    [stage, "wheel", onWheel],
+    [stage, "pointerdown", onPointerDown],
+    [stage, "pointermove", onPointerMove],
+    [stage, "pointerup", onPointerUp],
+    [stage, "pointercancel", onPointerUp],
+    [stage, "click", onStageClick],
+    [image, "dblclick", onDblClick],
+    [image, "load", onLoad],
+    [image, "error", onError],
+  ].filter(([el]) => el);
+  for (const [el, type, fn] of bindings) el.addEventListener(type, fn, type === "wheel" ? { passive: false } : undefined);
+
+  function destroy() {
+    for (const [el, type, fn] of bindings) el.removeEventListener(type, fn);
+    finish();
+    delete root._faqirLightbox;
+  }
+
+  const api = {
+    open,
+    close,
+    show,
+    next,
+    prev,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    destroy,
+  };
+  root._faqirLightbox = api;
+  return api;
+}
+    return createLightbox;
+  })();
+
+  // ── list ── (registry/recipes/list/list.js)
+  var createList = controllerRegistry["list"] = (function() {
+// @ui:controller list
+// @ui:provides select toggle selectAll clear getSelected move refresh destroy
+
+/**
+ * Rich list. Plain list semantics by default; `data-selection="single|multi"`
+ * turns the items container into a WAI-ARIA listbox with roving focus,
+ * type-ahead and range selection; `data-reorderable` adds pointer dragging by
+ * the handle and keyboard reordering, announced in a polite live region.
+ *
+ * Selection lives in the DOM (`aria-selected`), so a binding that writes it —
+ * an `l-data` scope mirroring the open conversation, say — and the controller
+ * never disagree. Item queries are live, for the same reason as tree-view's:
+ * keyed `l-for` rows can arrive, leave and move after the controller starts.
+ */
+function createList(root) {
+  if (root._faqirList) {
+    root._faqirList.refresh();
+    return root._faqirList;
+  }
+
+  let current = null;
+  let anchor = null;
+  let query = "";
+  let queryTimer = null;
+  let drag = null;
+  let grab = null;
+  let ownLive = null;
+  let moving = false;
+
+  const mode = () => (/^(single|multi)$/.test(root.dataset.selection) ? root.dataset.selection : "none");
+  const selectable = () => mode() !== "none";
+  const reorderable = () => root.hasAttribute("data-reorderable") && root.dataset.reorderable !== "false";
+  const items = () => ownParts(root, "item");
+  const isDisabled = (item) => item.getAttribute("aria-disabled") === "true";
+  const isSelected = (item) => item.getAttribute("aria-selected") === "true";
+  const enabled = () => items().filter((item) => !isDisabled(item) && !item.hidden);
+  const itemOf = (node) => {
+    const item = node instanceof Element ? node.closest("[data-part='item']") : null;
+    return item && items().includes(item) ? item : null;
+  };
+  const siblings = (item) => [...item.parentElement.children].filter((el) => el.matches("[data-part='item']"));
+  const labelOf = (item) => (item.querySelector("[data-part='title']") ?? item).textContent.trim();
+  const valueOf = (item) => item.dataset.value || item.id || labelOf(item);
+
+  function emit(type, detail) {
+    root.dispatchEvent(new CustomEvent("faqir:" + type, { bubbles: true, detail }));
+  }
+
+  function announce(message) {
+    let live = ownParts(root, "live")[0];
+    if (!live) {
+      live = ownLive = document.createElement("span");
+      live.setAttribute("data-part", "live");
+      live.setAttribute("role", "status");
+      root.append(live);
+    }
+    // A trailing no-break space alternates so a repeated message is re-read.
+    live.textContent = message + (live.textContent.endsWith(" ") ? "" : " ");
+  }
+
+  function setState() {
+    root.dataset.state = drag || grab ? "dragging" : items().length ? "idle" : "empty";
+  }
+
+  function refresh() {
+    const all = items();
+    const list = root.querySelector(":scope > [data-part='items']");
+    if (selectable() && list) {
+      list.setAttribute("role", "listbox");
+      list.setAttribute("aria-multiselectable", String(mode() === "multi"));
+      for (const section of ownParts(root, "section")) {
+        section.setAttribute("role", "group");
+        const header = section.querySelector(":scope > [data-part='header']");
+        if (header) {
+          header.id ||= uid("list-header");
+          header.setAttribute("role", "presentation");
+          section.setAttribute("aria-labelledby", header.id);
+        }
+        section.querySelector(":scope > [data-part='items']")?.setAttribute("role", "none");
+      }
+      let kept = false;
+      for (const item of all) {
+        item.setAttribute("role", "option");
+        if (isDisabled(item)) continue;
+        if (mode() === "single" && isSelected(item)) {
+          if (kept) item.setAttribute("aria-selected", "false");
+          kept = true;
+        } else if (!item.hasAttribute("aria-selected")) {
+          item.setAttribute("aria-selected", "false");
+        }
+      }
+      const pool = enabled();
+      if (!pool.includes(current)) {
+        current = pool.find(isSelected) ?? pool.find((item) => item.tabIndex === 0) ?? pool[0] ?? null;
+      }
+      for (const item of all) item.tabIndex = item === current ? 0 : -1;
+    }
+    for (const handle of ownParts(root, "handle")) {
+      const item = itemOf(handle);
+      if (selectable()) handle.setAttribute("aria-hidden", "true");
+      else if (item && !handle.hasAttribute("aria-label")) handle.setAttribute("aria-label", "Reorder " + labelOf(item));
+    }
+    setState();
+  }
+
+  function focusItem(item) {
+    if (!item) return false;
+    current = item;
+    for (const candidate of items()) candidate.tabIndex = candidate === item ? 0 : -1;
+    item.focus();
+    item.scrollIntoView?.({ block: "nearest" });
+    return true;
+  }
+
+  function resolve(target) {
+    if (target instanceof Element) return itemOf(target);
+    if (typeof target === "number") return items()[target] ?? null;
+    return items().find((item) => valueOf(item) === String(target)) ?? null;
+  }
+
+  function changed(item) {
+    const chosen = items().filter(isSelected);
+    emit("select", { item, value: item ? valueOf(item) : null, items: chosen, values: chosen.map(valueOf) });
+  }
+
+  function apply(next, item) {
+    for (const candidate of items()) {
+      if (!isDisabled(candidate)) candidate.setAttribute("aria-selected", String(next.includes(candidate)));
+    }
+    changed(item);
+  }
+
+  function range(from, to) {
+    const pool = enabled();
+    const [a, b] = [pool.indexOf(from), pool.indexOf(to)].sort((x, y) => x - y);
+    return a < 0 ? [to] : pool.slice(a, b + 1);
+  }
+
+  function select(target, extend = false) {
+    const item = resolve(target);
+    if (!item || isDisabled(item) || !selectable()) return false;
+    if (mode() === "single") apply([item], item);
+    else if (extend && anchor) apply([...new Set([...items().filter(isSelected), ...range(anchor, item)])], item);
+    else {
+      apply([...items().filter(isSelected), item], item);
+      anchor = item;
+    }
+    return true;
+  }
+
+  function toggle(target) {
+    const item = resolve(target);
+    if (!item || isDisabled(item) || !selectable()) return false;
+    if (mode() === "single") return select(item);
+    anchor = item;
+    apply(isSelected(item) ? items().filter((x) => isSelected(x) && x !== item) : [...items().filter(isSelected), item], item);
+    return true;
+  }
+
+  function selectAll() {
+    if (mode() !== "multi") return false;
+    const pool = enabled();
+    apply(pool.every(isSelected) ? [] : pool, current);
+    return true;
+  }
+
+  function clear() {
+    if (!selectable()) return false;
+    apply([], null);
+    return true;
+  }
+
+  function getSelected() {
+    return items().filter(isSelected).map(valueOf);
+  }
+
+  /** Move an item to `index` among its siblings; returns its new index. */
+  function move(target, index) {
+    const item = resolve(target);
+    if (!item) return -1;
+    const sibs = siblings(item);
+    const from = sibs.indexOf(item);
+    const others = sibs.filter((el) => el !== item);
+    const to = Math.max(0, Math.min(index, others.length));
+    if (to === from) return from;
+    // Moving a node blurs whatever it holds; that is not the user leaving.
+    moving = true;
+    if (to < others.length) others[to].before(item);
+    else others[others.length - 1].after(item);
+    moving = false;
+    emit("reorder", { item, value: valueOf(item), from, to, values: siblings(item).map(valueOf) });
+    return to;
+  }
+
+  function position(item) {
+    const sibs = siblings(item);
+    return `position ${sibs.indexOf(item) + 1} of ${sibs.length}`;
+  }
+
+  function step(item, delta, focusTarget) {
+    const from = siblings(item).indexOf(item);
+    const to = move(item, from + delta);
+    if (to === from) return;
+    (focusTarget ?? item).focus();
+    announce(`Moved ${labelOf(item)} to ${position(item)}`);
+  }
+
+  function endGrab(commit) {
+    const { item, from, handle } = grab;
+    grab = null;
+    delete item.dataset.state;
+    if (!commit) {
+      move(item, from);
+      handle.focus();
+      announce(`Reorder cancelled. ${labelOf(item)} returned to ${position(item)}`);
+    } else {
+      announce(`${labelOf(item)} dropped at ${position(item)}`);
+    }
+    setState();
+  }
+
+  function typeahead(key) {
+    query += key.toLocaleLowerCase();
+    clearTimeout(queryTimer);
+    queryTimer = setTimeout(() => (query = ""), 500);
+    const needle = [...query].every((c) => c === query[0]) ? query[0] : query;
+    const pool = enabled();
+    const start = pool.indexOf(current);
+    for (let offset = 1; offset <= pool.length; offset++) {
+      const candidate = pool[(start + offset) % pool.length];
+      if (labelOf(candidate).toLocaleLowerCase().startsWith(needle)) return focusItem(candidate);
+    }
+    return false;
+  }
+
+  function onHandleKey(event, handle) {
+    const item = itemOf(handle);
+    if (!item || isDisabled(item)) return;
+    const { key } = event;
+    if (grab) {
+      if (key === "ArrowUp" || key === "ArrowDown") step(item, key === "ArrowUp" ? -1 : 1, handle);
+      else if (key === " " || key === "Enter") endGrab(true);
+      else if (key === "Escape") endGrab(false);
+      else return;
+    } else if (event.altKey && (key === "ArrowUp" || key === "ArrowDown")) {
+      step(item, key === "ArrowUp" ? -1 : 1, handle);
+    } else if (key === " " || key === "Enter") {
+      grab = { item, handle, from: siblings(item).indexOf(item) };
+      item.dataset.state = "dragging";
+      setState();
+      announce(`${labelOf(item)} grabbed, ${position(item)}. Up and Down move it, Space drops it, Escape cancels.`);
+    } else return;
+    event.preventDefault();
+  }
+
+  function onKeyDown(event) {
+    if (!(event.target instanceof Element)) return;
+    if (drag && event.key === "Escape") return onPointerEnd({ pointerId: drag.id, type: "pointercancel" });
+    const handle = event.target.closest("[data-part='handle']");
+    if (handle && !selectable() && reorderable()) return onHandleKey(event, handle);
+
+    const item = event.target === itemOf(event.target) ? event.target : null;
+    if (!item || !selectable() || isDisabled(item)) return;
+    const pool = enabled();
+    const index = pool.indexOf(item);
+    const multi = mode() === "multi";
+    const { key, shiftKey } = event;
+    const mod = event.ctrlKey || event.metaKey;
+    let next = null;
+    if (multi && shiftKey && !anchor) anchor = item;
+
+    if (event.altKey && reorderable() && (key === "ArrowUp" || key === "ArrowDown")) {
+      step(item, key === "ArrowUp" ? -1 : 1);
+    } else if (key === "ArrowDown" || key === "ArrowUp") {
+      next = pool[Math.max(0, Math.min(index + (key === "ArrowDown" ? 1 : -1), pool.length - 1))];
+    } else if (key === "Home" || key === "End") {
+      next = key === "Home" ? pool[0] : pool[pool.length - 1];
+    } else if (key === " " || key === "Enter") {
+      if (multi && shiftKey) select(item, true);
+      else if (multi) toggle(item);
+      else select(item);
+    } else if (multi && mod && key.toLowerCase() === "a") {
+      selectAll();
+    } else if (key.length === 1 && !mod && !event.altKey) {
+      if (!typeahead(key)) return;
+    } else return;
+
+    event.preventDefault();
+    if (next && next !== item) {
+      focusItem(next);
+      if (multi && shiftKey) select(next, true);
+    }
+  }
+
+  function onClick(event) {
+    if (!(event.target instanceof Element) || !selectable()) return;
+    const item = itemOf(event.target);
+    if (!item || event.target.closest("[data-part='handle']")) return;
+    if (isDisabled(item)) return;
+    focusItem(item);
+    if (mode() === "multi" && event.shiftKey) select(item, true);
+    else toggle(item);
+  }
+
+  function onFocusIn(event) {
+    const item = event.target instanceof Element && event.target === itemOf(event.target) ? event.target : null;
+    if (item && selectable() && !isDisabled(item)) {
+      current = item;
+      for (const candidate of items()) candidate.tabIndex = candidate === item ? 0 : -1;
+    }
+  }
+
+  function onFocusOut(event) {
+    if (grab && !moving && event.target === grab.handle && !grab.handle.contains(event.relatedTarget)) endGrab(true);
+  }
+
+  function clearDrop() {
+    for (const item of items()) {
+      if (/^drop-/.test(item.dataset.state ?? "")) delete item.dataset.state;
+    }
+  }
+
+  function onPointerDown(event) {
+    const handle = event.target instanceof Element ? event.target.closest("[data-part='handle']") : null;
+    const item = handle && itemOf(handle);
+    if (!item || event.button !== 0 || !reorderable() || isDisabled(item) || grab) return;
+    event.preventDefault();
+    drag = { item, handle, id: event.pointerId, y: event.clientY, from: siblings(item).indexOf(item), to: null };
+    // A synthetic pointer has nothing to capture; the drag still works without it.
+    try {
+      handle.setPointerCapture(event.pointerId);
+    } catch {}
+    item.dataset.state = "dragging";
+    setState();
+  }
+
+  function onPointerMove(event) {
+    if (!drag || event.pointerId !== drag.id) return;
+    drag.item.style.setProperty("--list-drag-y", event.clientY - drag.y + "px");
+    const others = siblings(drag.item).filter((el) => el !== drag.item);
+    let to = others.findIndex((el) => {
+      const box = el.getBoundingClientRect();
+      return event.clientY < box.top + box.height / 2;
+    });
+    if (to < 0) to = others.length;
+    clearDrop();
+    drag.to = to;
+    if (to < others.length) others[to].dataset.state = "drop-before";
+    else if (others.length) others[others.length - 1].dataset.state = "drop-after";
+  }
+
+  function onPointerEnd(event) {
+    if (!drag || event.pointerId !== drag.id) return;
+    const { item, handle, from, to } = drag;
+    drag = null;
+    clearDrop();
+    delete item.dataset.state;
+    item.style.removeProperty("--list-drag-y");
+    if (event.type === "pointerup" && to !== null && move(item, to) !== from) {
+      announce(`Moved ${labelOf(item)} to ${position(item)}`);
+    }
+    if (handle.hasPointerCapture?.(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+    setState();
+  }
+
+  const listeners = {
+    keydown: onKeyDown,
+    click: onClick,
+    focusin: onFocusIn,
+    focusout: onFocusOut,
+    pointerdown: onPointerDown,
+    pointermove: onPointerMove,
+    pointerup: onPointerEnd,
+    pointercancel: onPointerEnd,
+  };
+  for (const [type, fn] of Object.entries(listeners)) root.addEventListener(type, fn);
+
+  const observer = new MutationObserver(refresh);
+  // Rows hidden by a filter or disabled later must leave the tab stop too.
+  observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "aria-disabled"] });
+
+  function destroy() {
+    for (const [type, fn] of Object.entries(listeners)) root.removeEventListener(type, fn);
+    observer.disconnect();
+    clearTimeout(queryTimer);
+    ownLive?.remove();
+    delete root._faqirList;
+  }
+
+  const api = { select, toggle, selectAll, clear, getSelected, move, refresh, destroy };
+  root._faqirList = api;
+  refresh();
+  return api;
+}
+    return createList;
   })();
 
   // ── menubar ── (registry/recipes/menubar/menubar.js)
@@ -11157,14 +12880,20 @@ function createTooltip(root) {
   // ── tree-view ── (registry/recipes/tree-view/tree-view.js)
   var createTreeView = controllerRegistry["tree-view"] = (function() {
 // @ui:controller tree-view
-// @ui:provides select expand collapse toggle refresh getSelected destroy
+// @ui:provides select expand collapse toggle check selectAll filter load setLoader move refresh getSelected getSelection destroy
 
 /**
- * Single-select WAI-ARIA tree view with roving DOM focus.
+ * WAI-ARIA tree view with roving DOM focus, in three selection modes
+ * (`data-mode`: single, multiple, checkbox), lazy children, type-ahead,
+ * filtering and drag-and-drop that also works from the keyboard.
  *
  * Item queries are deliberately live. A tree root can be initialized before
  * keyed l-for templates render their nodes, and later reconciliations can move,
  * insert, or remove whole branches without recreating the controller.
+ *
+ * The root is either the `role="tree"` list itself, or a wrapper holding a
+ * `tree` part (the list) beside an optional `filter` input, `status` live
+ * region and `empty` message — the parts a `<ul role="tree">` cannot contain.
  */
 function createTreeView(root) {
   if (root._faqirTreeView) {
@@ -11172,18 +12901,62 @@ function createTreeView(root) {
     return root._faqirTreeView;
   }
 
+  const ITEM = "[data-part='item']";
+  const HIGHLIGHT = "faqir-tree-match";
+  const tree = root.querySelector(":scope > [data-part='tree']") ?? root;
+  const filterInput = part("filter");
+  const empty = part("empty");
+  let status = part("status");
+  let ownStatus = null;
+
   let currentItem = null;
   let selectedItem = null;
+  let anchor = null;
   let typeahead = "";
   let typeaheadTimer = null;
+  let announceTimer = null;
+  let expandTimer = null;
+  let loader = null;
+  let query = "";
+  let snapshot = null;
+  let ranges = [];
+  let grab = null;
+  let drag = null;
+  let indicator = null;
+  const filtered = new Set();
+  const loading = new Map();
+  const attempts = new WeakMap();
+  // Transient item states (loading, error, grabbed) win over expanded/collapsed.
+  const transient = new WeakMap();
+
+  function part(name) {
+    return [...root.querySelectorAll(`[data-part='${name}']`)].find(belongsToTree) ?? null;
+  }
+
+  // A new element with attributes; `text` becomes its textContent.
+  function make(tag, attrs, text) {
+    const element = document.createElement(tag);
+    for (const [name, value] of Object.entries(attrs)) element.setAttribute(name, value);
+    if (text) element.textContent = text;
+    return element;
+  }
+
+  function newGroup() {
+    return make("ul", { "data-part": "group", role: "group" });
+  }
+
+  // `item` becomes the one roving tab stop.
+  function rove(item) {
+    currentItem = item;
+    for (const candidate of items()) candidate.tabIndex = candidate === item ? 0 : -1;
+  }
 
   function belongsToTree(element) {
     return element?.closest("[data-ui='tree-view']") === root;
   }
 
   function items() {
-    return [...root.querySelectorAll("[data-part='item']")]
-      .filter(belongsToTree);
+    return [...root.querySelectorAll(ITEM)].filter(belongsToTree);
   }
 
   function groups() {
@@ -11193,22 +12966,43 @@ function createTreeView(root) {
 
   function directItems(container) {
     return [...container.children]
-      .filter((child) => child.matches("[data-part='item']") && belongsToTree(child));
+      .filter((child) => child.matches(ITEM) && belongsToTree(child));
+  }
+
+  function childPart(item, name) {
+    return [...(item?.children ?? [])].find(
+      (child) => child.matches(`[data-part='${name}']`) && belongsToTree(child),
+    ) ?? null;
   }
 
   function directGroup(item) {
-    return [...item.children].find(
-      (child) => child.matches("[data-part='group']") && belongsToTree(child),
-    ) ?? null;
+    return childPart(item, "group");
+  }
+
+  function labelOf(item) {
+    return childPart(item, "label");
   }
 
   function parentItem(item) {
     const group = item.parentElement?.closest("[data-part='group']");
     if (!group || !belongsToTree(group)) return null;
     const parent = group.parentElement;
-    return parent?.matches("[data-part='item']") && belongsToTree(parent)
+    return parent?.matches(ITEM) && belongsToTree(parent)
       ? parent
       : null;
+  }
+
+  function descendants(item) {
+    return [...item.querySelectorAll(ITEM)].filter(belongsToTree);
+  }
+
+  function mode() {
+    const value = root.dataset.mode;
+    return value === "multiple" || value === "checkbox" ? value : "single";
+  }
+
+  function draggable() {
+    return root.hasAttribute("data-draggable") && root.dataset.draggable !== "false";
   }
 
   function isDisabled(item) {
@@ -11226,6 +13020,10 @@ function createTreeView(root) {
     );
   }
 
+  function isOpen(item) {
+    return item.getAttribute("aria-expanded") === "true";
+  }
+
   function isVisible(item) {
     if (!item || item.hidden || !belongsToTree(item)) return false;
 
@@ -11234,12 +13032,7 @@ function createTreeView(root) {
       if (ancestor.hidden) return false;
       if (ancestor.matches("[data-part='group']")) {
         const parent = ancestor.parentElement;
-        if (
-          parent?.matches("[data-part='item']") &&
-          parent.getAttribute("aria-expanded") !== "true"
-        ) {
-          return false;
-        }
+        if (parent?.matches(ITEM) && !isOpen(parent)) return false;
       }
       ancestor = ancestor.parentElement;
     }
@@ -11251,19 +13044,32 @@ function createTreeView(root) {
   }
 
   function syncParentState(item) {
-    if (item.hasAttribute("aria-expanded")) {
-      item.dataset.state = item.getAttribute("aria-expanded") === "true"
-        ? "expanded"
-        : "collapsed";
+    const state = transient.get(item);
+    if (state) {
+      item.dataset.state = state;
+    } else if (item.hasAttribute("aria-expanded")) {
+      item.dataset.state = isOpen(item) ? "expanded" : "collapsed";
     } else if (
-      item.dataset.state === "expanded" ||
-      item.dataset.state === "collapsed"
+      ["expanded", "collapsed", "loading", "error", "grabbed"].includes(item.dataset.state)
     ) {
       item.removeAttribute("data-state");
     }
   }
 
-  function normalizeBranch(container, level) {
+  function setTransient(item, state) {
+    if (state) transient.set(item, state);
+    else transient.delete(item);
+    syncParentState(item);
+  }
+
+  function setOpen(item, open) {
+    item.setAttribute("aria-expanded", String(open));
+    const group = directGroup(item);
+    if (group) group.hidden = !open;
+    syncParentState(item);
+  }
+
+  function normalizeBranch(container, level, checkbox, dnd) {
     const siblings = directItems(container);
     const setSize = String(siblings.length);
 
@@ -11272,17 +13078,19 @@ function createTreeView(root) {
       item.setAttribute("aria-level", String(level));
       item.setAttribute("aria-setsize", setSize);
       item.setAttribute("aria-posinset", String(index + 1));
+      if (dnd) item.draggable = !isDisabled(item);
+      if (checkbox) ensureCheckbox(item);
 
       const group = directGroup(item);
       if (group) {
         group.setAttribute("role", "group");
         const expanded = item.hasAttribute("aria-expanded")
-          ? item.getAttribute("aria-expanded") === "true"
+          ? isOpen(item)
           : !group.hidden;
         item.setAttribute("aria-expanded", String(expanded));
         group.hidden = !expanded;
         syncParentState(item);
-        normalizeBranch(group, level + 1);
+        normalizeBranch(group, level + 1, checkbox, dnd);
       } else if (isLazy(item) || item.hasAttribute("aria-expanded")) {
         if (!item.hasAttribute("aria-expanded")) {
           item.setAttribute("aria-expanded", "false");
@@ -11295,9 +13103,53 @@ function createTreeView(root) {
     });
   }
 
+  function ensureCheckbox(item) {
+    const label = labelOf(item);
+    if (!label || childPart(label, "checkbox")) return;
+    const box = make("span", { "data-part": "checkbox", "aria-hidden": "true" });
+    const toggle = childPart(label, "toggle");
+    if (toggle) toggle.after(box);
+    else label.prepend(box);
+  }
+
+  // Checkbox mode: an item without a state takes its parent's definite one,
+  // then every parent is derived from its children — all on, all off, or mixed.
+  function inheritChecks(container, inherited) {
+    for (const item of directItems(container)) {
+      let state = item.getAttribute("aria-checked");
+      if (state !== "true" && state !== "false" && state !== "mixed") {
+        state = inherited ?? "false";
+        item.setAttribute("aria-checked", state);
+      }
+      const group = directGroup(item);
+      if (group) inheritChecks(group, state === "mixed" ? null : state);
+    }
+  }
+
+  function deriveChecks(container) {
+    const kids = directItems(container);
+    let on = 0;
+    let off = 0;
+    for (const item of kids) {
+      const group = directGroup(item);
+      if (group && directItems(group).length > 0) {
+        item.setAttribute("aria-checked", deriveChecks(group));
+      }
+      const state = item.getAttribute("aria-checked");
+      if (state === "true") on++;
+      else if (state === "false") off++;
+    }
+    return on === kids.length ? "true" : off === kids.length ? "false" : "mixed";
+  }
+
   function refresh() {
-    root.setAttribute("role", "tree");
-    root.setAttribute("aria-multiselectable", "false");
+    const current = mode();
+    tree.setAttribute("role", "tree");
+    tree.setAttribute("aria-multiselectable", String(current !== "single"));
+    if (filterInput && tree.id === "") tree.id = uid("faqir-tree");
+    if (filterInput && !filterInput.hasAttribute("aria-controls")) {
+      filterInput.setAttribute("aria-controls", tree.id);
+    }
 
     const before = items();
     const authoredTabStop = before.find(
@@ -11305,26 +13157,37 @@ function createTreeView(root) {
     ) ?? null;
 
     groups().forEach((group) => group.setAttribute("role", "group"));
-    normalizeBranch(root, 1);
+    normalizeBranch(tree, 1, current === "checkbox", draggable());
 
     const allItems = items();
-    const selected = allItems.filter(
-      (item) => !isDisabled(item) && item.getAttribute("aria-selected") === "true",
-    );
-    const keepSelected = selected.includes(selectedItem)
-      ? selectedItem
-      : selected[0] ?? null;
+    let hasSelection;
+    if (current === "checkbox") {
+      allItems.forEach((item) => item.removeAttribute("aria-selected"));
+      inheritChecks(tree, null);
+      deriveChecks(tree);
+      selectedItem = null;
+      hasSelection = allItems.some((item) => item.getAttribute("aria-checked") === "true");
+    } else {
+      const selected = allItems.filter(
+        (item) => !isDisabled(item) && item.getAttribute("aria-selected") === "true",
+      );
+      const keep = current === "multiple"
+        ? selected
+        : [selected.includes(selectedItem) ? selectedItem : selected[0]].filter(Boolean);
 
-    for (const item of allItems) {
-      if (isDisabled(item)) {
-        item.removeAttribute("aria-selected");
-      } else {
-        item.setAttribute("aria-selected", item === keepSelected ? "true" : "false");
+      for (const item of allItems) {
+        item.removeAttribute("aria-checked");
+        if (isDisabled(item)) {
+          item.removeAttribute("aria-selected");
+        } else {
+          item.setAttribute("aria-selected", keep.includes(item) ? "true" : "false");
+        }
       }
+      selectedItem = keep.includes(selectedItem) ? selectedItem : keep[0] ?? null;
+      hasSelection = keep.length > 0;
     }
-    selectedItem = keepSelected;
 
-    const active = document.activeElement?.closest?.("[data-part='item']");
+    const active = document.activeElement?.closest?.(ITEM);
     const candidates = [currentItem, active, selectedItem, authoredTabStop];
     currentItem = candidates.find(
       (item) => allItems.includes(item) && isVisible(item) && !isDisabled(item),
@@ -11334,13 +13197,18 @@ function createTreeView(root) {
       item.tabIndex = item === currentItem ? 0 : -1;
     }
 
-    root.dataset.state = selectedItem ? "selected" : "idle";
+    // Children an app appended itself (an l-for render, a listener) end a load.
+    for (const item of [...loading.keys()]) {
+      if (directGroup(item)) finishLoad(item, null);
+    }
+
+    root.dataset.state = hasSelection ? "selected" : "idle";
     return allItems;
   }
 
   function resolveItem(target) {
     const allItems = items();
-    if (target?.matches?.("[data-part='item']")) {
+    if (target?.matches?.(ITEM)) {
       return allItems.includes(target) ? target : null;
     }
     if (typeof target === "number") return allItems[target] ?? null;
@@ -11353,7 +13221,7 @@ function createTreeView(root) {
   }
 
   function itemLabel(item) {
-    const label = item.querySelector("[data-part='label']");
+    const label = labelOf(item) ?? item.querySelector("[data-part='label']");
     if (label) {
       const readable = label.cloneNode(true);
       readable.querySelectorAll("[aria-hidden='true']").forEach((node) => node.remove());
@@ -11366,53 +13234,166 @@ function createTreeView(root) {
     return item.dataset.value || item.id || itemLabel(item);
   }
 
-  function emit(type, detail) {
-    root.dispatchEvent(
-      new CustomEvent("faqir:" + type, { bubbles: true, detail }),
+  function describe(item) {
+    return { item, value: itemValue(item), label: itemLabel(item) };
+  }
+
+  function emit(type, detail, cancelable = false) {
+    return root.dispatchEvent(
+      new CustomEvent("faqir:" + type, { bubbles: true, cancelable, detail }),
     );
+  }
+
+  function ensureStatus() {
+    if (status) return status;
+    // A list cannot hold a live region, so one sits right after the tree.
+    status = tree === root
+      ? make("span", { role: "status", "data-ui": "visually-hidden" })
+      : make("p", { role: "status", "data-part": "status" });
+    if (tree === root) root.after(status);
+    else root.append(status);
+    ownStatus = status;
+    return status;
+  }
+
+  function announce(message) {
+    const region = ensureStatus();
+    // The same sentence twice is a change too, or it would not be read again.
+    region.textContent = region.textContent === message ? message + " " : message;
   }
 
   function focusItem(target) {
     const item = resolveItem(target);
     if (!item || isDisabled(item) || !isVisible(item)) return false;
 
-    currentItem = item;
-    for (const candidate of items()) {
-      candidate.tabIndex = candidate === item ? 0 : -1;
-    }
+    rove(item);
     item.focus();
     item.scrollIntoView?.({ block: "nearest" });
     return true;
   }
 
+  // ── Selection ──────────────────────────────────────────────────────────────
+
+  function commitSelection(list, item) {
+    const previousItem = selectedItem;
+    for (const candidate of items()) {
+      if (!isDisabled(candidate)) {
+        candidate.setAttribute("aria-selected", list.includes(candidate) ? "true" : "false");
+      }
+    }
+
+    selectedItem = list.includes(item) ? item : list[list.length - 1] ?? null;
+    rove(item);
+    root.dataset.state = list.length > 0 ? "selected" : "idle";
+
+    emit("select", {
+      ...describe(item),
+      previousItem,
+      previousValue: previousItem ? itemValue(previousItem) : null,
+      items: list,
+      values: list.map(itemValue),
+    });
+  }
+
+  /**
+   * Select one item, replacing the selection; in checkbox mode, check it.
+   * @param {Element|string|number} target an item, its value or id, or its index
+   * @returns {boolean} whether an enabled item matched
+   */
   function select(target) {
     refresh();
     const item = resolveItem(target);
     if (!item || isDisabled(item)) return false;
+    if (mode() === "checkbox") return check(item, true);
 
-    const previousItem = selectedItem;
-    for (const candidate of items()) {
-      if (!isDisabled(candidate)) {
-        candidate.setAttribute("aria-selected", candidate === item ? "true" : "false");
-      }
-    }
-
-    selectedItem = item;
-    currentItem = item;
-    for (const candidate of items()) {
-      candidate.tabIndex = candidate === item ? 0 : -1;
-    }
-    root.dataset.state = "selected";
-
-    emit("select", {
-      item,
-      value: itemValue(item),
-      label: itemLabel(item),
-      previousItem,
-      previousValue: previousItem ? itemValue(previousItem) : null,
-    });
+    anchor = item;
+    commitSelection([item], item);
     return true;
   }
+
+  function toggleSelected(item) {
+    const list = getSelection();
+    anchor = item;
+    commitSelection(
+      list.includes(item) ? list.filter((other) => other !== item) : [...list, item],
+      item,
+    );
+  }
+
+  function selectRange(from, to, additive) {
+    const visible = visibleItems();
+    const end = visible.indexOf(to);
+    if (end === -1) return;
+    const start = visible.includes(from) ? visible.indexOf(from) : end;
+    anchor = visible[start];
+    const range = visible.slice(Math.min(start, end), Math.max(start, end) + 1);
+    commitSelection(additive ? [...new Set([...getSelection(), ...range])] : range, to);
+  }
+
+  /**
+   * Select every visible enabled item (multiple mode), or check them all
+   * (checkbox mode).
+   * @returns {boolean} false in single mode, which has no "all"
+   */
+  function selectAll() {
+    refresh();
+    const current = mode();
+    const visible = visibleItems();
+    if (current === "single" || visible.length === 0) return false;
+    const item = visible.includes(currentItem) ? currentItem : visible[0];
+    if (current === "checkbox") {
+      for (const node of visible) setChecked(node, true);
+      deriveChecks(tree);
+      root.dataset.state = "selected";
+      emit("check", checkDetail(item, true));
+    } else {
+      commitSelection(visible, item);
+    }
+    announce(`${visible.length} ${visible.length === 1 ? "item" : "items"} selected`);
+    return true;
+  }
+
+  // ── Checkbox mode ──────────────────────────────────────────────────────────
+
+  function setChecked(item, on) {
+    for (const node of [item, ...descendants(item)]) {
+      if (!isDisabled(node)) node.setAttribute("aria-checked", String(on));
+    }
+  }
+
+  function checkDetail(item, checked) {
+    const list = getSelection();
+    return { ...describe(item), checked, items: list, values: list.map(itemValue) };
+  }
+
+  /**
+   * Check or uncheck an item and every enabled item under it, then derive its
+   * ancestors (checkbox mode). Without `state` it toggles: a parent whose
+   * enabled leaves are all checked unchecks, anything else checks.
+   * @param {Element|string|number} target the item
+   * @param {boolean} [state] true to check, false to uncheck
+   * @returns {boolean} whether an enabled item matched in checkbox mode
+   */
+  function check(target, state) {
+    refresh();
+    const item = resolveItem(target);
+    if (!item || isDisabled(item) || mode() !== "checkbox") return false;
+
+    const leaves = [item, ...descendants(item)].filter(
+      (node) => !isDisabled(node) && !directItems(directGroup(node) ?? node).length,
+    );
+    const next = state === undefined
+      ? !leaves.every((node) => node.getAttribute("aria-checked") === "true")
+      : Boolean(state);
+
+    setChecked(item, next);
+    deriveChecks(tree);
+    root.dataset.state = getSelection().length > 0 ? "selected" : "idle";
+    emit("check", checkDetail(item, next));
+    return true;
+  }
+
+  // ── Expansion and lazy children ────────────────────────────────────────────
 
   function setExpanded(target, expanded) {
     refresh();
@@ -11421,45 +13402,593 @@ function createTreeView(root) {
 
     const next = Boolean(expanded);
     const changed = item.getAttribute("aria-expanded") !== String(next);
-    item.setAttribute("aria-expanded", String(next));
-    const group = directGroup(item);
-    if (group) group.hidden = !next;
-    syncParentState(item);
+    if (transient.get(item) === "error") transient.delete(item);
+    setOpen(item, next);
     refresh();
 
+    const lazy = isLazy(item) && !directGroup(item);
     if (changed) {
-      emit("expand", {
-        item,
-        value: itemValue(item),
-        label: itemLabel(item),
-        expanded: next,
-        lazy: isLazy(item) && !group,
-      });
+      emit("expand", { ...describe(item), expanded: next, lazy });
     }
+    // A listener may have supplied the children already; otherwise load them.
+    if (next && lazy && !directGroup(item)) load(item);
     return true;
   }
 
+  /**
+   * Expand a parent item; an unloaded lazy item starts loading its children.
+   * @param {Element|string|number} target the item
+   * @returns {boolean} whether an enabled parent matched
+   */
   function expand(target) {
     return setExpanded(target, true);
   }
 
+  /**
+   * Collapse a parent item.
+   * @param {Element|string|number} target the item
+   * @returns {boolean} whether an enabled parent matched
+   */
   function collapse(target) {
     return setExpanded(target, false);
   }
 
+  /**
+   * Expand a collapsed parent or collapse an expanded one.
+   * @param {Element|string|number} target the item
+   * @returns {boolean} whether a parent matched
+   */
   function toggle(target) {
     refresh();
     const item = resolveItem(target);
     if (!item || !isExpandable(item)) return false;
-    return setExpanded(item, item.getAttribute("aria-expanded") !== "true");
+    return setExpanded(item, !isOpen(item));
   }
 
+  /**
+   * Register the function that loads a lazy item's children: it receives
+   * `{ item, value, label, attempt }` and returns (a Promise of) an array of
+   * `{ label, value, lazy, disabled, checked, children }`, item elements or
+   * markup. Pass null to remove it.
+   * @param {Function|null} fn the loader
+   */
+  function setLoader(fn) {
+    loader = typeof fn === "function" ? fn : null;
+  }
+
+  /**
+   * Load a lazy item's children now — what expanding it does. Fires
+   * `faqir:load`, whose `detail.respond(result)` supplies them, then falls back
+   * to the registered loader, then waits for the app to append a group.
+   * @param {Element|string|number} target the lazy item
+   * @returns {boolean} whether a load started
+   */
+  function load(target) {
+    const item = resolveItem(target);
+    if (!item || !isLazy(item) || directGroup(item) || loading.has(item)) return false;
+
+    const attempt = (attempts.get(item) ?? 0) + 1;
+    attempts.set(item, attempt);
+    const token = {};
+    loading.set(item, token);
+    setTransient(item, "loading");
+    item.setAttribute("aria-busy", "true");
+    childPart(labelOf(item), "retry")?.remove();
+    if (!childPart(labelOf(item), "spinner")) {
+      labelOf(item)?.append(make("span", {
+        "data-ui": "spinner", "data-size": "sm", "data-part": "spinner", "aria-hidden": "true",
+      }));
+    }
+    announce(`Loading ${itemLabel(item)}`);
+
+    let result;
+    emit("load", { ...describe(item), attempt, respond(value) { result = value; } });
+    if (result === undefined && loader) result = loader({ ...describe(item), attempt });
+
+    if (directGroup(item)) {
+      finishLoad(item, null);
+    } else if (result !== undefined) {
+      Promise.resolve(result).then(
+        (content) => {
+          if (loading.get(item) !== token || !root.contains(item)) return;
+          const children = newGroup();
+          children.append(...toNodes(content));
+          item.append(children);
+          finishLoad(item, null);
+        },
+        (error) => {
+          if (loading.get(item) === token && root.contains(item)) {
+            finishLoad(item, error ?? new Error("load failed"));
+          }
+        },
+      );
+    }
+    return true;
+  }
+
+  function finishLoad(item, error) {
+    loading.delete(item);
+    item.removeAttribute("aria-busy");
+    const label = labelOf(item);
+    childPart(label, "spinner")?.remove();
+    setTransient(item, error ? "error" : null);
+    if (error) {
+      item.setAttribute("aria-expanded", "false");
+      // Pointer affordance only: the announcement gives keyboard users the key.
+      label?.append(make("button", {
+        type: "button", "data-part": "retry", tabindex: "-1", "aria-hidden": "true",
+      }, "Retry"));
+    }
+    refresh();
+
+    const group = directGroup(item);
+    const count = group ? directItems(group).length : 0;
+    const name = itemLabel(item);
+    announce(error
+      ? `Couldn't load ${name}. Press Right Arrow to try again.`
+      : `${name} loaded, ${count} ${count === 1 ? "item" : "items"}`);
+    emit("loaded", { ...describe(item), count, error: error ?? null });
+  }
+
+  function toNodes(content) {
+    if (content == null) return [];
+    if (typeof content === "string") {
+      const template = document.createElement("template");
+      template.innerHTML = content;
+      return [...template.content.childNodes];
+    }
+    if (Array.isArray(content)) {
+      return content.flatMap((entry) =>
+        entry && typeof entry === "object" && !(entry instanceof Node)
+          ? [buildItem(entry)]
+          : toNodes(entry));
+    }
+    if (content instanceof Node) {
+      return content.nodeType === 11 || content.matches?.("[data-part='group']")
+        ? [...content.childNodes]
+        : [content];
+    }
+    return [];
+  }
+
+  function buildItem(entry) {
+    const item = make("li", { "data-part": "item" });
+    if (entry.value != null) item.dataset.value = String(entry.value);
+    if (entry.lazy) item.dataset.lazy = "true";
+    if (entry.disabled) item.setAttribute("aria-disabled", "true");
+    if (entry.checked != null) item.setAttribute("aria-checked", String(entry.checked));
+
+    const label = make("span", { "data-part": "label" });
+    label.innerHTML = '<span data-part="toggle" aria-hidden="true">›</span>' +
+      (root.querySelector("[data-part='icon']") ? '<span data-part="icon" aria-hidden="true"></span>' : "");
+    label.append(String(entry.label ?? entry.value ?? ""));
+    item.append(label);
+
+    if (entry.children?.length) {
+      const children = newGroup();
+      children.hidden = true;
+      children.append(...entry.children.map(buildItem));
+      item.setAttribute("aria-expanded", "false");
+      item.append(children);
+    }
+    return item;
+  }
+
+  // ── Filtering ──────────────────────────────────────────────────────────────
+
+  function labelText(item) {
+    const label = labelOf(item);
+    const nodes = [];
+    let text = "";
+    if (!label) return { text, nodes };
+    const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement?.closest("[aria-hidden='true']")?.closest("[data-part='label']") === label) continue;
+      nodes.push([node, text.length]);
+      text += node.data;
+    }
+    return { text, nodes };
+  }
+
+  function highlight(nodes, start, length) {
+    const registry = globalThis.CSS?.highlights;
+    if (!registry || typeof Highlight === "undefined") return;
+    const range = document.createRange();
+    const place = (offset, edge) => {
+      const found = nodes.findLast(([, at]) => at <= offset) ?? nodes[0];
+      range[edge](found[0], Math.min(offset - found[1], found[0].length));
+    };
+    place(start, "setStart");
+    place(start + length, "setEnd");
+    let entry = registry.get(HIGHLIGHT);
+    if (!entry) registry.set(HIGHLIGHT, entry = new Highlight());
+    entry.add(range);
+    ranges.push(range);
+  }
+
+  function applyFilter(raw) {
+    const needle = String(raw ?? "").trim().toLocaleLowerCase();
+    const entry = globalThis.CSS?.highlights?.get(HIGHLIGHT);
+    for (const range of ranges) entry?.delete(range);
+    ranges = [];
+    for (const item of filtered) item.hidden = false;
+    filtered.clear();
+
+    let count = 0;
+    if (!needle) {
+      if (snapshot) {
+        for (const [item, open] of snapshot) if (root.contains(item)) setOpen(item, open);
+      }
+      snapshot = null;
+    } else {
+      snapshot ??= new Map(
+        items().filter((item) => item.hasAttribute("aria-expanded")).map((item) => [item, isOpen(item)]),
+      );
+      // A match keeps its ancestors visible and open; under a matching parent
+      // every child stays visible, as it was.
+      const walk = (container, keep) => {
+        let found = false;
+        for (const item of directItems(container)) {
+          // Hidden by the page, not by this filter: neither match nor reveal it.
+          if (item.hidden) continue;
+          const { text, nodes } = labelText(item);
+          const at = text.toLocaleLowerCase().indexOf(needle);
+          const group = directGroup(item);
+          const inner = group ? walk(group, keep || at !== -1) : false;
+          if (at !== -1) {
+            count++;
+            highlight(nodes, at, needle.length);
+          }
+          if (inner) setOpen(item, true);
+          if (at === -1 && !inner && !keep) {
+            item.hidden = true;
+            filtered.add(item);
+          }
+          found ||= at !== -1 || inner;
+        }
+        return found;
+      };
+      walk(tree, false);
+    }
+
+    query = needle;
+    if (empty) empty.hidden = !needle || count > 0;
+    refresh();
+    emit("filter", { query: String(raw ?? ""), count });
+    return count;
+  }
+
+  function filterMessage(count) {
+    if (!query) return "Filter cleared";
+    return count === 0
+      ? `No items match ${query}`
+      : `${count} ${count === 1 ? "item matches" : "items match"} ${query}`;
+  }
+
+  /**
+   * Show only items whose label contains `query` (case-insensitive), with
+   * their ancestors expanded, and announce the count. An empty query restores
+   * every item and the expansion from before filtering.
+   * @param {string} query the text to match
+   * @returns {number} how many items match
+   */
+  function filter(query) {
+    if (filterInput) filterInput.value = query ?? "";
+    const count = applyFilter(query);
+    announce(filterMessage(count));
+    return count;
+  }
+
+  function onFilterInput() {
+    const count = applyFilter(filterInput.value);
+    clearTimeout(announceTimer);
+    // Wait for typing to pause, so one count is read rather than one per key.
+    announceTimer = setTimeout(() => announce(filterMessage(count)), 400);
+  }
+
+  function onFilterKeyDown(event) {
+    if (event.key === "ArrowDown") {
+      const first = visibleItems()[0];
+      if (first) {
+        event.preventDefault();
+        focusItem(first);
+      }
+    } else if (event.key === "Escape" && filterInput.value) {
+      event.preventDefault();
+      filter("");
+    }
+  }
+
+  // ── Moving items ───────────────────────────────────────────────────────────
+
+  function canNest(item) {
+    return !isDisabled(item) &&
+      Boolean(directGroup(item) || (item.hasAttribute("aria-expanded") && !isLazy(item)));
+  }
+
+  function canDrop(source, target, position) {
+    return Boolean(source && target) && source !== target && !source.contains(target) &&
+      !isDisabled(source) && (position === "inside" ? canNest(target) : position === "before" || position === "after");
+  }
+
+  // Where a drop would put `source`: its new container and next sibling.
+  function destination(source, target, position) {
+    if (position === "inside") return [directGroup(target), null];
+    let next = position === "before" ? target : target.nextElementSibling;
+    while (next && (next === source || !next.matches(ITEM))) next = next.nextElementSibling;
+    return [target.parentElement, next];
+  }
+
+  function nextItem(item) {
+    let next = item.nextElementSibling;
+    while (next && !next.matches(ITEM)) next = next.nextElementSibling;
+    return next;
+  }
+
+  /**
+   * Move an item before or after another, or inside a parent (as its last
+   * child), then renumber levels and positions. Fires the cancelable
+   * `faqir:move` first; an item never moves into its own subtree.
+   * @param {Element|string|number} source the item to move
+   * @param {Element|string|number} target the item to move it next to or into
+   * @param {"before"|"after"|"inside"} position where, relative to target
+   * @returns {boolean} whether the item moved
+   */
+  function move(source, target, position) {
+    refresh();
+    const item = resolveItem(source);
+    const to = resolveItem(target);
+    if (!canDrop(item, to, position)) return false;
+
+    const [container, next] = destination(item, to, position);
+    const parent = position === "inside" ? to : parentItem(to);
+    const siblings = container ? directItems(container).filter((node) => node !== item) : [];
+    const index = next ? siblings.indexOf(next) : siblings.length;
+    const proceed = emit("move", {
+      ...describe(item),
+      target: to,
+      targetValue: itemValue(to),
+      position,
+      parent,
+      parentValue: parent ? itemValue(parent) : null,
+      index,
+    }, true);
+    if (!proceed) return false;
+
+    const hadFocus = item.contains(document.activeElement);
+    if (position === "inside") {
+      const children = directGroup(to) ?? to.appendChild(newGroup());
+      children.append(item);
+      setOpen(to, true);
+    } else if (position === "before") {
+      to.before(item);
+    } else {
+      to.after(item);
+    }
+    refresh();
+    if (hadFocus) focusItem(item);
+    return true;
+  }
+
+  function placeText(target, position) {
+    const where = position === "inside" ? "Inside" : position === "before" ? "Before" : "After";
+    const level = Number(target.getAttribute("aria-level")) + (position === "inside" ? 1 : 0);
+    return `${where} ${itemLabel(target)}, level ${level}`;
+  }
+
+  function movedText(item, target, position) {
+    const where = position === "inside" ? "into" : position;
+    return `Moved ${itemLabel(item)} ${where} ${itemLabel(target)}`;
+  }
+
+  // Every place the grabbed item could go, in reading order; `origin` counts
+  // the places above where it sits now. Places that would not move it are left out.
+  function dropTargets(source) {
+    const list = [];
+    let origin = 0;
+    const [home, homeNext] = [source.parentElement, nextItem(source)];
+    const add = (target, position) => {
+      const [container, next] = destination(source, target, position);
+      if (!(container === home && next === homeNext)) list.push([target, position]);
+    };
+    const walk = (container) => {
+      const kids = directItems(container).filter((item) => !item.hidden);
+      const last = kids.filter((item) => item !== source).pop();
+      for (const item of kids) {
+        if (item === source) {
+          origin = list.length;
+          continue;
+        }
+        add(item, "before");
+        if (canNest(item)) add(item, "inside");
+        if (directGroup(item) && isOpen(item)) walk(directGroup(item));
+        if (item === last) add(item, "after");
+      }
+    };
+    walk(tree);
+    return { list, origin };
+  }
+
+  function showIndicator(target, position) {
+    if (!indicator) {
+      indicator = tree.appendChild(make("li", { "data-part": "drop-indicator", "aria-hidden": "true" }));
+    }
+    const label = labelOf(target) ?? target;
+    const base = tree.getBoundingClientRect();
+    const row = label.getBoundingClientRect();
+    const box = position === "after" ? target.getBoundingClientRect() : row;
+    const rtl = getComputedStyle(tree).direction === "rtl";
+    indicator.dataset.state = position;
+    Object.assign(indicator.style, {
+      insetBlockStart: `${(position === "after" ? box.bottom : box.top) - base.top + tree.scrollTop}px`,
+      insetInlineStart: `${rtl ? base.right - row.right : row.left - base.left}px`,
+      inlineSize: `${row.width}px`,
+      blockSize: position === "inside" ? `${row.height}px` : "",
+    });
+  }
+
+  function hideIndicator() {
+    indicator?.remove();
+    indicator = null;
+  }
+
+  function pickUp(item) {
+    const { list, origin } = dropTargets(item);
+    grab = { item, list, origin, index: -1 };
+    setTransient(item, "grabbed");
+    announce(`Picked up ${itemLabel(item)}. Press Up or Down Arrow to choose a place, Enter to drop, Escape to cancel.`);
+  }
+
+  function endGrab(message) {
+    if (!grab) return;
+    const { item } = grab;
+    grab = null;
+    hideIndicator();
+    setTransient(item, null);
+    if (message) announce(message);
+  }
+
+  function cancelText(item) {
+    return `Move cancelled. ${itemLabel(item)} stays where it was.`;
+  }
+
+  function onGrabKey(event) {
+    const { item, list, origin, index } = grab;
+    const key = event.key;
+    if (key === "Escape" || key === "Tab") {
+      if (key === "Escape") event.preventDefault();
+      endGrab(cancelText(item));
+      return;
+    }
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      const chosen = list[index];
+      endGrab();
+      announce(chosen && move(item, chosen[0], chosen[1])
+        ? movedText(item, chosen[0], chosen[1])
+        : `${itemLabel(item)} was not moved`);
+      return;
+    }
+    const delta = { ArrowDown: 1, ArrowUp: -1 }[key];
+    if (!delta && key !== "Home" && key !== "End") {
+      // Left and Right would expand or leave the item: nothing else moves here.
+      if (key === "ArrowLeft" || key === "ArrowRight") event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    let next = key === "Home" ? 0 : key === "End" ? list.length - 1
+      : index === -1 ? origin - (delta < 0 ? 1 : 0) : index + delta;
+    if (list.length === 0 || next < 0 || next >= list.length) {
+      announce(list.length === 0 ? "There is nowhere else to move it"
+        : next < 0 ? "Top of the tree" : "End of the tree");
+      return;
+    }
+    grab.index = next;
+    const [target, position] = list[next];
+    showIndicator(target, position);
+    announce(placeText(target, position));
+  }
+
+  function dropAt(event) {
+    const target = event.target instanceof Element ? event.target.closest(ITEM) : null;
+    if (!target || !belongsToTree(target)) return null;
+    const row = (labelOf(target) ?? target).getBoundingClientRect();
+    const y = (event.clientY - row.top) / (row.height || 1);
+    let position = canNest(target)
+      ? y < 0.25 ? "before" : y > 0.75 ? "after" : "inside"
+      : y < 0.5 ? "before" : "after";
+    let at = target;
+    // Below an open parent's row is its first child's top edge, not its end.
+    const first = position === "after" && isOpen(target) && directGroup(target)
+      ? directItems(directGroup(target)).find((node) => !node.hidden)
+      : null;
+    if (first) {
+      at = first;
+      position = "before";
+    }
+    return canDrop(drag.item, at, position) ? [at, position] : null;
+  }
+
+  function onDragStart(event) {
+    if (!draggable() || !(event.target instanceof Element)) return;
+    const item = event.target.closest(ITEM);
+    if (!item || !belongsToTree(item) || isDisabled(item)) return;
+    drag = { item, hit: null };
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", itemValue(item));
+      const label = labelOf(item);
+      if (label) event.dataTransfer.setDragImage?.(label, 16, 12);
+    }
+    // After the browser has taken its drag image of the undimmed row.
+    setTimeout(() => drag?.item === item && setTransient(item, "grabbed"));
+  }
+
+  function onDragOver(event) {
+    if (!drag) return;
+    const hit = dropAt(event);
+    const [target, position] = hit ?? [];
+    if (target !== drag.hit?.[0] || position !== drag.hit?.[1]) {
+      clearTimeout(expandTimer);
+      // Hovering inside a closed parent opens it, so a drop can reach deeper.
+      if (position === "inside" && !isOpen(target)) {
+        expandTimer = setTimeout(() => drag && expand(target), 700);
+      }
+    }
+    drag.hit = hit;
+    if (!hit) {
+      hideIndicator();
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    showIndicator(target, position);
+  }
+
+  function onDragLeave(event) {
+    if (drag && !root.contains(event.relatedTarget)) {
+      drag.hit = null;
+      hideIndicator();
+    }
+  }
+
+  function endDrag() {
+    clearTimeout(expandTimer);
+    if (drag) setTransient(drag.item, null);
+    drag = null;
+    hideIndicator();
+  }
+
+  function onDrop(event) {
+    if (!drag) return;
+    event.preventDefault();
+    const { item, hit } = drag;
+    endDrag();
+    if (hit && move(item, hit[0], hit[1])) announce(movedText(item, hit[0], hit[1]));
+  }
+
+  // ── Keyboard and pointer ───────────────────────────────────────────────────
+
+  /**
+   * The selected item (single and multiple mode), or null.
+   * @returns {Element|null}
+   */
   function getSelected() {
     refresh();
     return selectedItem;
   }
 
-  function move(item, delta) {
+  /**
+   * Every selected item, or every checked item in checkbox mode, in tree order.
+   * @returns {Element[]}
+   */
+  function getSelection() {
+    const attr = mode() === "checkbox" ? "aria-checked" : "aria-selected";
+    return items().filter((item) => item.getAttribute(attr) === "true");
+  }
+
+  function step(item, delta) {
     const visible = visibleItems();
     const index = visible.indexOf(item);
     if (index === -1) return false;
@@ -11481,7 +14010,7 @@ function createTreeView(root) {
       typeaheadTimer = null;
     }, 500);
 
-    const query = [...typeahead].every((character) => character === typeahead[0])
+    const prefix = [...typeahead].every((character) => character === typeahead[0])
       ? typeahead[0]
       : typeahead;
     const visible = visibleItems();
@@ -11490,7 +14019,7 @@ function createTreeView(root) {
 
     for (let offset = 1; offset <= visible.length; offset++) {
       const candidate = visible[(start + offset) % visible.length];
-      if (itemLabel(candidate).toLocaleLowerCase().startsWith(query)) {
+      if (itemLabel(candidate).toLocaleLowerCase().startsWith(prefix)) {
         return focusItem(candidate);
       }
     }
@@ -11499,46 +14028,62 @@ function createTreeView(root) {
 
   function onKeyDown(event) {
     if (!(event.target instanceof Element)) return;
-    const item = event.target.closest("[data-part='item']");
+    const item = event.target.closest(ITEM);
     if (!item || !belongsToTree(item) || isDisabled(item)) return;
+    if (grab) {
+      onGrabKey(event);
+      return;
+    }
+
+    const current = mode();
+    const multiple = current === "multiple";
+    const command = event.ctrlKey || event.metaKey;
+    const ranged = multiple && event.shiftKey;
+    if (!anchor || !items().includes(anchor)) anchor = item;
+
+    if (event.key === "Enter" && event.altKey && draggable()) {
+      event.preventDefault();
+      pickUp(item);
+      return;
+    }
+    if (current !== "single" && command && event.key.toLowerCase() === "a") {
+      event.preventDefault();
+      selectAll();
+      return;
+    }
 
     switch (event.key) {
       case "ArrowDown":
-        event.preventDefault();
-        move(item, 1);
-        break;
       case "ArrowUp":
         event.preventDefault();
-        move(item, -1);
+        if (step(item, event.key === "ArrowDown" ? 1 : -1) && ranged) {
+          selectRange(anchor, currentItem);
+        }
         break;
-      case "Home": {
-        event.preventDefault();
-        const first = visibleItems()[0];
-        if (first) focusItem(first);
-        break;
-      }
+      case "Home":
       case "End": {
         event.preventDefault();
         const visible = visibleItems();
-        if (visible.length > 0) focusItem(visible[visible.length - 1]);
+        const edge = event.key === "Home" ? visible[0] : visible[visible.length - 1];
+        if (edge && focusItem(edge) && ranged && command) selectRange(item, edge);
         break;
       }
       case "ArrowRight": {
         event.preventDefault();
         if (!isExpandable(item)) break;
-        if (item.getAttribute("aria-expanded") !== "true") {
+        if (!isOpen(item)) {
           expand(item);
           break;
         }
         const child = directGroup(item)
-          ? directItems(directGroup(item)).find((candidate) => !isDisabled(candidate))
+          ? directItems(directGroup(item)).find((candidate) => !isDisabled(candidate) && isVisible(candidate))
           : null;
         if (child) focusItem(child);
         break;
       }
       case "ArrowLeft": {
         event.preventDefault();
-        if (isExpandable(item) && item.getAttribute("aria-expanded") === "true") {
+        if (isExpandable(item) && isOpen(item)) {
           collapse(item);
           break;
         }
@@ -11549,7 +14094,11 @@ function createTreeView(root) {
       case "Enter":
       case " ":
         event.preventDefault();
-        select(item);
+        if (current === "checkbox") check(item);
+        else if (multiple && event.key === " ") {
+          if (event.shiftKey) selectRange(anchor, item);
+          else toggleSelected(item);
+        } else select(item);
         break;
       case "*": {
         event.preventDefault();
@@ -11574,18 +14123,30 @@ function createTreeView(root) {
 
   function onClick(event) {
     if (!(event.target instanceof Element)) return;
-    const item = event.target.closest("[data-part='item']");
+    const item = event.target.closest(ITEM);
     if (!item || !belongsToTree(item)) return;
     if (isDisabled(item)) {
       event.preventDefault();
       return;
     }
+    if (grab) endGrab(cancelText(grab.item));
 
+    const current = mode();
+    const from = anchor && items().includes(anchor) ? anchor : currentItem;
     focusItem(item);
-    const togglePart = event.target.closest("[data-part='toggle']");
-    if (togglePart && togglePart.closest("[data-part='item']") === item) {
+    const owned = (name) => event.target.closest(`[data-part='${name}']`)?.closest(ITEM) === item;
+    if (owned("retry")) {
+      event.preventDefault();
+      expand(item);
+    } else if (owned("toggle")) {
       event.preventDefault();
       toggle(item);
+    } else if (current === "checkbox") {
+      check(item);
+    } else if (current === "multiple" && event.shiftKey) {
+      selectRange(from, item, event.ctrlKey || event.metaKey);
+    } else if (current === "multiple" && (event.ctrlKey || event.metaKey)) {
+      toggleSelected(item);
     } else {
       select(item);
     }
@@ -11593,32 +14154,56 @@ function createTreeView(root) {
 
   function onFocusIn(event) {
     if (!(event.target instanceof Element)) return;
-    const item = event.target.closest("[data-part='item']");
+    const item = event.target.closest(ITEM);
     if (!item || !belongsToTree(item) || isDisabled(item)) return;
 
-    currentItem = item;
-    for (const candidate of items()) {
-      candidate.tabIndex = candidate === item ? 0 : -1;
-    }
+    rove(item);
   }
 
-  root.addEventListener("keydown", onKeyDown);
-  root.addEventListener("click", onClick);
-  root.addEventListener("focusin", onFocusIn);
+  function onFocusOut(event) {
+    if (grab && !grab.item.contains(event.relatedTarget)) endGrab(cancelText(grab.item));
+  }
+
+  const listeners = [
+    ["keydown", onKeyDown],
+    ["click", onClick],
+    ["focusin", onFocusIn],
+    ["focusout", onFocusOut],
+    ["dragstart", onDragStart],
+    ["dragover", onDragOver],
+    ["dragleave", onDragLeave],
+    ["drop", onDrop],
+    ["dragend", endDrag],
+  ];
+  for (const [type, listener] of listeners) root.addEventListener(type, listener);
+  filterInput?.addEventListener("input", onFilterInput);
+  filterInput?.addEventListener("keydown", onFilterKeyDown);
 
   function onMutation() {
     refresh();
+    // Nodes rendered while a filter is on are filtered too.
+    if (query) applyFilter(query);
   }
 
   const observer = new MutationObserver(onMutation);
   observer.observe(root, { childList: true, subtree: true });
 
+  /**
+   * Remove every listener, the observer and the timers, and end any drag.
+   */
   function destroy() {
-    root.removeEventListener("keydown", onKeyDown);
-    root.removeEventListener("click", onClick);
-    root.removeEventListener("focusin", onFocusIn);
+    for (const [type, listener] of listeners) root.removeEventListener(type, listener);
+    filterInput?.removeEventListener("input", onFilterInput);
+    filterInput?.removeEventListener("keydown", onFilterKeyDown);
     observer.disconnect();
     if (typeaheadTimer) clearTimeout(typeaheadTimer);
+    clearTimeout(announceTimer);
+    endGrab();
+    endDrag();
+    loading.clear();
+    const marks = globalThis.CSS?.highlights?.get(HIGHLIGHT);
+    for (const range of ranges) marks?.delete(range);
+    ownStatus?.remove();
     delete root._faqirTreeView;
   }
 
@@ -11627,15 +14212,493 @@ function createTreeView(root) {
     expand,
     collapse,
     toggle,
+    check,
+    selectAll,
+    filter,
+    load,
+    setLoader,
+    move,
     refresh,
     getSelected,
+    getSelection,
     destroy,
   };
   root._faqirTreeView = api;
   refresh();
+  if (draggable() || items().some(isLazy)) ensureStatus();
   return api;
 }
     return createTreeView;
+  })();
+
+  // ── video-player ── (registry/recipes/video-player/video-player.js)
+  var createVideoPlayer = controllerRegistry["video-player"] = (function() {
+// @ui:controller video-player
+// @ui:provides play pause toggle seek setVolume toggleMute setRate toggleCaptions toggleFullscreen destroy
+
+const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+/**
+ * video-player — custom controls over a native `<video>`.
+ *
+ * The reference markup ships `<video controls>` and the custom chrome `hidden`,
+ * so with no script the browser's own controls run the video. On init the
+ * controller takes `controls` away and un-hides its own: a big centre play
+ * button, a scrubber (role="slider", buffered range, hover time), elapsed and
+ * duration, mute and a volume slider, a playback-rate cycle, a captions toggle
+ * (hidden without a captions/subtitles track; cues are drawn in the `cue` part
+ * so they sit above the bar), picture-in-picture (hidden where unsupported) and
+ * fullscreen on the root. destroy() hands the video back to its native controls.
+ *
+ * State lives on the root's data-state — paused | playing | buffering | ended |
+ * error — and the controls part is `data-state="hidden"` while playback runs
+ * untouched; any pointer movement, focus or key press brings it back, and it
+ * never hides while keyboard focus is inside the player. Positions are CSS:
+ * --video-player-progress, --video-player-buffered, --video-player-volume and
+ * --video-player-hover on the root.
+ *
+ * Shortcuts run while focus is anywhere in the player: Space/K play-pause, ←/→
+ * ±5 s, J/L ±10 s, ↑/↓ volume, M mute, F fullscreen, C captions, Home/End,
+ * 0–9 seek to that tenth, < / > speed. A slider owns the arrows, Page and
+ * Home/End keys while it has focus; Space and Enter on a button press it.
+ */
+function createVideoPlayer(root) {
+  if (root._faqirVideoPlayer) return root._faqirVideoPlayer;
+
+  const part = (name) => ownParts(root, name)[0] || null;
+  const video = part("video");
+  if (!video) return null;
+  const controls = part("controls");
+  const scrubber = part("scrubber");
+  const tooltip = part("tooltip");
+  const volume = part("volume");
+  const elapsed = part("elapsed");
+  const total = part("duration");
+  const bigPlay = part("big-play");
+  const playBtn = part("play");
+  const muteBtn = part("mute");
+  const rateBtn = part("rate");
+  const ccBtn = part("captions");
+  const pipBtn = part("pip");
+  const fsBtn = part("fullscreen");
+  const cue = part("cue");
+  const message = part("message");
+  const status = part("status");
+
+  const offs = [];
+  const on = (el, map, opts) => {
+    if (!el) return;
+    for (const k in map) el.addEventListener(k, map[k], opts);
+    offs.push(() => {
+      for (const k in map) el.removeEventListener(k, map[k], opts);
+    });
+  };
+  const css = (name, pct) => root.style.setProperty("--video-player-" + name, pct + "%");
+  const label = (el, text) => el && el.setAttribute("aria-label", text);
+  const pressed = (el, on) => el && el.setAttribute("aria-pressed", String(!!on));
+  const dur = () => (Number.isFinite(video.duration) ? video.duration : 0);
+  const rtl = () => getComputedStyle(root).direction === "rtl";
+
+  // Hand the native controls over to ours.
+  const hadControls = video.hasAttribute("controls");
+  video.controls = false;
+  for (const el of [controls, bigPlay]) if (el) el.hidden = false;
+
+  // Captions: the first captions/subtitles track. Its cues are rendered in the
+  // `cue` part (mode "hidden" keeps them loading and firing cuechange without
+  // the browser painting them under our bar).
+  const trackEl = video.querySelector("track[kind='captions'], track[kind='subtitles']");
+  const track = trackEl && trackEl.track;
+  let captions = !!track && (trackEl.hasAttribute("default") || track.mode === "showing");
+  if (ccBtn) ccBtn.hidden = !track;
+  const pipOk = !!(document.pictureInPictureEnabled && video.requestPictureInPicture && !video.disablePictureInPicture);
+  if (pipBtn) pipBtn.hidden = !pipOk;
+  if (fsBtn) fsBtn.hidden = !(document.fullscreenEnabled && root.requestFullscreen);
+
+  let waiting = false;
+
+  function sync() {
+    const state = video.error
+      ? "error"
+      : video.ended
+        ? "ended"
+        : video.paused
+          ? "paused"
+          : waiting
+            ? "buffering"
+            : "playing";
+    if (root.dataset.state !== state) {
+      root.dataset.state = state;
+      root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { state } }));
+      if (state !== "playing") wake();
+    }
+    const word = state === "playing" || state === "buffering" ? "Pause" : state === "ended" ? "Replay" : "Play";
+    label(playBtn, word);
+    label(bigPlay, word);
+    if (message) message.hidden = state !== "error";
+
+    const d = dur();
+    const t = video.currentTime || 0;
+    css("progress", d ? (t / d) * 100 : 0);
+    if (elapsed) elapsed.textContent = clock(t);
+    if (total) total.textContent = clock(d);
+    if (scrubber) {
+      scrubber.setAttribute("aria-valuemax", String(Math.floor(d)));
+      scrubber.setAttribute("aria-valuenow", String(Math.floor(t)));
+      scrubber.setAttribute("aria-valuetext", spoken(t) + " of " + spoken(d));
+    }
+    let end = 0;
+    const b = video.buffered;
+    if (b && d) for (let i = 0; i < b.length; i++) if (b.start(i) <= t + 0.5) end = Math.max(end, b.end(i));
+    css("buffered", d ? (end / d) * 100 : 0);
+
+    const vol = Math.round(video.volume * 100);
+    css("volume", video.muted ? 0 : vol);
+    pressed(muteBtn, video.muted);
+    if (volume) {
+      volume.setAttribute("aria-valuenow", String(vol));
+      volume.setAttribute("aria-valuetext", video.muted ? "Muted" : vol + "%");
+    }
+    const rate = video.playbackRate;
+    if (rateBtn) {
+      rateBtn.textContent = rate + "×";
+      label(rateBtn, "Playback speed " + rate + "×");
+    }
+    pressed(ccBtn, captions);
+    pressed(pipBtn, document.pictureInPictureElement === video);
+    pressed(fsBtn, document.fullscreenElement === root);
+  }
+
+  function renderCue() {
+    if (!cue) return;
+    const text = captions && track && track.activeCues
+      ? [...track.activeCues].map((c) => c.text.replace(/<[^>]*>/g, "")).join("\n")
+      : "";
+    cue.textContent = text;
+    cue.hidden = !text;
+  }
+
+  function applyCaptions() {
+    if (track) track.mode = captions ? "hidden" : "disabled";
+    renderCue();
+    sync();
+  }
+
+  // ── Auto-hiding controls ───────────────────────────────────────────────────
+  let idle = 0;
+  let keyboard = false;
+  let drag = null; // the slider a pointer is dragging: scrubber | volume
+
+  function wake() {
+    if (!controls) return;
+    delete controls.dataset.state;
+    clearTimeout(idle);
+    idle = setTimeout(sleep, 2500);
+  }
+  function sleep() {
+    if (!controls || video.paused || drag) return;
+    if (keyboard && root.contains(document.activeElement)) return;
+    controls.dataset.state = "hidden";
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  function play() {
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+  function pause() {
+    video.pause();
+  }
+  function toggle() {
+    video.paused || video.ended ? play() : pause();
+  }
+  function seek(t) {
+    const d = dur();
+    if (!d) return;
+    video.currentTime = clamp(t, 0, d);
+    sync();
+  }
+  function setVolume(v) {
+    video.volume = clamp(v, 0, 1);
+    video.muted = video.volume === 0;
+  }
+  function toggleMute() {
+    if (video.muted && video.volume === 0) video.volume = 0.5;
+    video.muted = !video.muted;
+  }
+  function setRate(r) {
+    video.playbackRate = clamp(Number(r) || 1, RATES[0], RATES[RATES.length - 1]);
+    sync();
+  }
+  function stepRate(dir) {
+    const i = RATES.indexOf(video.playbackRate);
+    setRate(RATES[clamp((i < 0 ? 2 : i) + dir, 0, RATES.length - 1)]);
+  }
+  function toggleCaptions(force) {
+    if (!track) return;
+    captions = force === undefined ? !captions : !!force;
+    applyCaptions();
+  }
+  function toggleFullscreen() {
+    if (document.fullscreenElement === root) document.exitFullscreen();
+    else if (root.requestFullscreen) root.requestFullscreen().catch(() => {});
+  }
+  function togglePip() {
+    if (document.pictureInPictureElement === video) document.exitPictureInPicture();
+    else if (pipOk) video.requestPictureInPicture().catch(() => {});
+  }
+
+  const say = (text) => {
+    if (status) status.textContent = text;
+  };
+
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────────
+  function onKeyDown(e) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    keyboard = true;
+    wake();
+    const target = e.target;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    const onVol = !!volume && volume.contains(target);
+    const onScrub = !!scrubber && scrubber.contains(target);
+    const now = video.currentTime || 0;
+    const fwd = (k === "ArrowRight") !== rtl();
+    const by = (s) => {
+      seek(now + s);
+      if (!onScrub) say(clock(video.currentTime));
+    };
+    const vol = (v) => {
+      setVolume(v);
+      if (!onVol) say(video.muted ? "Muted" : "Volume " + Math.round(video.volume * 100) + "%");
+    };
+    switch (k) {
+      case " ":
+        if (target.closest("button")) return;
+      // falls through
+      case "k":
+        toggle();
+        say(video.paused ? "Paused" : "Playing");
+        break;
+      case "ArrowLeft":
+      case "ArrowRight":
+        onVol ? vol(video.volume + (fwd ? 0.05 : -0.05)) : by(fwd ? 5 : -5);
+        break;
+      case "ArrowUp":
+      case "ArrowDown":
+        onScrub ? by(k === "ArrowUp" ? 5 : -5) : vol(video.volume + (k === "ArrowUp" ? 0.05 : -0.05));
+        break;
+      case "PageUp":
+      case "PageDown":
+        onVol ? vol(video.volume + (k === "PageUp" ? 0.1 : -0.1)) : by(k === "PageUp" ? 10 : -10);
+        break;
+      case "Home":
+        onVol ? vol(0) : by(-now);
+        break;
+      case "End":
+        onVol ? vol(1) : by(dur() - now);
+        break;
+      case "j":
+        by(-10);
+        break;
+      case "l":
+        by(10);
+        break;
+      case "m":
+        toggleMute();
+        say(video.muted ? "Muted" : "Unmuted");
+        break;
+      case "f":
+        toggleFullscreen();
+        break;
+      case "c":
+        if (!track) return;
+        toggleCaptions();
+        say(captions ? "Captions on" : "Captions off");
+        break;
+      case "<":
+      case ">":
+        stepRate(k === ">" ? 1 : -1);
+        say("Speed " + video.playbackRate + "×");
+        break;
+      default:
+        if (k.length !== 1 || k < "0" || k > "9") return;
+        seek((dur() * Number(k)) / 10);
+        say(clock(video.currentTime));
+    }
+    e.preventDefault();
+  }
+
+  // ── Pointer: the two sliders ───────────────────────────────────────────────
+  function fraction(el, e) {
+    const r = el.getBoundingClientRect();
+    const f = r.width ? (e.clientX - r.left) / r.width : 0;
+    return clamp(rtl() ? 1 - f : f, 0, 1);
+  }
+  function hover(e) {
+    if (!tooltip) return;
+    const f = fraction(scrubber, e);
+    css("hover", f * 100);
+    tooltip.textContent = clock(f * dur());
+    tooltip.hidden = !dur();
+  }
+  function apply(e) {
+    if (drag === scrubber) {
+      seek(fraction(scrubber, e) * dur());
+      hover(e);
+    } else setVolume(fraction(volume, e));
+  }
+  function onSliderDown(e) {
+    if (e.button > 0) return;
+    drag = e.currentTarget;
+    drag.setPointerCapture?.(e.pointerId);
+    drag.dataset.state = "dragging";
+    drag.focus({ preventScroll: true });
+    e.preventDefault();
+    apply(e);
+  }
+  function onSliderMove(e) {
+    if (drag === e.currentTarget) apply(e);
+    else if (e.currentTarget === scrubber) hover(e);
+  }
+  function onSliderUp(e) {
+    if (drag !== e.currentTarget) return;
+    delete drag.dataset.state;
+    drag = null;
+  }
+  const slider = { pointerdown: onSliderDown, pointermove: onSliderMove, pointerup: onSliderUp, pointercancel: onSliderUp };
+  on(scrubber, slider);
+  on(scrubber, {
+    pointerleave: () => {
+      if (tooltip && drag !== scrubber) tooltip.hidden = true;
+    },
+  });
+  on(volume, slider);
+
+  // ── Wiring ─────────────────────────────────────────────────────────────────
+  on(video, {
+    waiting: () => {
+      waiting = true;
+      sync();
+    },
+    playing: () => {
+      waiting = false;
+      sync();
+      wake();
+    },
+    play: sync,
+    pause: sync,
+    ended: sync,
+    canplay: () => {
+      waiting = false;
+      sync();
+    },
+    timeupdate: sync,
+    durationchange: sync,
+    loadedmetadata: sync,
+    progress: sync,
+    seeked: sync,
+    volumechange: sync,
+    ratechange: sync,
+    error: sync,
+    enterpictureinpicture: sync,
+    leavepictureinpicture: sync,
+    click: toggle,
+    dblclick: toggleFullscreen,
+  });
+  on(track, { cuechange: renderCue });
+  // The browser may switch a default track to "showing" on its own; keep the
+  // cues ours.
+  on(video.textTracks, {
+    change: () => {
+      if (track && track.mode === "showing") {
+        captions = true;
+        applyCaptions();
+      }
+    },
+  });
+  on(document, { fullscreenchange: sync });
+  on(root, {
+    keydown: onKeyDown,
+    pointermove: () => {
+      keyboard = false;
+      wake();
+    },
+    pointerdown: () => {
+      keyboard = false;
+    },
+    focusin: wake,
+    pointerleave: () => {
+      if (!drag) sleep();
+    },
+  });
+  // The big button hides once playback starts; focus on it would fall to
+  // <body>, out of the player and its shortcuts, so hand it to the bar.
+  on(bigPlay, {
+    click: () => {
+      toggle();
+      if (document.activeElement === bigPlay) playBtn?.focus();
+    },
+  });
+  on(playBtn, { click: toggle });
+  on(muteBtn, { click: toggleMute });
+  on(rateBtn, { click: () => stepRate(video.playbackRate >= RATES[RATES.length - 1] ? -RATES.length : 1) });
+  on(ccBtn, { click: () => toggleCaptions() });
+  on(pipBtn, { click: togglePip });
+  on(fsBtn, { click: toggleFullscreen });
+
+  applyCaptions();
+
+  function destroy() {
+    for (const off of offs) off();
+    clearTimeout(idle);
+    if (track && captions) track.mode = "showing";
+    video.controls = hadControls;
+    for (const el of [controls, bigPlay, cue, message]) if (el) el.hidden = true;
+    if (controls) delete controls.dataset.state;
+    delete root._faqirVideoPlayer;
+  }
+
+  const api = {
+    play,
+    pause,
+    toggle,
+    seek,
+    setVolume,
+    toggleMute,
+    setRate,
+    toggleCaptions,
+    toggleFullscreen,
+    destroy,
+  };
+  root._faqirVideoPlayer = api;
+  return api;
+}
+
+// ── Pure time formatting (no DOM) — unit-tested in isolation ────────────────
+
+function pad(n) {
+  return (n < 10 ? "0" : "") + n;
+}
+
+/** 65 → "1:05", 3725 → "1:02:05". */
+function clock(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor(s / 60) % 60;
+  return (h ? h + ":" + pad(m) : m) + ":" + pad(s % 60);
+}
+
+/** 65 → "1 minute 5 seconds", the form a screen reader speaks. */
+function spoken(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  const out = [];
+  const add = (n, unit) => out.push(n + " " + unit + (n === 1 ? "" : "s"));
+  if (s >= 3600) add(Math.floor(s / 3600), "hour");
+  if (s % 3600 >= 60) add(Math.floor(s / 60) % 60, "minute");
+  if (s % 60 || !out.length) add(s % 60, "second");
+  return out.join(" ");
+}
+    return createVideoPlayer;
   })();
 
   // ═══════════════════════════════════════════════════════

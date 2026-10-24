@@ -1,0 +1,285 @@
+/* @ui:component lightbox */
+/* @ui:tokens palette-gray-50 palette-gray-950 space-3 space-1 space-4 space-2 space-6 space-5 image-radius radius-lg radius-md focus-ring-width focus-ring-style focus-ring-color focus-ring-offset z-overlay z-modal duration-normal duration-fast ease-default ease-out ease-linear font-ui text-sm weight-medium shadow-xl leading-normal disabled-opacity border-width-lg */
+
+/* The viewer is a darkroom in every theme and scheme: ink and scrim from the
+   palette's ends, so a picture is judged against neutral dark, not the page. */
+
+/* ── Root ── */
+[data-ui="lightbox"] {
+  --lightbox-ink: var(--palette-gray-50);
+  --lightbox-scrim: var(--palette-gray-950);
+  --lightbox-zoom: 1;
+  --lightbox-x: 0px;
+  --lightbox-y: 0px;
+  --lightbox-control: 2.75rem;
+  position: relative;
+}
+
+/* ── Gallery ── */
+[data-ui="lightbox"] > [data-part="gallery"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-ui="lightbox"] > :where([data-part="gallery"]) > [data-part="item"],
+[data-ui="lightbox"] > :where([data-part="gallery"]) > :where(li) > [data-part="item"] {
+  display: block;
+  border-radius: var(--image-radius, var(--radius-lg));
+  color: inherit;
+  cursor: zoom-in;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-ui="lightbox"] > :where([data-part="gallery"]) > [data-part="item"]:focus-visible,
+[data-ui="lightbox"] > :where([data-part="gallery"]) > :where(li) > [data-part="item"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* ── Overlay ── */
+[data-ui="lightbox"] > [data-part="overlay"] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: color-mix(in oklch, var(--lightbox-scrim) 94%, transparent);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-default);
+}
+
+[data-ui="lightbox"][data-state="open"] > [data-part="overlay"] {
+  opacity: 1;
+}
+
+/* ── Panel: the viewer, edge to edge ── */
+[data-ui="lightbox"] > [data-part="panel"] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  color: var(--lightbox-ink);
+  font-family: var(--font-ui);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+[data-ui="lightbox"] > [data-part="panel"]:focus {
+  outline: none;
+}
+
+[data-ui="lightbox"][data-state="open"] > [data-part="panel"] {
+  opacity: 1;
+}
+
+[data-ui="lightbox"][data-state="closing"] > [data-part="panel"],
+[data-ui="lightbox"][data-state="closing"] > [data-part="overlay"] {
+  opacity: 0;
+}
+
+/* ── Toolbar ── */
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="toolbar"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="toolbar"]) > [data-part="counter"] {
+  margin-inline-end: auto;
+  padding-inline: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+/* ── Controls: round, translucent, light on dark ── */
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="toolbar"]) > button,
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"],
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"] {
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--lightbox-control);
+  block-size: var(--lightbox-control);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in oklch, var(--lightbox-ink) 10%, transparent);
+  color: var(--lightbox-ink);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default),
+              opacity var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="toolbar"]) > button:hover,
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"]:hover,
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"]:hover {
+  background: color-mix(in oklch, var(--lightbox-ink) 22%, transparent);
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="toolbar"]) > button:focus-visible,
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"]:focus-visible,
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-width);
+  /* An ink halo inside the theme's ring, so it reads on the darkroom. */
+  box-shadow: 0 0 0 var(--focus-ring-width) var(--lightbox-ink);
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="toolbar"]) > button[aria-disabled="true"] {
+  opacity: calc(var(--disabled-opacity) * 0.8);
+  cursor: default;
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="toolbar"]) > button > svg,
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"] > svg,
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"] > svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"],
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"] {
+  position: absolute;
+  inset-block-end: var(--space-3);
+  z-index: 1;
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"] {
+  inset-inline-start: var(--space-4);
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"] {
+  inset-inline-end: var(--space-4);
+}
+
+/* The chevrons point the way the gallery runs. */
+[data-ui="lightbox"]:dir(rtl) > :where([data-part="panel"]) > :is([data-part="prev"], [data-part="next"]) > svg {
+  scale: -1 1;
+}
+
+/* ── Stage and picture ── */
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="stage"] {
+  position: relative;
+  display: grid;
+  /* One definite cell, so the picture's max sizes resolve against it. */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  min-block-size: 0;
+  overflow: hidden;
+  touch-action: none;
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="stage"]) > [data-part="image"] {
+  display: block;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  cursor: zoom-in;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform: translate(var(--lightbox-x), var(--lightbox-y)) scale(var(--lightbox-zoom));
+  transition: transform var(--duration-normal) var(--ease-out),
+              opacity var(--duration-normal) var(--ease-out);
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="stage"]) > [data-part="image"][data-state="zoomed"] {
+  cursor: grab;
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="stage"]) > [data-part="image"][data-state="zoomed"]:active {
+  cursor: grabbing;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+/* Loading: the picture waits, a ring turns. */
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="stage"][data-state="loading"] > [data-part="image"] {
+  opacity: 0;
+}
+
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="stage"][data-state="loading"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  margin: auto;
+  border: var(--border-width-lg) solid color-mix(in oklch, var(--lightbox-ink) 22%, transparent);
+  border-block-start-color: var(--lightbox-ink);
+  border-radius: 50%;
+  animation: faqir-lightbox-spin 0.9s var(--ease-linear) infinite;
+}
+
+@keyframes faqir-lightbox-spin {
+  to { rotate: 1turn; }
+}
+
+/* ── Caption ── */
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="caption"] {
+  max-inline-size: 42rem;
+  margin: 0 auto;
+  padding: var(--space-3) calc(var(--lightbox-control) + var(--space-6)) var(--space-5);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  text-align: center;
+  text-wrap: balance;
+  opacity: 0.9;
+}
+
+/* ── Announcements ── */
+[data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="status"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── From 40rem: the prev/next controls flank the picture ──
+   Narrower, the picture takes the whole width and the controls sit at the
+   bottom corners, either side of the caption. */
+@media (min-width: 40rem) {
+  [data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="stage"] {
+    padding-inline: calc(var(--lightbox-control) + var(--space-6));
+  }
+
+  [data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"],
+  [data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"] {
+    inset-block-start: 50%;
+    inset-block-end: auto;
+    margin-block-start: calc(var(--lightbox-control) / -2);
+  }
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="lightbox"] > [data-part="overlay"],
+  [data-ui="lightbox"] > [data-part="panel"],
+  [data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="stage"]) > [data-part="image"],
+  [data-ui="lightbox"] > :where([data-part="panel"]) > :where([data-part="toolbar"]) > button,
+  [data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="prev"],
+  [data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="next"] {
+    transition: none;
+  }
+
+  [data-ui="lightbox"] > :where([data-part="panel"]) > [data-part="stage"][data-state="loading"]::after {
+    animation: none;
+  }
+}

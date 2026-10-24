@@ -155,9 +155,10 @@ describe("docs site coverage", () => {
     // one specimen page per theme (see src/generator/docs-pages/) — and the
     // motion page and the theme studio (2) — and the six pages of the Server
     // templates section, rendered by @faqir-ui/template (6, on 1.2.5) — and the
-    // runtime accent, documents & print, and the strict-CSP engine (3, on 1.3).
+    // runtime accent, documents & print, and the strict-CSP engine (3, on 1.3)
+    // — and the component showcase (1, the component expansion).
     expect(shellPages.length).toBe(
-      components.length + 18 + 7 + 2 + 6 + 3 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 18 + 7 + 2 + 6 + 3 + 1 + SCAFFOLD_NAMES.length + themes.length,
     );
     // one gallery frame per theme, and one live document per scaffold
     expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);

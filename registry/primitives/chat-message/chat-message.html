@@ -1,0 +1,113 @@
+<!-- @ui:component chat-message -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots avatar bubble sender label quote cite excerpt media text meta status edited file icon name info action voice play waveform duration reactions reaction count dots -->
+<!-- @ui:variants variant=incoming|outgoing -->
+<!-- @ui:states typing -->
+<!-- @ui:composition avatar icon chat-thread -->
+<!--
+  Messages, bubbles and runs
+  Shown inside a chat-thread for its wallpaper. Direction is the variant. A message WITHOUT data-continued starts a run (tail on the bubble, more air above); one WITH it continues the run.
+  Screen readers hear one line per message, in reading order: who (the visible sender, or the hidden [data-part="label"]), what, when (the visible time, read once), and the delivery status — the ticks are a role="img" whose label is the only thing announced for them.
+-->
+<div data-ui="chat-thread" role="log" aria-label="Conversation with Maya Chen" tabindex="0" style="--chat-thread-height: 38rem">
+  <ol data-part="messages">
+    <li data-part="day"><time datetime="2026-10-24">Today</time></li>
+
+    <li data-ui="chat-message" data-variant="incoming">
+      <div data-part="bubble">
+        <span data-part="label">Maya Chen</span>
+        <p data-part="text">Morning! Did the parcel from the bike shop arrive? 🚲</p>
+        <span data-part="meta"><time>09:12</time></span>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="outgoing">
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">It did — new chain and the bell you picked 🔔</p>
+        <span data-part="meta">
+          <time>09:14</time>
+          <span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="outgoing" data-continued>
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <figure data-part="media">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23d9e8e3'/%3E%3Crect y='210' width='400' height='90' fill='%23b8cfc7'/%3E%3Cg fill='none' stroke='%23264653' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='110' cy='196' r='58'/%3E%3Ccircle cx='292' cy='196' r='58'/%3E%3Cpath d='M110 196l58-86h96l28 86M168 110l46 86h78M150 92h40M264 110l-8-26h28'/%3E%3C/g%3E%3Ccircle cx='214' cy='196' r='10' fill='%23e76f51'/%3E%3C/svg%3E" width="400" height="300" alt="A teal bicycle against a pale green wall">
+        </figure>
+        <span data-part="meta">
+          <time>09:14</time>
+          <span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="incoming">
+      <div data-part="bubble">
+        <span data-part="label">Maya Chen</span>
+        <blockquote data-part="quote" data-accent="indigo">
+          <span data-part="cite">You</span>
+          <span data-part="excerpt">It did — new chain and the bell you picked 🔔</span>
+        </blockquote>
+        <p data-part="text">Looks brand new. The route for Sunday is on <a href="#route">the club page</a> — 42 km, mostly flat.</p>
+        <span data-part="meta">
+          <span data-part="edited">edited</span>
+          <time>09:20</time>
+        </span>
+      </div>
+      <div data-part="reactions" role="group" aria-label="Reactions">
+        <button type="button" data-part="reaction" aria-pressed="true" aria-label="Thumbs up, 1 reaction, yours">👍 <span data-part="count">1</span></button>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="outgoing">
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">Sent</p>
+        <span data-part="meta">
+          <time>09:21</time>
+          <span data-part="status" data-status="sent" role="img" aria-label="Sent"><span data-ui="icon" data-icon="check"></span></span>
+        </span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="outgoing" data-continued>
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">Delivered</p>
+        <span data-part="meta">
+          <time>09:21</time>
+          <span data-part="status" data-status="delivered" role="img" aria-label="Delivered"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="outgoing" data-continued>
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">Waiting for a connection</p>
+        <span data-part="meta">
+          <time>09:22</time>
+          <span data-part="status" data-status="pending" role="img" aria-label="Sending"><span data-ui="icon" data-icon="clock"></span></span>
+        </span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="outgoing" data-continued>
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">Could not be sent</p>
+        <span data-part="meta">
+          <time>09:22</time>
+          <span data-part="status" data-status="failed" role="img" aria-label="Not sent"><span data-ui="icon" data-icon="circle-alert"></span></span>
+        </span>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="incoming" data-state="typing">
+      <div data-part="bubble">
+        <span data-part="label">Maya Chen is typing</span>
+        <span data-part="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+      </div>
+    </li>
+  </ol>
+</div>

@@ -1,0 +1,397 @@
+// @ui:controller list
+// @ui:provides select toggle selectAll clear getSelected move refresh destroy
+
+import { ownParts } from "../../core/dom.js";
+import { uid } from "../../core/utils.js";
+
+/**
+ * Rich list. Plain list semantics by default; `data-selection="single|multi"`
+ * turns the items container into a WAI-ARIA listbox with roving focus,
+ * type-ahead and range selection; `data-reorderable` adds pointer dragging by
+ * the handle and keyboard reordering, announced in a polite live region.
+ *
+ * Selection lives in the DOM (`aria-selected`), so a binding that writes it —
+ * an `l-data` scope mirroring the open conversation, say — and the controller
+ * never disagree. Item queries are live, for the same reason as tree-view's:
+ * keyed `l-for` rows can arrive, leave and move after the controller starts.
+ */
+export function createList(root) {
+  if (root._faqirList) {
+    root._faqirList.refresh();
+    return root._faqirList;
+  }
+
+  let current = null;
+  let anchor = null;
+  let query = "";
+  let queryTimer = null;
+  let drag = null;
+  let grab = null;
+  let ownLive = null;
+  let moving = false;
+
+  const mode = () => (/^(single|multi)$/.test(root.dataset.selection) ? root.dataset.selection : "none");
+  const selectable = () => mode() !== "none";
+  const reorderable = () => root.hasAttribute("data-reorderable") && root.dataset.reorderable !== "false";
+  const items = () => ownParts(root, "item");
+  const isDisabled = (item) => item.getAttribute("aria-disabled") === "true";
+  const isSelected = (item) => item.getAttribute("aria-selected") === "true";
+  const enabled = () => items().filter((item) => !isDisabled(item) && !item.hidden);
+  const itemOf = (node) => {
+    const item = node instanceof Element ? node.closest("[data-part='item']") : null;
+    return item && items().includes(item) ? item : null;
+  };
+  const siblings = (item) => [...item.parentElement.children].filter((el) => el.matches("[data-part='item']"));
+  const labelOf = (item) => (item.querySelector("[data-part='title']") ?? item).textContent.trim();
+  const valueOf = (item) => item.dataset.value || item.id || labelOf(item);
+
+  function emit(type, detail) {
+    root.dispatchEvent(new CustomEvent("faqir:" + type, { bubbles: true, detail }));
+  }
+
+  function announce(message) {
+    let live = ownParts(root, "live")[0];
+    if (!live) {
+      live = ownLive = document.createElement("span");
+      live.setAttribute("data-part", "live");
+      live.setAttribute("role", "status");
+      root.append(live);
+    }
+    // A trailing no-break space alternates so a repeated message is re-read.
+    live.textContent = message + (live.textContent.endsWith(" ") ? "" : " ");
+  }
+
+  function setState() {
+    root.dataset.state = drag || grab ? "dragging" : items().length ? "idle" : "empty";
+  }
+
+  function refresh() {
+    const all = items();
+    const list = root.querySelector(":scope > [data-part='items']");
+    if (selectable() && list) {
+      list.setAttribute("role", "listbox");
+      list.setAttribute("aria-multiselectable", String(mode() === "multi"));
+      for (const section of ownParts(root, "section")) {
+        section.setAttribute("role", "group");
+        const header = section.querySelector(":scope > [data-part='header']");
+        if (header) {
+          header.id ||= uid("list-header");
+          header.setAttribute("role", "presentation");
+          section.setAttribute("aria-labelledby", header.id);
+        }
+        section.querySelector(":scope > [data-part='items']")?.setAttribute("role", "none");
+      }
+      let kept = false;
+      for (const item of all) {
+        item.setAttribute("role", "option");
+        if (isDisabled(item)) continue;
+        if (mode() === "single" && isSelected(item)) {
+          if (kept) item.setAttribute("aria-selected", "false");
+          kept = true;
+        } else if (!item.hasAttribute("aria-selected")) {
+          item.setAttribute("aria-selected", "false");
+        }
+      }
+      const pool = enabled();
+      if (!pool.includes(current)) {
+        current = pool.find(isSelected) ?? pool.find((item) => item.tabIndex === 0) ?? pool[0] ?? null;
+      }
+      for (const item of all) item.tabIndex = item === current ? 0 : -1;
+    }
+    for (const handle of ownParts(root, "handle")) {
+      const item = itemOf(handle);
+      if (selectable()) handle.setAttribute("aria-hidden", "true");
+      else if (item && !handle.hasAttribute("aria-label")) handle.setAttribute("aria-label", "Reorder " + labelOf(item));
+    }
+    setState();
+  }
+
+  function focusItem(item) {
+    if (!item) return false;
+    current = item;
+    for (const candidate of items()) candidate.tabIndex = candidate === item ? 0 : -1;
+    item.focus();
+    item.scrollIntoView?.({ block: "nearest" });
+    return true;
+  }
+
+  function resolve(target) {
+    if (target instanceof Element) return itemOf(target);
+    if (typeof target === "number") return items()[target] ?? null;
+    return items().find((item) => valueOf(item) === String(target)) ?? null;
+  }
+
+  function changed(item) {
+    const chosen = items().filter(isSelected);
+    emit("select", { item, value: item ? valueOf(item) : null, items: chosen, values: chosen.map(valueOf) });
+  }
+
+  function apply(next, item) {
+    for (const candidate of items()) {
+      if (!isDisabled(candidate)) candidate.setAttribute("aria-selected", String(next.includes(candidate)));
+    }
+    changed(item);
+  }
+
+  function range(from, to) {
+    const pool = enabled();
+    const [a, b] = [pool.indexOf(from), pool.indexOf(to)].sort((x, y) => x - y);
+    return a < 0 ? [to] : pool.slice(a, b + 1);
+  }
+
+  function select(target, extend = false) {
+    const item = resolve(target);
+    if (!item || isDisabled(item) || !selectable()) return false;
+    if (mode() === "single") apply([item], item);
+    else if (extend && anchor) apply([...new Set([...items().filter(isSelected), ...range(anchor, item)])], item);
+    else {
+      apply([...items().filter(isSelected), item], item);
+      anchor = item;
+    }
+    return true;
+  }
+
+  function toggle(target) {
+    const item = resolve(target);
+    if (!item || isDisabled(item) || !selectable()) return false;
+    if (mode() === "single") return select(item);
+    anchor = item;
+    apply(isSelected(item) ? items().filter((x) => isSelected(x) && x !== item) : [...items().filter(isSelected), item], item);
+    return true;
+  }
+
+  function selectAll() {
+    if (mode() !== "multi") return false;
+    const pool = enabled();
+    apply(pool.every(isSelected) ? [] : pool, current);
+    return true;
+  }
+
+  function clear() {
+    if (!selectable()) return false;
+    apply([], null);
+    return true;
+  }
+
+  function getSelected() {
+    return items().filter(isSelected).map(valueOf);
+  }
+
+  /** Move an item to `index` among its siblings; returns its new index. */
+  function move(target, index) {
+    const item = resolve(target);
+    if (!item) return -1;
+    const sibs = siblings(item);
+    const from = sibs.indexOf(item);
+    const others = sibs.filter((el) => el !== item);
+    const to = Math.max(0, Math.min(index, others.length));
+    if (to === from) return from;
+    // Moving a node blurs whatever it holds; that is not the user leaving.
+    moving = true;
+    if (to < others.length) others[to].before(item);
+    else others[others.length - 1].after(item);
+    moving = false;
+    emit("reorder", { item, value: valueOf(item), from, to, values: siblings(item).map(valueOf) });
+    return to;
+  }
+
+  function position(item) {
+    const sibs = siblings(item);
+    return `position ${sibs.indexOf(item) + 1} of ${sibs.length}`;
+  }
+
+  function step(item, delta, focusTarget) {
+    const from = siblings(item).indexOf(item);
+    const to = move(item, from + delta);
+    if (to === from) return;
+    (focusTarget ?? item).focus();
+    announce(`Moved ${labelOf(item)} to ${position(item)}`);
+  }
+
+  function endGrab(commit) {
+    const { item, from, handle } = grab;
+    grab = null;
+    delete item.dataset.state;
+    if (!commit) {
+      move(item, from);
+      handle.focus();
+      announce(`Reorder cancelled. ${labelOf(item)} returned to ${position(item)}`);
+    } else {
+      announce(`${labelOf(item)} dropped at ${position(item)}`);
+    }
+    setState();
+  }
+
+  function typeahead(key) {
+    query += key.toLocaleLowerCase();
+    clearTimeout(queryTimer);
+    queryTimer = setTimeout(() => (query = ""), 500);
+    const needle = [...query].every((c) => c === query[0]) ? query[0] : query;
+    const pool = enabled();
+    const start = pool.indexOf(current);
+    for (let offset = 1; offset <= pool.length; offset++) {
+      const candidate = pool[(start + offset) % pool.length];
+      if (labelOf(candidate).toLocaleLowerCase().startsWith(needle)) return focusItem(candidate);
+    }
+    return false;
+  }
+
+  function onHandleKey(event, handle) {
+    const item = itemOf(handle);
+    if (!item || isDisabled(item)) return;
+    const { key } = event;
+    if (grab) {
+      if (key === "ArrowUp" || key === "ArrowDown") step(item, key === "ArrowUp" ? -1 : 1, handle);
+      else if (key === " " || key === "Enter") endGrab(true);
+      else if (key === "Escape") endGrab(false);
+      else return;
+    } else if (event.altKey && (key === "ArrowUp" || key === "ArrowDown")) {
+      step(item, key === "ArrowUp" ? -1 : 1, handle);
+    } else if (key === " " || key === "Enter") {
+      grab = { item, handle, from: siblings(item).indexOf(item) };
+      item.dataset.state = "dragging";
+      setState();
+      announce(`${labelOf(item)} grabbed, ${position(item)}. Up and Down move it, Space drops it, Escape cancels.`);
+    } else return;
+    event.preventDefault();
+  }
+
+  function onKeyDown(event) {
+    if (!(event.target instanceof Element)) return;
+    if (drag && event.key === "Escape") return onPointerEnd({ pointerId: drag.id, type: "pointercancel" });
+    const handle = event.target.closest("[data-part='handle']");
+    if (handle && !selectable() && reorderable()) return onHandleKey(event, handle);
+
+    const item = event.target === itemOf(event.target) ? event.target : null;
+    if (!item || !selectable() || isDisabled(item)) return;
+    const pool = enabled();
+    const index = pool.indexOf(item);
+    const multi = mode() === "multi";
+    const { key, shiftKey } = event;
+    const mod = event.ctrlKey || event.metaKey;
+    let next = null;
+    if (multi && shiftKey && !anchor) anchor = item;
+
+    if (event.altKey && reorderable() && (key === "ArrowUp" || key === "ArrowDown")) {
+      step(item, key === "ArrowUp" ? -1 : 1);
+    } else if (key === "ArrowDown" || key === "ArrowUp") {
+      next = pool[Math.max(0, Math.min(index + (key === "ArrowDown" ? 1 : -1), pool.length - 1))];
+    } else if (key === "Home" || key === "End") {
+      next = key === "Home" ? pool[0] : pool[pool.length - 1];
+    } else if (key === " " || key === "Enter") {
+      if (multi && shiftKey) select(item, true);
+      else if (multi) toggle(item);
+      else select(item);
+    } else if (multi && mod && key.toLowerCase() === "a") {
+      selectAll();
+    } else if (key.length === 1 && !mod && !event.altKey) {
+      if (!typeahead(key)) return;
+    } else return;
+
+    event.preventDefault();
+    if (next && next !== item) {
+      focusItem(next);
+      if (multi && shiftKey) select(next, true);
+    }
+  }
+
+  function onClick(event) {
+    if (!(event.target instanceof Element) || !selectable()) return;
+    const item = itemOf(event.target);
+    if (!item || event.target.closest("[data-part='handle']")) return;
+    if (isDisabled(item)) return;
+    focusItem(item);
+    if (mode() === "multi" && event.shiftKey) select(item, true);
+    else toggle(item);
+  }
+
+  function onFocusIn(event) {
+    const item = event.target instanceof Element && event.target === itemOf(event.target) ? event.target : null;
+    if (item && selectable() && !isDisabled(item)) {
+      current = item;
+      for (const candidate of items()) candidate.tabIndex = candidate === item ? 0 : -1;
+    }
+  }
+
+  function onFocusOut(event) {
+    if (grab && !moving && event.target === grab.handle && !grab.handle.contains(event.relatedTarget)) endGrab(true);
+  }
+
+  function clearDrop() {
+    for (const item of items()) {
+      if (/^drop-/.test(item.dataset.state ?? "")) delete item.dataset.state;
+    }
+  }
+
+  function onPointerDown(event) {
+    const handle = event.target instanceof Element ? event.target.closest("[data-part='handle']") : null;
+    const item = handle && itemOf(handle);
+    if (!item || event.button !== 0 || !reorderable() || isDisabled(item) || grab) return;
+    event.preventDefault();
+    drag = { item, handle, id: event.pointerId, y: event.clientY, from: siblings(item).indexOf(item), to: null };
+    // A synthetic pointer has nothing to capture; the drag still works without it.
+    try {
+      handle.setPointerCapture(event.pointerId);
+    } catch {}
+    item.dataset.state = "dragging";
+    setState();
+  }
+
+  function onPointerMove(event) {
+    if (!drag || event.pointerId !== drag.id) return;
+    drag.item.style.setProperty("--list-drag-y", event.clientY - drag.y + "px");
+    const others = siblings(drag.item).filter((el) => el !== drag.item);
+    let to = others.findIndex((el) => {
+      const box = el.getBoundingClientRect();
+      return event.clientY < box.top + box.height / 2;
+    });
+    if (to < 0) to = others.length;
+    clearDrop();
+    drag.to = to;
+    if (to < others.length) others[to].dataset.state = "drop-before";
+    else if (others.length) others[others.length - 1].dataset.state = "drop-after";
+  }
+
+  function onPointerEnd(event) {
+    if (!drag || event.pointerId !== drag.id) return;
+    const { item, handle, from, to } = drag;
+    drag = null;
+    clearDrop();
+    delete item.dataset.state;
+    item.style.removeProperty("--list-drag-y");
+    if (event.type === "pointerup" && to !== null && move(item, to) !== from) {
+      announce(`Moved ${labelOf(item)} to ${position(item)}`);
+    }
+    if (handle.hasPointerCapture?.(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+    setState();
+  }
+
+  const listeners = {
+    keydown: onKeyDown,
+    click: onClick,
+    focusin: onFocusIn,
+    focusout: onFocusOut,
+    pointerdown: onPointerDown,
+    pointermove: onPointerMove,
+    pointerup: onPointerEnd,
+    pointercancel: onPointerEnd,
+  };
+  for (const [type, fn] of Object.entries(listeners)) root.addEventListener(type, fn);
+
+  const observer = new MutationObserver(refresh);
+  // Rows hidden by a filter or disabled later must leave the tab stop too.
+  observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "aria-disabled"] });
+
+  function destroy() {
+    for (const [type, fn] of Object.entries(listeners)) root.removeEventListener(type, fn);
+    observer.disconnect();
+    clearTimeout(queryTimer);
+    ownLive?.remove();
+    delete root._faqirList;
+  }
+
+  const api = { select, toggle, selectAll, clear, getSelected, move, refresh, destroy };
+  root._faqirList = api;
+  refresh();
+  return api;
+}

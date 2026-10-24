@@ -37,6 +37,7 @@ import {
   STUDIO_PAGE,
   ACCENT_PAGE,
   PRINT_PAGE,
+  SHOWCASE_PAGE,
   CSP_PAGE,
   CSP_ENGINE_SCRIPT,
   TWEAK_SCRIPT,
@@ -441,8 +442,9 @@ describe("site JavaScript", () => {
     // +1: the motion page (the studio is checked above, with its plugin).
     // +6 on 1.2.5: the Server templates section (src/generator/docs-pages/template.ts).
     // +3 on 1.3: the runtime accent, documents & print, and the strict-CSP engine.
+    // +1 for the component expansion: the showcase.
     expect(documentation.length).toBe(
-      components.length + 16 + 7 + 1 + 6 + 3 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 16 + 7 + 1 + 6 + 3 + 1 + SCAFFOLD_NAMES.length + themes.length,
     );
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
@@ -461,6 +463,7 @@ describe("site JavaScript", () => {
         [ACCENT_PAGE]: ["scripts/faqir-core.js"],
         [PRINT_PAGE]: ["scripts/plugins/faqir-chart.js"],
         [CSP_PAGE]: [CSP_ENGINE_SCRIPT, "scripts/csp-proof.js"],
+        [SHOWCASE_PAGE]: ["scripts/faqir-core.js", "scripts/plugins/faqir-chart.js"],
       };
       const allowed = own[f.path]
         ? ["scripts/gallery.js", ...own[f.path]!].map((p) => `<script src="${relUrl(f.path, p)}" defer>`)

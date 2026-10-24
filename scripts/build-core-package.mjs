@@ -95,12 +95,16 @@ const noPin = process.argv.slice(2).includes("--no-pin");
 // Shipped engine + controller budget (§10.4), kept aligned with
 // scripts/check-size.mjs. The engine-only 14 KB budget applies to
 // src/core-src/engine.js; this package artifact intentionally assembles every
-// recipe controller and is governed by the 45 KB launch budget.
-const ASSEMBLED_GZIP_BUDGET = 45 * 1024;
+// recipe controller. The 45 KB launch budget moved to 65 KB with the component
+// expansion (measured at 64.41 KB minified with Bun's zlib, which the package
+// test uses; Node's reports 64.00 KB); the ledger is in
+// scripts/check-size.mjs.
+const ASSEMBLED_GZIP_BUDGET = 65 * 1024;
 // The strict-CSP engine's own budget (forecraft #50): the same runtime with the
 // expression interpreter in place of `new Function`. Enforced by
 // scripts/check-size.mjs and tests/build/core-package-forecraft-csp.test.ts.
-const CSP_GZIP_BUDGET = 52 * 1024;
+// 52 → 70 KB with the component expansion (measured at 69.02 KB minified, Bun's zlib).
+const CSP_GZIP_BUDGET = 70 * 1024;
 
 // Token files in cascade order (mirrors src/utils/bundler.ts). We concatenate the
 // individual files rather than tokens/index.css precisely because index.css is a

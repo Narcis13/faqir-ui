@@ -175,7 +175,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 
 | Plugin | Provides | File | What it does |
 |---|---|---|---|
-| `faqir-chart` | `redraw`, `destroy` | `registry/core/plugins/faqir-chart.js` | draws a chart's data table as an inline SVG bar, column or line chart. |
+| `faqir-chart` | `redraw`, `destroy` | `registry/core/plugins/faqir-chart.js` | draws a chart's data table as an inline SVG chart. |
 | `faqir-collapse` | `l-collapse` | `registry/core/plugins/faqir-collapse.js` | height auto-animation for a boolean expression. |
 | `faqir-intersect` | `l-intersect` | `registry/core/plugins/faqir-intersect.js` | declarative IntersectionObserver hooks. |
 | `faqir-mask` | `l-mask` | `registry/core/plugins/faqir-mask.js` | caret-safe input masking. |
@@ -186,7 +186,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 
 ### `faqir-chart`
 
-The table is the source of truth and the SVG a progressive enhancement: without this plugin the table is the chart; once it draws, the root takes data-state="drawn", the table stays in the page for assistive technology and paper, and the SVG (role="img", an aria-label that reads the numbers) redraws when the table or the width changes. Colours, type and rules come from the component's custom properties; bar and column value axes start at zero; series differ by lightness, and lines also by dash. Runs with or without faqir-core.
+Kinds (data-variant): column, bar, line, area, stacked-column, stacked-bar, pie, donut, scatter, sparkline, radar, gauge.
 
 ```html
 <figure data-ui="chart" data-variant="column">

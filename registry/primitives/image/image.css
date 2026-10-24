@@ -1,8 +1,13 @@
 /* @ui:component image */
-/* @ui:tokens color-bg-muted color-fg-muted radius-md space-2 space-1 text-xs font-body image-radius image-border-width image-border image-caption-size image-caption-color doc-font duration-normal duration-slower ease-out ease-emphasized ease-default */
+/* @ui:tokens color-bg-muted color-fg-muted color-bg-subtle radius-md space-2 space-1 space-0h space-8 space-4 space-3 text-xs text-sm font-body font-ui image-radius image-border-width image-border image-caption-size image-caption-color doc-font duration-normal duration-slower ease-out ease-emphasized ease-default palette-gray-950 palette-gray-50 weight-medium */
 
 /* ── Base ── */
 [data-ui="image"] {
+  /* Author knobs, set inline on the figure (1.2): the focal point, and the
+     blur placeholder's tiny image and its softness. */
+  --image-focus: 50% 50%;
+  --image-placeholder: none;
+  --image-placeholder-blur: 1.25rem;
   display: inline-block;
   margin: 0;
   padding: 0;
@@ -17,6 +22,9 @@
   height: auto;
   border-radius: var(--image-radius);
   border: var(--image-border-width) solid var(--image-border);
+  /* The focal point: what a cropping fit (cover, a ratio, a thumbnail) keeps
+     in frame. Unset, it is the centre — the browser's own default. */
+  object-position: var(--image-focus, 50% 50%);
 }
 
 /* ── Caption ── */
@@ -133,6 +141,8 @@
 }
 
 [data-ui="image"][data-hover="zoom"] > [data-part="img"] {
+  /* Lean in toward the focal point, not the middle of the frame. */
+  transform-origin: var(--image-focus, 50% 50%);
   transition: scale var(--duration-slower) var(--ease-emphasized);
 }
 
@@ -159,5 +169,148 @@
   [data-ui="image"][data-hover],
   [data-ui="image"][data-hover] > [data-part="img"] {
     transition: none;
+  }
+}
+
+/* ── Ratio and fit (1.2) ──
+   data-ratio gives the picture a fixed shape and crops it to fill (cover);
+   the focal point above decides what the crop keeps. data-fit overrides the
+   object-fit of any variant or ratio; the contain variant keeps containing. */
+[data-ui="image"][data-ratio] > [data-part="img"] {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+[data-ui="image"][data-ratio="square"] > [data-part="img"] { aspect-ratio: 1; }
+[data-ui="image"][data-ratio="16-9"] > [data-part="img"] { aspect-ratio: 16 / 9; }
+[data-ui="image"][data-ratio="4-3"] > [data-part="img"] { aspect-ratio: 4 / 3; }
+[data-ui="image"][data-ratio="3-2"] > [data-part="img"] { aspect-ratio: 3 / 2; }
+[data-ui="image"][data-ratio="21-9"] > [data-part="img"] { aspect-ratio: 21 / 9; }
+[data-ui="image"][data-ratio="portrait"] > [data-part="img"] { aspect-ratio: 3 / 4; }
+
+[data-ui="image"][data-variant="contain"][data-ratio] > [data-part="img"] {
+  object-fit: contain;
+}
+
+[data-ui="image"][data-fit="cover"] > [data-part="img"] { object-fit: cover; }
+[data-ui="image"][data-fit="contain"] > [data-part="img"] { object-fit: contain; }
+[data-ui="image"][data-fit="fill"] > [data-part="img"] { object-fit: fill; }
+[data-ui="image"][data-fit="scale-down"] > [data-part="img"] { object-fit: scale-down; }
+
+[data-ui="image"][data-fit="contain"] > [data-part="img"],
+[data-ui="image"][data-fit="scale-down"] > [data-part="img"] {
+  background-color: var(--color-bg-muted);
+}
+
+/* ── Caption placement (1.2) ──
+   below: a start-aligned note under the picture. overlay: over the bottom of
+   the picture on a scrim, light on dark in every theme. */
+[data-ui="image"][data-caption="below"] > [data-part="caption"] {
+  margin-top: var(--space-2);
+  padding-inline: var(--space-0h);
+  text-align: start;
+  text-wrap: pretty;
+}
+
+[data-ui="image"][data-caption="overlay"] {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--image-radius);
+}
+
+[data-ui="image"][data-caption="overlay"] > [data-part="caption"] {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  margin: 0;
+  padding: var(--space-8) var(--space-4) var(--space-3);
+  background: linear-gradient(
+    to top,
+    color-mix(in oklch, var(--palette-gray-950) 82%, transparent),
+    color-mix(in oklch, var(--palette-gray-950) 45%, transparent) 55%,
+    transparent
+  );
+  color: var(--palette-gray-50);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-align: start;
+  text-wrap: balance;
+  border-end-start-radius: var(--image-radius);
+  border-end-end-radius: var(--image-radius);
+}
+
+/* ── Placeholder (1.2) ──
+   Painted behind the picture, in the same box, until the picture paints over
+   it — no script needed. Give the img width/height attributes (or a
+   data-ratio) so the box exists before the bytes do. blur: the low-resolution
+   --image-placeholder, softened; skeleton: a shimmer, for a bounded time.
+   Optionally a script may set data-state="loading" (the picture is held back
+   and the placeholder shows) and then "loaded" (the picture fades in). */
+[data-ui="image"][data-placeholder] {
+  display: inline-grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-ui="image"][data-placeholder]::before {
+  content: "";
+  grid-area: 1 / 1;
+  border-radius: var(--image-radius);
+  background-color: var(--color-bg-muted);
+  pointer-events: none;
+}
+
+[data-ui="image"][data-placeholder] > [data-part="img"] {
+  grid-area: 1 / 1;
+}
+
+[data-ui="image"][data-placeholder="blur"]::before {
+  background-image: var(--image-placeholder, none);
+  background-position: center;
+  background-size: cover;
+  filter: blur(var(--image-placeholder-blur, 1.25rem)) saturate(1.2);
+  scale: 1.08;
+  clip-path: inset(4% round var(--image-radius));
+}
+
+[data-ui="image"][data-placeholder="skeleton"]::before {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in oklch, var(--color-bg-subtle) 85%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: faqir-image-shimmer 1.6s var(--ease-default) 8;
+}
+
+[data-ui="image"][data-placeholder="skeleton"][data-state="loading"]::before {
+  animation: faqir-image-shimmer 1.6s var(--ease-default) infinite;
+}
+
+[data-ui="image"][data-state="loading"] > [data-part="img"] {
+  opacity: 0;
+}
+
+[data-ui="image"][data-state="loaded"] > [data-part="img"] {
+  animation: faqir-image-reveal var(--duration-slower) var(--ease-out);
+}
+
+@keyframes faqir-image-shimmer {
+  from { background-position: 120% 0; }
+  to   { background-position: -120% 0; }
+}
+
+@keyframes faqir-image-reveal {
+  from { opacity: 0; filter: blur(0.5rem); }
+  to   { opacity: 1; filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="image"][data-placeholder="skeleton"]::before,
+  [data-ui="image"][data-placeholder="skeleton"][data-state="loading"]::before,
+  [data-ui="image"][data-state="loaded"] > [data-part="img"] {
+    animation: none;
   }
 }

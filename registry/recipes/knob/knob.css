@@ -1,0 +1,249 @@
+/* @ui:component knob */
+/* @ui:tokens color-bg-muted color-primary color-surface-1 color-border color-fg color-fg-muted color-bg color-border-strong space-2 space-4 space-0h space-1 space-3 font-ui duration-fast ease-out ease-default text-xs text-sm weight-semibold leading-tight leading-normal radius-full border-width shadow-md focus-ring-width focus-ring-style focus-ring-color focus-ring-offset disabled-opacity */
+
+/* The dial is drawn from two numbers the controller writes on the root:
+   --knob-pos (the value, 0–1 along the sweep) and --knob-origin (where the arc
+   starts: 0, or a bipolar knob's centre). Registered so a keyboard step or a
+   model write glides instead of jumping; a drag turns that off. */
+@property --knob-pos {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* ── Root ── */
+[data-ui="knob"] {
+  --knob-size: 4.5rem;
+  --knob-thickness: 9px;
+  --knob-track: color-mix(in oklch, var(--color-fg) 12%, transparent);
+  --knob-arc: var(--color-primary);
+  --knob-cap: var(--color-surface-1);
+  --knob-cap-edge: var(--color-border);
+  --knob-indicator: var(--color-fg);
+  --knob-scale: var(--color-border-strong);
+  --knob-glow: color-mix(in oklch, var(--knob-arc) 40%, transparent);
+  --knob-pos: 0;
+  --knob-origin: 0;
+
+  display: grid;
+  inline-size: fit-content;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-2);
+  min-inline-size: calc(var(--knob-size) + var(--space-4));
+  font-family: var(--font-ui);
+  color: var(--color-fg);
+  user-select: none;
+  transition: --knob-pos var(--duration-fast) var(--ease-out);
+}
+
+/* ── Label ── */
+[data-ui="knob"] > [data-part="label"] {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  text-align: center;
+  line-height: var(--leading-tight);
+}
+
+/* ── Control: the round hit area the dial is drawn in ── */
+[data-ui="knob"] > [data-part="control"] {
+  position: relative;
+  inline-size: var(--knob-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* The native range sits exactly over the dial — what a screen reader's focus
+   outline traces — but takes no pointer: the controller owns the gesture. */
+[data-ui="knob"] > :where([data-part="control"]) > [data-part="input"] {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Cap: the knob body, lit from above so it reads as a dome ── */
+[data-ui="knob"] > :where([data-part="control"]) > [data-part="cap"] {
+  position: absolute;
+  inset: 21%;
+  border: var(--border-width) solid var(--knob-cap-edge);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 22%, var(--color-bg) 0, transparent 70%),
+    var(--knob-cap);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--duration-fast) var(--ease-default),
+              scale var(--duration-fast) var(--ease-out);
+}
+
+/* ── Dial: the SVG track, value arc and indicator ── */
+[data-ui="knob"] > :where([data-part="control"]) > [data-part="dial"] {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+[data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="track"],
+[data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="arc"] {
+  fill: none;
+  stroke-width: var(--knob-thickness);
+  stroke-linecap: round;
+}
+
+[data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="track"] {
+  stroke: var(--knob-track);
+}
+
+/* The optional scale: eleven dots around the outside of the sweep — zero-length
+   dashes every tenth of a pathLength-100 arc, which a round cap draws as dots. */
+[data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="scale"] {
+  fill: none;
+  stroke: var(--knob-scale);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  stroke-dasharray: 0 10px;
+}
+
+/* The arc runs from min(pos, origin) to max(pos, origin) along a path whose
+   pathLength is 100 — one dash, offset to where it starts. */
+[data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="arc"] {
+  stroke: var(--knob-arc);
+  stroke-dasharray:
+    calc((max(var(--knob-pos), var(--knob-origin)) - min(var(--knob-pos), var(--knob-origin))) * 100px)
+    200px;
+  stroke-dashoffset: calc(min(var(--knob-pos), var(--knob-origin)) * -100px);
+  filter: drop-shadow(0 0 3px var(--knob-glow));
+}
+
+[data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="indicator"] {
+  stroke: var(--knob-indicator);
+  stroke-width: 5px;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  rotate: calc((var(--knob-pos) * 270 - 135) * 1deg);
+}
+
+/* ── Value readout ── */
+[data-ui="knob"] > [data-part="output"] {
+  min-inline-size: 4ch;
+  padding: var(--space-0h) var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-muted);
+  color: var(--color-fg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-normal);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ── Interaction ── */
+[data-ui="knob"] > [data-part="control"]:hover > [data-part="cap"] {
+  border-color: var(--color-border-strong);
+}
+
+[data-ui="knob"] > [data-part="control"]:has(> [data-part="input"]:focus-visible) {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+[data-ui="knob"][data-state="dragging"] {
+  transition: none;
+}
+
+[data-ui="knob"][data-state="dragging"] > [data-part="control"] {
+  cursor: grabbing;
+}
+
+[data-ui="knob"][data-state="dragging"] > :where([data-part="control"]) > [data-part="cap"] {
+  border-color: var(--knob-arc);
+  scale: 0.97;
+}
+
+/* ── Sizes ── */
+[data-ui="knob"][data-size="sm"] {
+  --knob-size: 3rem;
+  gap: var(--space-1);
+}
+
+[data-ui="knob"][data-size="lg"] {
+  --knob-size: 6.5rem;
+  gap: var(--space-3);
+}
+
+[data-ui="knob"][data-size="lg"] > [data-part="output"] {
+  font-size: var(--text-sm);
+}
+
+/* ── Disabled (the native input's own state) ──
+   Only the dial dims: the label and readout keep full contrast. */
+[data-ui="knob"]:has(> :where([data-part="control"]) > [data-part="input"]:disabled) > [data-part="control"] {
+  opacity: var(--disabled-opacity);
+  cursor: not-allowed;
+}
+
+[data-ui="knob"]:has(> :where([data-part="control"]) > [data-part="input"]:disabled) > [data-part="output"] {
+  background: transparent;
+  color: var(--color-fg-muted);
+}
+
+/* ── No JavaScript: the native range is the whole control ── */
+@media (scripting: none) {
+  [data-ui="knob"] > [data-part="control"] {
+    inline-size: auto;
+    aspect-ratio: auto;
+  }
+
+  [data-ui="knob"] > :where([data-part="control"]) > [data-part="input"] {
+    position: static;
+    inline-size: calc(var(--knob-size) * 2);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  [data-ui="knob"] > :where([data-part="control"]) > [data-part="cap"],
+  [data-ui="knob"] > :where([data-part="control"]) > [data-part="dial"] {
+    display: none;
+  }
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="knob"],
+  [data-ui="knob"] > :where([data-part="control"]) > [data-part="cap"] {
+    transition: none;
+  }
+}
+
+/* ── Forced colors: the arc and the track differ only by colour ── */
+@media (forced-colors: active) {
+  [data-ui="knob"] > :where([data-part="control"]) > [data-part="dial"] {
+    forced-color-adjust: none;
+  }
+
+  [data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="track"] {
+    stroke: GrayText;
+  }
+
+  [data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="arc"] {
+    stroke: Highlight;
+    filter: none;
+  }
+
+  [data-ui="knob"] > :where([data-part="control"]) > :where([data-part="dial"]) > [data-part="indicator"] {
+    stroke: CanvasText;
+  }
+}

@@ -1,0 +1,146 @@
+<!-- @ui:component chat-thread -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots messages day system unread -->
+<!-- @ui:variants variant=doodle|plain size=sm|md|lg -->
+<!-- @ui:composition chat-message avatar icon -->
+<!--
+  A group conversation log
+  The root is the scroll container and the live region: role="log" announces what is appended (politely), and tabindex="0" makes the scrolled history reachable from the keyboard. It holds one ordered list — date pills, system lines, an unread divider and chat-message entries — and CSS alone keeps it pinned to the newest message.
+  In a group chat every incoming message carries its avatar column and the first message of each run shows its sender, coloured by the message's data-accent. Continued messages name their sender for screen readers only ([data-part="label"]).
+-->
+<div data-ui="chat-thread" role="log" aria-label="Lisbon trip, group chat" tabindex="0" style="--chat-thread-height: 42rem">
+  <ol data-part="messages">
+    <li data-part="system">
+      <span data-ui="icon" data-icon="lock" aria-hidden="true"></span>
+      Messages are end-to-end encrypted. No one outside this chat can read them.
+    </li>
+
+    <li data-part="day"><time datetime="2026-10-23">Yesterday</time></li>
+    <li data-part="system">Maya created the group “Lisbon trip” and added you</li>
+
+    <li data-ui="chat-message" data-variant="incoming" data-accent="pink">
+      <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+      <div data-part="bubble">
+        <span data-part="sender">Maya Chen</span>
+        <p data-part="text">Flights are booked ✈️ We land Friday at 10:40.</p>
+        <span data-part="meta"><time>18:02</time></span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="incoming" data-accent="pink" data-continued>
+      <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+      <div data-part="bubble">
+        <span data-part="label">Maya Chen</span>
+        <p data-part="text">Who is up for pastéis de nata at Manteigaria before we even drop the bags?</p>
+        <span data-part="meta"><time>18:03</time></span>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="incoming" data-accent="blue">
+      <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237dd3fc'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EJL%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>JL</span></span></span>
+      <div data-part="bubble">
+        <span data-part="sender">Jonah Lee</span>
+        <blockquote data-part="quote" data-accent="pink">
+          <span data-part="cite">Maya Chen</span>
+          <span data-part="excerpt">Who is up for pastéis de nata at Manteigaria before we even drop the bags?</span>
+        </blockquote>
+        <p data-part="text">Obviously. Then the 28 tram up to Graça 🚋</p>
+        <span data-part="meta"><time>18:05</time></span>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="outgoing">
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">Count me in! 🙋</p>
+        <span data-part="meta">
+          <time>18:06</time>
+          <span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="outgoing" data-continued>
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">I will put every place we mention in one list so nobody has to scroll back for it.
+Will share it here tomorrow morning.</p>
+        <span data-part="meta">
+          <time>18:07</time>
+          <span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+    </li>
+
+    <li data-part="day"><time datetime="2026-10-24">Today</time></li>
+    <li data-part="unread">3 unread messages</li>
+
+    <li data-ui="chat-message" data-variant="incoming" data-accent="violet">
+      <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c4b5fd'/%3E%3Cstop offset='1' stop-color='%236d28d9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EPS%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>PS</span></span></span>
+      <div data-part="bubble">
+        <span data-part="sender">Priya Shah</span>
+        <figure data-part="media">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='320' viewBox='0 0 480 320'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f7a08b'/%3E%3Cstop offset='.6' stop-color='%23fcc79f'/%3E%3Cstop offset='1' stop-color='%23ffe0b0'/%3E%3C/linearGradient%3E%3ClinearGradient id='w' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%236a93bd'/%3E%3Cstop offset='1' stop-color='%23253f63'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='480' height='320' fill='url(%23s)'/%3E%3Ccircle cx='318' cy='196' r='46' fill='%23fff3dc'/%3E%3Cpath d='M0 214 60 168l44 22 64-58 54 52 40-30 70 60H0Z' fill='%23523a4f' fill-opacity='.7'/%3E%3Cpath d='M300 214l40-46 26 18 50-40 64 68Z' fill='%23523a4f' fill-opacity='.45'/%3E%3Crect y='212' width='480' height='108' fill='url(%23w)'/%3E%3Cpath d='M268 232h100M240 252h150M290 272h70M30 244h120M120 290h200' stroke='%23fff' stroke-opacity='.35' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" width="480" height="320" alt="Sunset over the river from a hillside viewpoint, rooftops in silhouette">
+        </figure>
+        <p data-part="text">The view from Miradouro da Senhora do Monte last time 😍 We have to go back at golden hour.</p>
+        <span data-part="meta"><time>08:12</time></span>
+      </div>
+      <div data-part="reactions" role="group" aria-label="Reactions">
+        <button type="button" data-part="reaction" aria-pressed="true" aria-label="Heart eyes, 3 reactions, including yours">😍 <span data-part="count">3</span></button>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="incoming" data-accent="blue">
+      <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237dd3fc'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EJL%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>JL</span></span></span>
+      <div data-part="bubble">
+        <span data-part="sender">Jonah Lee</span>
+        <div data-part="file">
+          <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file-text"></span></span>
+          <span data-part="name">Lisbon-itinerary.pdf</span>
+          <span data-part="info">4 pages · PDF · 1.2 MB</span>
+          <button type="button" data-part="action" aria-label="Download Lisbon-itinerary.pdf"><span data-ui="icon" data-icon="download" aria-hidden="true"></span></button>
+        </div>
+        <p data-part="text">Beat you to it 😎</p>
+        <span data-part="meta"><time>08:20</time></span>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="incoming" data-accent="pink">
+      <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+      <div data-part="bubble">
+        <span data-part="sender">Maya Chen</span>
+        <div data-part="voice">
+          <button type="button" data-part="play" aria-label="Play voice message, 0:42"><span data-ui="icon" data-icon="play" aria-hidden="true"></span></button>
+          <span data-part="waveform" aria-hidden="true" style="--chat-progress: 38%"></span>
+          <span data-part="duration">0:42</span>
+        </div>
+        <span data-part="meta"><time>08:31</time></span>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="outgoing">
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <blockquote data-part="quote" data-accent="blue">
+          <span data-part="cite">Jonah Lee</span>
+          <span data-part="excerpt">📄 Lisbon-itinerary.pdf</span>
+        </blockquote>
+        <p data-part="text">Perfect — printing two copies. See you all at the gate 🧳</p>
+        <span data-part="meta">
+          <time>08:34</time>
+          <span data-part="status" data-status="delivered" role="img" aria-label="Delivered"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+      <div data-part="reactions" role="group" aria-label="Reactions">
+        <button type="button" data-part="reaction" aria-pressed="false" aria-label="Thumbs up, 2 reactions">👍 <span data-part="count">2</span></button>
+        <button type="button" data-part="reaction" aria-pressed="false" aria-label="Heart, 1 reaction">❤️ <span data-part="count">1</span></button>
+      </div>
+    </li>
+
+    <li data-ui="chat-message" data-variant="incoming" data-accent="blue" data-state="typing">
+      <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237dd3fc'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EJL%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>JL</span></span></span>
+      <div data-part="bubble">
+        <span data-part="label">Jonah Lee is typing</span>
+        <span data-part="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+      </div>
+    </li>
+  </ol>
+</div>

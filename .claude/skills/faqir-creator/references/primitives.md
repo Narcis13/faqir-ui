@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-55 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+57 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -249,7 +249,7 @@ Container surface with header, optional divider, body, and footer slots; direct 
 
 _kind: primitive · category: data-display_
 
-Bar, column or line chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin
+Column, bar, line, area, stacked column or bar, pie, donut, scatter, sparkline, radar or gauge chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin
 
 ```html
 <figure data-ui="chart" data-variant="{variant}">
@@ -276,22 +276,32 @@ Bar, column or line chart drawn from its own data table: the table is the source
 ├─ [data-part='grid']  <g>  optional  — Drawn by faqir-chart: the value-axis rules, one line per tick
 ├─ [data-part='axis']  <g>  optional  — Drawn by faqir-chart: the tick and category labels
 ├─ [data-part='marks']  <g>  optional  — Drawn by faqir-chart: one series group per table column, in table order
-├─ [data-part='series']  <g>  optional  — Drawn by faqir-chart: one series' marks, labels and name. Its position in marks picks its lightness band
-├─ [data-part='mark']  <rect>  optional  — Drawn by faqir-chart: a bar or column (rect), or a line's point (circle)
-├─ [data-part='line']  <path>  optional  — Drawn by faqir-chart: a line series' path, dashed per series (solid, dash, dot, dash-dot)
-├─ [data-part='label']  <text>  optional  — Drawn by faqir-chart: a value label on a mark, the cell's own text, where it fits
-├─ [data-part='name']  <text>  optional  — Drawn by faqir-chart: a series name written on its marks (bar, column) or after its end (line) instead of a legend, where every name fits
+├─ [data-part='series']  <g>  optional  — Drawn by faqir-chart: one series' marks, labels and name (for pie and donut, one category's slices across the rings). Its position in marks picks its lightness band
+├─ [data-part='mark']  <rect>  optional  — Drawn by faqir-chart: a bar, column or stacked segment (rect), a line's, radar's, scatter's or sparkline's point (circle), a slice (path) or a gauge's value arc (path). The new kinds' marks carry a <title> with their value, for a pointer
+├─ [data-part='line']  <path>  optional  — Drawn by faqir-chart: a line, area or sparkline series' path, or a radar series' closed polygon, dashed per series (solid, dash, dot, dash-dot)
+├─ [data-part='label']  <text>  optional  — Drawn by faqir-chart: a value label on a mark, the cell's own text, where it fits — a share on a slice, a value on a stacked segment, a name beside a scatter point
+├─ [data-part='name']  <text>  optional  — Drawn by faqir-chart: a series name written on its marks (bar, column, stacked) or after its end (line, area) instead of a legend, where every name fits; under a donut's total or a gauge's reading, what it counts
 ├─ [data-part='baseline']  <line>  optional  — Drawn by faqir-chart: the zero rule the bars and columns grow from
-├─ [data-part='legend']  <g>  optional  — Drawn by faqir-chart only when the series names do not fit on the marks
+├─ [data-part='legend']  <g>  optional  — Drawn by faqir-chart when the series names do not fit on the marks, and for radar, pie and donut (beside the circle where it fits, else under it)
 ├─ [data-part='key']  <g>  optional  — Drawn by faqir-chart: one legend entry, a swatch and the series name
-└─ [data-part='swatch']  <rect>  optional  — Drawn by faqir-chart: a legend key's sample of the series' band (and dash, for lines)
+├─ [data-part='swatch']  <rect>  optional  — Drawn by faqir-chart: a legend key's sample of the series' band (and dash, for lines)
+├─ [data-part='area']  <path>  optional  — Drawn by faqir-chart: an area series' fill (path) under its line, painted with the series' gradient
+├─ [data-part='stop']  <stop>  optional  — Drawn by faqir-chart: a stop of an area's gradient; its colour is the series' band from the stylesheet
+├─ [data-part='totals']  <g>  optional  — Drawn by faqir-chart: the group of totals — a stack's sum past its end, a donut's whole in its hole, a gauge's reading
+├─ [data-part='total']  <text>  optional  — Drawn by faqir-chart: one total (text)
+├─ [data-part='amount']  <text>  optional  — Drawn by faqir-chart: a pie or donut legend key's value, the cell's own text
+├─ [data-part='share']  <text>  optional  — Drawn by faqir-chart: a pie or donut legend key's share of the whole, as a percentage in the page language
+├─ [data-part='title']  <text>  optional  — Drawn by faqir-chart: a scatter's axis name, its column's heading
+├─ [data-part='track']  <path>  optional  — Drawn by faqir-chart: a gauge's full half ring, from data-min to data-max
+├─ [data-part='zone']  <path>  optional  — Drawn by faqir-chart: a gauge's outer scale between two thresholds, darker towards the maximum
+└─ [data-part='tick']  <line>  optional  — Drawn by faqir-chart: a notch across a gauge's ring at a threshold
 ```
 
 **Variants**
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| variant | `column`, `bar`, `line` | `column` | `data-variant` | root |
+| variant | `column`, `bar`, `line`, `area`, `stacked-column`, `stacked-bar`, `pie`, `donut`, `scatter`, `sparkline`, `radar`, `gauge` | `column` | `data-variant` | root |
 
 **Controller API**
 
@@ -302,9 +312,120 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 | `redraw()` | Read the data table again and redraw the chart; false when it holds no number. |
 | `destroy()` | Stop watching the table, remove the drawing and show the table again. |
 
-- **Safe transforms:** `Change data-variant to column, bar or line`, `Add, remove or reorder table rows (categories) and columns (series)`, `Edit a cell's text, or add a data-value with its number`, `Change data-table to auto, visible or hidden`, `Set --chart-accent to another colour token`
-- **Unsafe (never do):** `Remove the data table`, `Draw the chart without the table (an SVG alone has no accessible numbers and nothing to print without JavaScript)`, `Give the marks literal colours`
+- **Safe transforms:** `Change data-variant to any of column, bar, line, area, stacked-column, stacked-bar, pie, donut, scatter, sparkline, radar or gauge`, `Add, remove or reorder table rows (categories) and columns (series)`, `Edit a cell's text, or add a data-value with its number`, `Change data-table to auto, visible or hidden`, `Set --chart-accent to another colour token`, `Set data-min, data-max and data-thresholds on a gauge`, `Put a sparkline in a stat or a table cell, named by its data table's caption`
+- **Unsafe (never do):** `Remove the data table`, `Draw the chart without the table (an SVG alone has no accessible numbers and nothing to print without JavaScript)`, `Give the marks literal colours`, `Give a scatter fewer than two value columns, or a radar fewer than three rows (both then draw as a column chart)`
 - **Required ARIA:** `a <table data-part="data"> with th scope="col" headers and th scope="row" category labels`; `the drawn svg carries role="img" and an aria-label reading the caption, the kind and every value`
+
+## chat-message
+
+_kind: primitive · category: data-display_
+
+One message of a conversation, messaging-app style: incoming and outgoing bubbles with a tail on the first bubble of each run, sender name and avatar once per run in group chats, the time and sent/delivered/read ticks tucked into the bubble's corner, replies with a coloured quote bar, images with captions, file cards, voice notes, reaction pills and a typing indicator. Pure CSS — grouping is one boolean per message, and every colour is a token pair the contrast gate already holds.
+
+```html
+<li data-ui="chat-message" data-variant="incoming">
+  <div data-part="bubble">
+    <span data-part="label">{sender}</span>
+    <p data-part="text">{text}</p>
+    <span data-part="meta"><time datetime="{datetime}">{time}</time></span>
+  </div>
+</li>
+```
+
+**Anatomy**
+
+```text
+[data-ui='chat-message']  ·  <li> · content: slots
+├─ [data-part='avatar']  <span>  optional  — Wrapper for the sender's avatar primitive, group chats only. Put it on EVERY incoming message of a group chat so the column never collapses — a continued message keeps the space and hides the picture. Mark it aria-hidden: the sender is named in text.
+├─ [data-part='bubble']  <div>  required  — The bubble. Holds, in order, any of: sender or label, quote, media, file, voice, dots, text, meta. The first bubble of a run (no data-continued on the message) grows a tail from its top corner, drawn in the bubble's own fill and edge.
+├─ [data-part='sender']  <span>  optional  — Visible sender name on the first message of a run in a group chat, coloured by the accent — set data-accent on the message to give each person a stable hue. Read by screen readers; do not add a label beside it.
+├─ [data-part='label']  <span>  optional  — Screen-reader-only author line ('Maya Chen', 'You', 'Maya Chen is typing') for every message that shows no visible sender. Visually hidden by this stylesheet.
+├─ [data-part='quote']  <blockquote>  optional  — The message being replied to, inside the bubble, with an accent bar: a cite (who) over an excerpt (what). Give it its own data-accent to colour it as the quoted sender.
+├─ [data-part='cite']  <span>  optional  — Inside a quote: who wrote the quoted message.
+├─ [data-part='excerpt']  <span>  optional  — Inside a quote: the quoted text, clamped to two lines.
+├─ [data-part='media']  <figure>  optional  — An image (an <img> with width, height and alt). The bubble tightens its padding around it; a [data-part='text'] after it is the caption. With no caption the time sits on a scrim over the picture.
+├─ [data-part='text']  <p>  optional  — The message text. Whitespace is preserved (pre-wrap), so newlines typed with Shift+Enter survive — write the text with no indentation inside the element. A spacer after the last word reserves room for the time.
+├─ [data-part='meta']  <span>  optional  — Time and delivery status in the bubble's inline-end corner, on the last line of the text when it fits. Not hidden from assistive tech: the time is read once, here.
+├─ [data-part='status']  <span>  optional  — Delivery ticks: role='img' with an aria-label ('Sent', 'Delivered', 'Read', 'Sending', 'Not sent') around an icon primitive — check for sent, check-check for delivered and read, clock for pending, circle-alert for failed. data-status colours it: read takes the accent, failed the destructive colour.
+├─ [data-part='edited']  <span>  optional  — The word 'edited' before the time, set in italics.
+├─ [data-part='file']  <div>  optional  — A document card: an icon tile, the name over its details, and an optional action button (download, open).
+├─ [data-part='icon']  <span>  optional  — Inside a file card: the accent tile holding an icon primitive (file-text, image, music …). Decorative: aria-hidden.
+├─ [data-part='name']  <span>  optional  — Inside a file card: the file name, truncated with an ellipsis.
+├─ [data-part='info']  <span>  optional  — Inside a file card: pages, type and size, already formatted ('4 pages · PDF · 1.2 MB').
+├─ [data-part='action']  <button>  optional  — Inside a file card: the round download/open control — a real button or link with an aria-label naming the file.
+├─ [data-part='voice']  <div>  optional  — A voice note: play button, waveform and duration.
+├─ [data-part='play']  <button>  optional  — Play/pause button with an aria-label that includes the duration ('Play voice message, 0:42').
+├─ [data-part='waveform']  <span>  optional  — Decorative trace (aria-hidden), drawn by CSS masks. --chat-progress (a percentage) colours the played part in the accent.
+├─ [data-part='duration']  <span>  optional  — Length of the note, already formatted ('0:42').
+├─ [data-part='reactions']  <div>  optional  — Reaction pills hung over the bubble's lower edge. role='group' with aria-label='Reactions'.
+├─ [data-part='reaction']  <button>  optional  — One reaction: a real toggle button — aria-pressed says whether you reacted, and the aria-label says the emoji in words and the count ('Heart, 2 reactions, including yours').
+├─ [data-part='count']  <span>  optional  — Inside a reaction: the number beside the emoji.
+└─ [data-part='dots']  <span>  optional  — Typing indicator: three empty <span> children that rise in turn (still under reduced motion). aria-hidden; the label says who is typing. Use with data-state='typing'.
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| direction | `incoming`, `outgoing` | `incoming` | `data-variant` | root |
+
+- **Safe transforms:** `change-direction`, `mark-as-continued`, `add-sender-name-and-avatar-for-group-chats`, `set-a-sender-accent`, `add-a-quote`, `add-an-image-with-or-without-caption`, `add-a-file-card`, `add-a-voice-note`, `add-reactions`, `change-delivery-status`, `mark-as-edited`, `retint-with-custom-properties`
+- **Unsafe (never do):** `remove-the-label-from-a-message-with-no-visible-sender`, `aria-hide-the-time`, `remove-the-status-label`, `show-the-sender-and-the-label-together`, `drop-alt-text-from-media`, `indent-the-text-inside-a-pre-wrap-text-part`, `use-a-div-reaction-instead-of-a-button`
+- **A11y:** keys: Tab, Enter / Space on a reaction
+- **Required ARIA:** `aria-hidden="true" on avatar`; `role="img" on status`; `aria-label on status`
+
+## chat-thread
+
+_kind: primitive · category: data-display_
+
+A conversation log on a themed wallpaper: a role='log' scroll container that opens on the newest message and stays pinned to it as messages arrive — in CSS alone, with column-reverse — holding chat-message entries, sticky date pills, centred system lines and an unread divider. The wallpaper's doodle is drawn from the ink and the accent, so it is faint and on-hue in every theme and both schemes.
+
+```html
+<div data-ui="chat-thread" role="log" aria-label="{conversation_label}" tabindex="0" style="--chat-thread-height: {height}">
+  <ol data-part="messages">
+    <li data-part="day"><time datetime="{date}">{day_label}</time></li>
+    <li data-ui="chat-message" data-variant="incoming">
+      <div data-part="bubble">
+        <span data-part="label">{sender}</span>
+        <p data-part="text">{text}</p>
+        <span data-part="meta"><time datetime="{datetime}">{time}</time></span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="outgoing">
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">{reply}</p>
+        <span data-part="meta">
+          <time datetime="{reply_datetime}">{reply_time}</time>
+          <span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+    </li>
+  </ol>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='chat-thread']  ·  <div> · content: slots
+├─ [data-part='messages']  <ol>  required  — The ONE child of the root: an ordered list of entries (chat-message items, day, system and unread lines). Keep it the only child — the stick-to-bottom behaviour depends on it.
+├─ [data-part='day']  <li>  optional  — Date separator pill ('Today', 'Yesterday', 'Tue 21 Oct'), sticky to the top while its day is on screen. Wrap the words in a <time datetime>.
+├─ [data-part='system']  <li>  optional  — A centred, muted line that is not a message: someone joined, the group was renamed, the encryption note. May start with an aria-hidden icon primitive.
+└─ [data-part='unread']  <li>  optional  — Divider above the first unread message ('3 unread messages').
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| wallpaper | `doodle`, `plain` | `doodle` | `data-variant` | root |
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `add-messages`, `add-a-date-separator`, `add-a-system-line`, `add-an-unread-divider`, `render-messages-with-l-for`, `switch-to-the-plain-wallpaper`, `change-the-text-size`, `retint-the-wallpaper-with-custom-properties`
+- **Unsafe (never do):** `remove-role-log`, `remove-the-log-accessible-name`, `remove-tabindex-from-the-scroll-container`, `add-a-second-child-to-the-root`, `reverse-the-dom-order-of-messages`
+- **A11y:** role=log · keys: Tab, ArrowUp / ArrowDown, PageUp / PageDown, Home / End
+- **Required ARIA:** `role="log" on root`; `aria-label on root`; `tabindex="0" on root`
 
 ## checkbox
 
@@ -658,7 +779,7 @@ CSS-only icon: a data-URI SVG rendered via mask-image on a currentColor box. Inh
 
 _kind: primitive · category: data-display_
 
-Responsive image with variants for different display modes and print optimization
+Responsive image with display variants, fixed ratios with a focal point, fit control, below and overlay captions, blur and skeleton placeholders, and print optimization
 
 ```html
 <figure data-ui="image" data-variant="{variant}" data-size="{size}">
@@ -671,7 +792,7 @@ Responsive image with variants for different display modes and print optimizatio
 ```text
 [data-ui='image']  ·  <figure> · content: slots
 ├─ [data-part='img']  <img>  required  — The image element
-└─ [data-part='caption']  <figcaption>  optional  — Optional image caption
+└─ [data-part='caption']  <figcaption>  optional  — Optional image caption: centred below by default, start-aligned below with data-caption="below", over the picture with data-caption="overlay"
 ```
 
 **Variants**
@@ -681,7 +802,7 @@ Responsive image with variants for different display modes and print optimizatio
 | variant | `responsive`, `thumbnail`, `cover`, `contain` | `responsive` | `data-variant` | root |
 | size | `xs`, `sm`, `md`, `lg`, `full` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-size`, `change-variant`, `swap-image-src`, `change-alt-text`, `add-caption`, `remove-caption`, `set-hover`
+- **Safe transforms:** `change-size`, `change-variant`, `swap-image-src`, `change-alt-text`, `add-caption`, `remove-caption`, `set-hover`, `set-ratio`, `set-focal-point`, `set-fit`, `set-caption-placement`, `add-placeholder`
 - **Unsafe (never do):** `remove-alt-attribute`, `remove-img-element`
 - **Required ARIA:** `img must have non-empty alt attribute`
 
@@ -1394,7 +1515,7 @@ Large metric display with number, label, and optional change indicator
 
 _kind: primitive · category: navigation_
 
-Step indicator with numbered circles, connectors, and labels for multi-step flows
+Step indicator for multi-step flows: numbered circles, connectors and labels, horizontal or vertical, with completed, current, error and optional steps, screen-reader state text, and clickable link or button steps
 
 ```html
 <div data-ui="stepper"><div data-part="step" data-state="{state}"><span data-part="indicator">{number}</span><span data-part="label">{label}</span></div></div>
@@ -1404,10 +1525,13 @@ Step indicator with numbered circles, connectors, and labels for multi-step flow
 
 ```text
 [data-ui='stepper']  ·  <div> · content: slots
-├─ [data-part='step']  <div>  required  — Individual step container
-├─ [data-part='indicator']  <span>  required  — Numbered circle or checkmark
-├─ [data-part='label']  <span>  optional  — Step label text
-└─ [data-part='connector']  <div>  optional  — Line connecting steps
+├─ [data-part='step']  <div>  required  — Individual step container: a div or li to display progress, an a or button to navigate to the step (disable the ones that cannot be reached yet)
+├─ [data-part='indicator']  <span>  required  — Numbered circle; a completed step draws a tick and an error step an exclamation mark over its number
+├─ [data-part='label']  <span>  optional  — Step label text. Hidden below sm in the horizontal layout except on the aria-current step; always shown in the vertical layout
+├─ [data-part='description']  <span>  optional  — Second line under the label: a summary, a hint, an error message (destructive on an error step)
+├─ [data-part='optional']  <span>  optional  — The optional marker: visible text ("Optional") on its own line under the label, read with the step
+├─ [data-part='status']  <span>  optional  — The step's state in words for screen readers only ("Completed", "Error"), visually hidden; the current step needs none, aria-current says it
+└─ [data-part='connector']  <div>  optional  — Line connecting steps (an aria-hidden li in an ol)
 ```
 
 **Variants**
@@ -1417,9 +1541,9 @@ Step indicator with numbered circles, connectors, and labels for multi-step flow
 | variant | `horizontal`, `vertical` | `horizontal` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `Change step data-state to active or completed`, `Add or remove label slot`, `Change indicator content`, `Add or remove connector slots`
-- **Unsafe (never do):** `Remove data-ui attribute`, `Remove step or indicator slots`
-- **A11y:** role=navigation
+- **Safe transforms:** `Change step data-state to active, completed or error`, `Add or remove label slot`, `Change indicator content`, `Add or remove connector slots`, `Add a description, optional or status part to a step`, `Make steps buttons or links, disabling the ones not reachable yet`, `Move aria-current="step" with the current step`
+- **Unsafe (never do):** `Remove data-ui attribute`, `Remove step or indicator slots`, `Show a state by colour alone, without a status part`, `Leave an unreachable button or link step enabled`
+- **A11y:** role=navigation · keys: Tab, Enter, Space
 - **Required ARIA:** `aria-label`
 
 ## surface

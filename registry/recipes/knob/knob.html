@@ -1,0 +1,214 @@
+<!-- @ui:component knob -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots label control input cap dial scale track arc indicator output -->
+<!-- @ui:variants size=sm|md|lg -->
+<!-- @ui:controller knob.js -->
+
+<!-- A voice panel
+     Drag a knob up or right to turn it (Shift for fine), use the arrow, Page and Home/End keys once it has focus, or scroll the wheel over a focused knob. Double-click returns a knob to its default. Detune is bipolar: its arc grows out of the centre. -->
+<div data-ui="surface" data-variant="raised" data-size="md">
+  <div data-ui="cluster" data-gap="6" data-justify="center" data-align="start">
+    <div data-ui="knob" data-value-suffix=" Hz" data-page-step="100" style="--knob-pos: 0.3131">
+      <label data-part="label" for="knob-cutoff">Cutoff</label>
+      <div data-part="control">
+        <input data-part="input" id="knob-cutoff" type="range" name="cutoff" min="20" max="2000" step="10" value="640" aria-valuetext="640 Hz">
+        <span data-part="cap" aria-hidden="true"></span>
+        <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+          <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+        </svg>
+      </div>
+      <output data-part="output" for="knob-cutoff" aria-hidden="true">640 Hz</output>
+    </div>
+
+    <div data-ui="knob" data-value-suffix="%" style="--knob-pos: 0.68">
+      <label data-part="label" for="knob-resonance">Resonance</label>
+      <div data-part="control">
+        <input data-part="input" id="knob-resonance" type="range" name="resonance" min="0" max="100" step="1" value="68" aria-valuetext="68%">
+        <span data-part="cap" aria-hidden="true"></span>
+        <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+          <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+        </svg>
+      </div>
+      <output data-part="output" for="knob-resonance" aria-hidden="true">68%</output>
+    </div>
+
+    <div data-ui="knob" data-value-suffix=" dB" style="--knob-pos: 0.375">
+      <label data-part="label" for="knob-drive">Drive</label>
+      <div data-part="control">
+        <input data-part="input" id="knob-drive" type="range" name="drive" min="0" max="24" step="0.5" value="9" aria-valuetext="9 dB">
+        <span data-part="cap" aria-hidden="true"></span>
+        <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+          <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+        </svg>
+      </div>
+      <output data-part="output" for="knob-drive" aria-hidden="true">9 dB</output>
+    </div>
+
+    <div data-ui="knob" data-origin="0" data-value-suffix=" ct" style="--knob-pos: 0.62; --knob-origin: 0.5">
+      <label data-part="label" for="knob-detune">Detune</label>
+      <div data-part="control">
+        <input data-part="input" id="knob-detune" type="range" name="detune" min="-50" max="50" step="1" value="12" aria-valuetext="+12 ct">
+        <span data-part="cap" aria-hidden="true"></span>
+        <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+          <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+        </svg>
+      </div>
+      <output data-part="output" for="knob-detune" aria-hidden="true">+12 ct</output>
+    </div>
+
+    <div data-ui="knob" data-size="lg" data-drag="angular" data-value-suffix="%" style="--knob-pos: 0.8">
+      <label data-part="label" for="knob-master">Master</label>
+      <div data-part="control">
+        <input data-part="input" id="knob-master" type="range" name="master" min="0" max="100" step="1" value="80" aria-valuetext="80%">
+        <span data-part="cap" aria-hidden="true"></span>
+        <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+          <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+        </svg>
+      </div>
+      <output data-part="output" for="knob-master" aria-hidden="true">80%</output>
+    </div>
+  </div>
+</div>
+
+<!-- Sizes
+     The sm, md (default) and lg dials, and a knob whose input is disabled. -->
+<div data-ui="cluster" data-gap="8" data-align="end">
+  <div data-ui="knob" data-size="sm" data-value-suffix="%" style="--knob-pos: 0.25">
+    <label data-part="label" for="knob-size-sm">Small</label>
+    <div data-part="control">
+      <input data-part="input" id="knob-size-sm" type="range" min="0" max="100" value="25" aria-valuetext="25%">
+      <span data-part="cap" aria-hidden="true"></span>
+      <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+      </svg>
+    </div>
+    <output data-part="output" for="knob-size-sm" aria-hidden="true">25%</output>
+  </div>
+
+  <div data-ui="knob" data-value-suffix="%" style="--knob-pos: 0.5">
+    <label data-part="label" for="knob-size-md">Medium</label>
+    <div data-part="control">
+      <input data-part="input" id="knob-size-md" type="range" min="0" max="100" value="50" aria-valuetext="50%">
+      <span data-part="cap" aria-hidden="true"></span>
+      <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+        <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+      </svg>
+    </div>
+    <output data-part="output" for="knob-size-md" aria-hidden="true">50%</output>
+  </div>
+
+  <div data-ui="knob" data-size="lg" data-value-suffix="%" style="--knob-pos: 0.75">
+    <label data-part="label" for="knob-size-lg">Large</label>
+    <div data-part="control">
+      <input data-part="input" id="knob-size-lg" type="range" min="0" max="100" value="75" aria-valuetext="75%">
+      <span data-part="cap" aria-hidden="true"></span>
+      <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+        <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+      </svg>
+    </div>
+    <output data-part="output" for="knob-size-lg" aria-hidden="true">75%</output>
+  </div>
+
+  <div data-ui="knob" data-value-suffix="%" style="--knob-pos: 0.4">
+    <label data-part="label" for="knob-disabled">Disabled</label>
+    <div data-part="control">
+      <input data-part="input" id="knob-disabled" type="range" min="0" max="100" value="40" disabled aria-valuetext="40%">
+      <span data-part="cap" aria-hidden="true"></span>
+      <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+        <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+      </svg>
+    </div>
+    <output data-part="output" for="knob-disabled" aria-hidden="true">40%</output>
+  </div>
+</div>
+
+<!-- In a form
+     Each knob's native range is a named field, so it submits with the form, and Reset puts every dial back to its authored value. -->
+<form aria-label="Equaliser">
+  <div data-ui="cluster" data-gap="6" data-align="end">
+    <div data-ui="knob" data-origin="0" data-value-suffix=" dB" style="--knob-pos: 0.6667; --knob-origin: 0.5">
+      <label data-part="label" for="knob-bass">Bass</label>
+      <div data-part="control">
+        <input data-part="input" id="knob-bass" type="range" name="bass" min="-12" max="12" step="1" value="4" aria-valuetext="+4 dB">
+        <span data-part="cap" aria-hidden="true"></span>
+        <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+          <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+        </svg>
+      </div>
+      <output data-part="output" for="knob-bass" aria-hidden="true">+4 dB</output>
+    </div>
+
+    <div data-ui="knob" data-origin="0" data-value-suffix=" dB" style="--knob-pos: 0.375; --knob-origin: 0.5">
+      <label data-part="label" for="knob-treble">Treble</label>
+      <div data-part="control">
+        <input data-part="input" id="knob-treble" type="range" name="treble" min="-12" max="12" step="1" value="-3" aria-valuetext="−3 dB">
+        <span data-part="cap" aria-hidden="true"></span>
+        <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+          <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+          <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+        </svg>
+      </div>
+      <output data-part="output" for="knob-treble" aria-hidden="true">−3 dB</output>
+    </div>
+
+    <button data-ui="button" data-variant="outline" data-size="sm" type="reset">Reset</button>
+  </div>
+</form>
+
+<!-- Bound with l-model
+     The model drives the dial and the dial drives the model. -->
+<div data-ui="cluster" data-gap="6" data-align="center" l-data="{ gain: 64 }">
+  <div data-ui="knob" data-value-suffix="%" style="--knob-pos: 0.64">
+    <label data-part="label" for="knob-gain">Gain</label>
+    <div data-part="control">
+      <input data-part="input" id="knob-gain" type="range" name="gain" min="0" max="100" step="1" value="64" aria-valuetext="64%" l-model.number="gain">
+      <span data-part="cap" aria-hidden="true"></span>
+      <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+        <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+        <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+      </svg>
+    </div>
+    <output data-part="output" for="knob-gain" aria-hidden="true">64%</output>
+  </div>
+  <div data-ui="stack" data-gap="2">
+    <p data-ui="text" data-size="sm">Model: <strong l-text="gain">64</strong></p>
+    <div data-ui="cluster" data-gap="2">
+      <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="gain = 0">Silence</button>
+      <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="gain = 50">Half</button>
+      <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="gain = 100">Full</button>
+    </div>
+  </div>
+</div>

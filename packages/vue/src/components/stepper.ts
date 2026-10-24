@@ -16,7 +16,7 @@ export interface LStepperProps {
   size?: LStepperSize;
 }
 
-/** `stepper` — Step indicator with numbered circles, connectors, and labels for multi-step flows */
+/** `stepper` — Step indicator for multi-step flows: numbered circles, connectors and labels, horizontal or vertical, with completed, current, error and optional steps, screen-reader state text, and clickable link or button steps */
 export const LStepper = defineFaqirPrimitive<LStepperProps>({
   name: "stepper",
   tag: "div",
@@ -29,6 +29,9 @@ export const LStepper = defineFaqirPrimitive<LStepperProps>({
     { name: "step", tag: "div", required: true, isVoid: false },
     { name: "indicator", tag: "span", required: true, isVoid: false },
     { name: "label", tag: "span", required: false, isVoid: false },
+    { name: "description", tag: "span", required: false, isVoid: false },
+    { name: "optional", tag: "span", required: false, isVoid: false },
+    { name: "status", tag: "span", required: false, isVoid: false },
     { name: "connector", tag: "div", required: false, isVoid: false },
   ],
   defaultSlot: false,

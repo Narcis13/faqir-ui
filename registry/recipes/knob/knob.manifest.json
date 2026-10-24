@@ -1,0 +1,269 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "knob",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Rotary control over a native range input: drag, wheel and keyboard turning, a token-drawn value arc (unipolar or bipolar), sizes, form participation and l-model support",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='knob']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "label": {
+      "selector": "[data-part='label']",
+      "required": false,
+      "tag_hint": "label",
+      "description": "Visible name, a <label for> pointing at the input"
+    },
+    "control": {
+      "selector": "[data-part='control']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The round hit area: takes the pointer drag, the wheel and the double-click, and draws the focus ring while the input has keyboard focus"
+    },
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "input",
+      "description": "A native <input type=\"range\"> carrying name, min, max, step and value. It is the focusable, accessible slider, the form field and the l-model target; it lies invisibly over the dial, and is the visible control when scripting is off"
+    },
+    "cap": {
+      "selector": "[data-part='cap']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "The knob body inside the ring (decorative, aria-hidden)"
+    },
+    "dial": {
+      "selector": "[data-part='dial']",
+      "required": true,
+      "tag_hint": "svg",
+      "description": "aria-hidden SVG (viewBox 0 0 100 100) holding the track, arc and indicator"
+    },
+    "scale": {
+      "selector": "[data-part='scale']",
+      "required": false,
+      "tag_hint": "path",
+      "description": "Optional tick scale: an arc just outside the track (pathLength=\"100\") drawn as eleven dots"
+    },
+    "track": {
+      "selector": "[data-part='track']",
+      "required": true,
+      "tag_hint": "path",
+      "description": "The 270° sweep, a path with pathLength=\"100\""
+    },
+    "arc": {
+      "selector": "[data-part='arc']",
+      "required": true,
+      "tag_hint": "path",
+      "description": "The same path, dashed by the stylesheet from --knob-origin to --knob-pos"
+    },
+    "indicator": {
+      "selector": "[data-part='indicator']",
+      "required": true,
+      "tag_hint": "line",
+      "description": "The pointer line on the cap, rotated to the value"
+    },
+    "output": {
+      "selector": "[data-part='output']",
+      "required": false,
+      "tag_hint": "output",
+      "description": "Visible value readout, written by the controller with the same text as aria-valuetext (aria-hidden, so the value is not announced twice)"
+    }
+  },
+  "variants": {
+    "size": {
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root",
+      "description": "Dial diameter: 3rem, 4.5rem, 6.5rem"
+    }
+  },
+  "states": {
+    "dragging": {
+      "attr": "data-state=\"dragging\"",
+      "transient": true,
+      "applied_to": "root",
+      "description": "A pointer drag is in progress; the glide transition is off so the dial tracks the pointer"
+    }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "setValue",
+        "params": "value",
+        "description": "Set the value (snapped and clamped); fires `input` and `change`."
+      },
+      {
+        "name": "getValue",
+        "params": "",
+        "description": "The current value as a number."
+      },
+      {
+        "name": "stepBy",
+        "params": "n",
+        "description": "Move by `n` steps (negative turns anticlockwise)."
+      },
+      {
+        "name": "reset",
+        "params": "",
+        "description": "Return to the authored default (the input's `value` attribute)."
+      },
+      {
+        "name": "setFormatter",
+        "params": "fn",
+        "description": "Format the readout and aria-valuetext: `fn(value) → string`, or null."
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
+  "props": {
+    "valueSuffix": {
+      "type": "string",
+      "attr": "data-value-suffix",
+      "description": "Appended to the value in the readout and aria-valuetext (\"%\", \" Hz\", \" dB\")"
+    },
+    "pageStep": {
+      "type": "number",
+      "attr": "data-page-step",
+      "description": "PageUp/PageDown increment; defaults to 10 × step"
+    },
+    "origin": {
+      "type": "number",
+      "attr": "data-origin",
+      "description": "Bipolar mode: the value the arc grows out of (0 on a −12…12 range). Values above it read with a plus sign"
+    },
+    "drag": {
+      "type": "enum",
+      "values": [
+        "linear",
+        "angular"
+      ],
+      "default": "linear",
+      "attr": "data-drag",
+      "description": "linear: drag up or right to turn clockwise (200px for the whole sweep, Shift for ten times finer). angular: the knob follows the pointer's angle around its centre"
+    }
+  },
+  "a11y": {
+    "role": "slider",
+    "required_attrs": [
+      "a <label for> or aria-label naming the input",
+      "aria-hidden=\"true\" on dial",
+      "aria-hidden=\"true\" on cap"
+    ],
+    "keyboard": {
+      "ArrowUp": "increase by step",
+      "ArrowRight": "increase by step",
+      "ArrowDown": "decrease by step",
+      "ArrowLeft": "decrease by step",
+      "PageUp": "increase by the page step (data-page-step, default 10 × step)",
+      "PageDown": "decrease by the page step",
+      "Home": "jump to min",
+      "End": "jump to max"
+    },
+    "notes": [
+      "The native <input type=\"range\"> is the slider: implicit role=\"slider\", native aria-valuenow/min/max from its value/min/max, and aria-valuetext kept by the controller from the readout text.",
+      "Pointer: drag up or right to increase (Shift for fine); double-click restores the default value. The wheel turns the knob only while it has focus, so a page scrolled past a knob keeps scrolling.",
+      "Every user change fires native input and change events on the input, so forms, listeners and l-model see a knob exactly as they see a range.",
+      "Disable with the input's own disabled attribute: it leaves the tab order and the form submission, and only the dial dims.",
+      "With scripting off the native range is shown in place of the dial.",
+      "The controller writes --knob-pos (0–1 along the sweep) and, for a bipolar knob, --knob-origin on the root. Author both inline (style=\"--knob-pos: 0.42\") so the page paints the right dial before the controller runs."
+    ]
+  },
+  "tokens_used": [
+    "color-bg-muted",
+    "color-primary",
+    "color-surface-1",
+    "color-border",
+    "color-fg",
+    "color-fg-muted",
+    "color-bg",
+    "color-border-strong",
+    "space-2",
+    "space-4",
+    "space-0h",
+    "space-1",
+    "space-3",
+    "font-ui",
+    "duration-fast",
+    "ease-out",
+    "ease-default",
+    "text-xs",
+    "text-sm",
+    "weight-semibold",
+    "leading-tight",
+    "leading-normal",
+    "radius-full",
+    "border-width",
+    "shadow-md",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset",
+    "disabled-opacity"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"knob\" data-value-suffix=\"{suffix}\" style=\"--knob-pos: {fraction}\">\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"control\">\n    <input data-part=\"input\" id=\"{id}\" type=\"range\" name=\"{name}\" min=\"{min}\" max=\"{max}\" step=\"{step}\" value=\"{value}\">\n    <span data-part=\"cap\" aria-hidden=\"true\"></span>\n    <svg data-part=\"dial\" viewBox=\"0 0 100 100\" aria-hidden=\"true\" focusable=\"false\">\n      <path data-part=\"scale\" d=\"M 16.059 83.941 A 48 48 0 1 1 83.941 83.941\" pathLength=\"100\"/>\n      <path data-part=\"track\" d=\"M 21.716 78.284 A 40 40 0 1 1 78.284 78.284\" pathLength=\"100\"/>\n      <path data-part=\"arc\" d=\"M 21.716 78.284 A 40 40 0 1 1 78.284 78.284\" pathLength=\"100\"/>\n      <line data-part=\"indicator\" x1=\"50\" y1=\"27\" x2=\"50\" y2=\"39\"/>\n    </svg>\n  </div>\n  <output data-part=\"output\" for=\"{id}\" aria-hidden=\"true\">{value}{suffix}</output>\n</div>",
+    "bipolar": "<div data-ui=\"knob\" data-origin=\"0\" data-value-suffix=\" dB\" style=\"--knob-pos: 0.5; --knob-origin: 0.5\">\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"control\">\n    <input data-part=\"input\" id=\"{id}\" type=\"range\" name=\"{name}\" min=\"-12\" max=\"12\" step=\"1\" value=\"0\">\n    <span data-part=\"cap\" aria-hidden=\"true\"></span>\n    <svg data-part=\"dial\" viewBox=\"0 0 100 100\" aria-hidden=\"true\" focusable=\"false\">\n      <path data-part=\"scale\" d=\"M 16.059 83.941 A 48 48 0 1 1 83.941 83.941\" pathLength=\"100\"/>\n      <path data-part=\"track\" d=\"M 21.716 78.284 A 40 40 0 1 1 78.284 78.284\" pathLength=\"100\"/>\n      <path data-part=\"arc\" d=\"M 21.716 78.284 A 40 40 0 1 1 78.284 78.284\" pathLength=\"100\"/>\n      <line data-part=\"indicator\" x1=\"50\" y1=\"27\" x2=\"50\" y2=\"39\"/>\n    </svg>\n  </div>\n  <output data-part=\"output\" for=\"{id}\" aria-hidden=\"true\">0 dB</output>\n</div>"
+  },
+  "safe_transforms": [
+    "change-min-max-step",
+    "change-initial-value",
+    "add-value-suffix",
+    "set-page-step",
+    "set-bipolar-origin",
+    "set-angular-drag",
+    "toggle-label",
+    "toggle-output",
+    "change-size",
+    "toggle-disabled",
+    "bind-l-model",
+    "restyle-arc-colours"
+  ],
+  "unsafe_transforms": [
+    "remove-native-input",
+    "change-input-type",
+    "remove-input-label",
+    "remove-aria-hidden-from-dial",
+    "remove-keyboard-handler",
+    "remove-control"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+  "files": {
+    "html": "knob.html",
+    "css": "knob.css",
+    "js": "knob.js",
+    "manifest": "knob.manifest.json"
+  },
+  "tests": [
+    "seeds-from-the-native-input",
+    "snaps-to-step-and-clamps",
+    "arrow-keys-step",
+    "page-keys-use-page-step",
+    "home-end-jump-to-bounds",
+    "keys-fire-input-and-change",
+    "vertical-drag-turns-shift-is-finer",
+    "angular-drag-follows-the-pointer",
+    "wheel-turns-only-while-focused",
+    "double-click-restores-default",
+    "programmatic-value-write-repaints-the-dial",
+    "form-reset-restores-and-repaints",
+    "l-model-both-directions",
+    "bipolar-arc-and-signed-readout",
+    "disabled-ignores-input",
+    "prevents-double-initialization",
+    "destroy-removes-listeners-and-accessor"
+  ]
+}

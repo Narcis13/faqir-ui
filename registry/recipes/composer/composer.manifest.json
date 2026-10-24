@@ -1,0 +1,261 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "composer",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Message composer: a textarea that grows with its text to a maximum number of lines and then scrolls (CSS field-sizing with a measured fallback), Enter to send and Shift+Enter for a new line — never mid-IME-composition — a send button that is live only when there is something to send, an action slot (emoji, voice), and file attachments from a picker, a paste or a drop, shown as removable chips. Sending emits a cancelable faqir:send with the text and the files, then clears and refocuses.",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='composer']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "attachments": {
+      "selector": "[data-part='attachments']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "The tray of attached files, above the bar: role='list' with an aria-label and aria-live='polite', hidden while empty. The controller renders one chip primitive per file (role='listitem', the name and size as the label, a 'Remove {name}' dismiss button); removing one moves focus to the next chip, or to the attach button."
+    },
+    "bar": {
+      "selector": "[data-part='bar']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The row: the field, then the send button."
+    },
+    "field": {
+      "selector": "[data-part='field']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The rounded well that holds the action buttons, the textarea and the attach button. It carries the focus ring for everything inside it."
+    },
+    "action": {
+      "selector": "[data-part='action']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Optional icon button(s) in the field — emoji picker, camera, voice note. Each a real button with an aria-label; what it opens is the page's."
+    },
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "textarea",
+      "description": "The message textarea, with an aria-label naming the conversation. Grows from one line to --composer-max-lines (default 6), then scrolls."
+    },
+    "attach": {
+      "selector": "[data-part='attach']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Opens the hidden file picker. A button with an aria-label ('Attach files')."
+    },
+    "file": {
+      "selector": "[data-part='file']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "The hidden <input type='file'> the attach button opens; add multiple and accept as needed. Picked files are added (deduplicated) and the input is reset, so the same file can be picked again after removal."
+    },
+    "send": {
+      "selector": "[data-part='send']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Round send button with an aria-label. Disabled while there is no text and no file; author it disabled when the composer starts empty."
+    }
+  },
+  "variants": {},
+  "states": {
+    "empty": {
+      "attr": "data-state=\"empty\"",
+      "default": true,
+      "applied_to": "root",
+      "description": "Nothing to send: no text (whitespace does not count) and no file. The send button is disabled."
+    },
+    "ready": {
+      "attr": "data-state=\"ready\"",
+      "applied_to": "root",
+      "description": "There is text or at least one file; the send button is enabled."
+    }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "send",
+        "params": ""
+      },
+      {
+        "name": "clear",
+        "params": ""
+      },
+      {
+        "name": "focus",
+        "params": ""
+      },
+      {
+        "name": "setValue",
+        "params": "text"
+      },
+      {
+        "name": "addFiles",
+        "params": "list"
+      },
+      {
+        "name": "removeFile",
+        "params": "index"
+      },
+      {
+        "name": "getFiles",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
+  "props": {
+    "enter": {
+      "type": "enum",
+      "values": [
+        "send",
+        "newline"
+      ],
+      "default": "send",
+      "attr": "data-enter",
+      "description": "send = Enter sends and Shift+Enter breaks the line (chat); newline = Enter breaks the line and Ctrl/Cmd+Enter sends (long-form posts). Say which in visible help text for newline."
+    },
+    "--composer-max-lines": {
+      "type": "number",
+      "default": 6,
+      "description": "How many lines the textarea grows to before it scrolls (custom property)."
+    },
+    "--composer-bg": {
+      "type": "string",
+      "default": "var(--color-bg-subtle)",
+      "description": "The bar's background (custom property)."
+    },
+    "--composer-radius": {
+      "type": "string",
+      "default": "var(--radius-2xl)",
+      "description": "Corner radius of the field (custom property)."
+    },
+    "--composer-send-radius": {
+      "type": "string",
+      "default": "var(--radius-full)",
+      "description": "Corner radius of the send button (custom property)."
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-label on input",
+      "aria-label on send",
+      "aria-label on attach",
+      "aria-label on action"
+    ],
+    "keyboard": {
+      "Enter": "send (data-enter='send', the default); a new line with data-enter='newline'",
+      "Shift + Enter": "insert a new line (data-enter='send')",
+      "Ctrl/Cmd + Enter": "send (data-enter='newline')",
+      "Enter during IME composition": "commits the composition — never sends (isComposing / keyCode 229 are respected)",
+      "Tab": "move through the action buttons, the textarea, attach, each attachment's remove button and send",
+      "Enter / Space on a chip's remove button": "remove that file; focus moves to the next chip, or to the attach button"
+    },
+    "notes": [
+      "The send button is disabled, not hidden, while there is nothing to send, so its position and name are stable.",
+      "After a send the composer clears and focus returns to the textarea, ready for the next message.",
+      "The attachments tray is a labelled list and a polite live region: adding a file announces its name and size.",
+      "With data-enter='newline', describe the send shortcut in visible text and point aria-describedby at it.",
+      "The root may also be a <form> (a no-JavaScript fallback that posts the message): the controller intercepts its submit and sends instead, so it never navigates."
+    ]
+  },
+  "events": {
+    "faqir:send": {
+      "detail": "{ text, files }",
+      "description": "Fires, cancelable, when the user sends (Enter, Ctrl/Cmd+Enter, the send button, a form submit, or send()): text is trimmed (inner newlines kept), files is an array of File. Call preventDefault() to keep the draft — say, when the network is down."
+    }
+  },
+  "tokens_used": [
+    "space-2",
+    "space-3",
+    "space-1h",
+    "space-0h",
+    "space-1",
+    "space-8",
+    "color-bg-subtle",
+    "color-fg",
+    "color-border-strong",
+    "color-fg-muted",
+    "color-bg-muted",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "font-ui",
+    "font-body",
+    "control-height-md",
+    "input-border-width",
+    "input-border",
+    "input-fill",
+    "radius-2xl",
+    "radius-full",
+    "corner-shape",
+    "shadow-xs",
+    "shadow-sm",
+    "duration-fast",
+    "ease-default",
+    "ease-out",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset",
+    "text-base",
+    "text-lg",
+    "text-sm",
+    "leading-normal",
+    "disabled-opacity"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"composer\" data-state=\"empty\">\n  <div data-part=\"attachments\" role=\"list\" aria-label=\"Attachments\" aria-live=\"polite\" hidden></div>\n  <div data-part=\"bar\">\n    <div data-part=\"field\">\n      <textarea data-part=\"input\" rows=\"1\" aria-label=\"{label}\" placeholder=\"{placeholder}\"></textarea>\n      <button type=\"button\" data-part=\"attach\" aria-label=\"Attach files\"><span data-ui=\"icon\" data-icon=\"paperclip\" aria-hidden=\"true\"></span></button>\n      <input type=\"file\" data-part=\"file\" multiple hidden aria-label=\"Files to attach\">\n    </div>\n    <button type=\"button\" data-part=\"send\" aria-label=\"Send\" disabled><span data-ui=\"icon\" data-icon=\"send\" aria-hidden=\"true\"></span></button>\n  </div>\n</div>",
+    "html_minimal": "<div data-ui=\"composer\" data-state=\"empty\">\n  <div data-part=\"bar\">\n    <div data-part=\"field\">\n      <textarea data-part=\"input\" rows=\"1\" aria-label=\"{label}\" placeholder=\"{placeholder}\"></textarea>\n    </div>\n    <button type=\"button\" data-part=\"send\" aria-label=\"Send\" disabled><span data-ui=\"icon\" data-icon=\"send\" aria-hidden=\"true\"></span></button>\n  </div>\n</div>"
+  },
+  "safe_transforms": [
+    "add-an-emoji-or-voice-action",
+    "remove-the-attachment-slot",
+    "accept-only-some-file-types",
+    "switch-enter-to-newline-for-long-form",
+    "change-the-maximum-lines",
+    "relabel-the-input-and-send-button",
+    "cancel-faqir-send-to-keep-the-draft"
+  ],
+  "unsafe_transforms": [
+    "remove-the-input-label",
+    "hide-the-send-button-instead-of-disabling-it",
+    "send-on-enter-during-ime-composition",
+    "make-the-field-a-contenteditable-div"
+  ],
+  "composition": {
+    "contains": [
+      "chip",
+      "icon"
+    ],
+    "used_in": [
+      "chat"
+    ]
+  },
+  "files": {
+    "html": "composer.html",
+    "css": "composer.css",
+    "js": "composer.js",
+    "manifest": "composer.manifest.json"
+  },
+  "tests": [
+    "send-is-disabled-until-there-is-content",
+    "enter-sends-and-shift-enter-breaks-the-line",
+    "newline-mode-sends-on-ctrl-or-cmd-enter",
+    "enter-during-ime-composition-never-sends",
+    "faqir-send-carries-text-and-files",
+    "a-cancelled-send-keeps-the-draft",
+    "send-clears-and-refocuses",
+    "attachments-render-as-removable-chips",
+    "duplicate-files-are-ignored",
+    "auto-grow-fallback-measures-scroll-height",
+    "prevents-double-initialization",
+    "destroy-removes-listeners"
+  ]
+}

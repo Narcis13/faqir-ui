@@ -120,6 +120,14 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   // A single-page form renders its submit button (forecraft #2), and the
   // pattern is that render byte for byte. Nothing existing was recomposed.
   "patterns/form-page/form-page.html": "1 added button: the form's submit, in its footer",
+  // The component expansion: date ranges. Each reference gained one example per
+  // new capability; the existing examples were not recomposed.
+  "recipes/calendar/calendar.html": "range showcases (presets + two months, range length bounds): calendar 5 → 7",
+  "recipes/date-picker/date-picker.html": "range, typed and inline demos; icon primitive glyphs: calendar 3 → 6, date-picker 3 → 6, icon 0 → 9",
+  "primitives/stepper/stepper.html": "2 → 6 steppers (all states, error, vertical, clickable, sizes); stack/cluster/button for the clickable demo",
+  "recipes/tree-view/tree-view.html": "1 → 5 trees (explorer, checkbox, lazy, filter, multi-select + DnD) in surface panels; input, stack, text, kbd, icon",
+  "primitives/image/image.html": "9 added images (focal point ×4, fit, overlay caption, placeholders ×3) in 2 clusters",
+  "primitives/chart/chart.html": "a demo per new chart kind: chart 4 → 19, plus grid ×1, stat ×3 and table ×1 hosting the sparklines",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

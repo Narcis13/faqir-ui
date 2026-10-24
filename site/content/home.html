@@ -75,6 +75,172 @@
 
         <!-- @faqir:home-stats -->
 
+        <section aria-labelledby="release-expansion-heading" data-docs-section data-docs-release data-docs-release-expansion>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="primary" data-live>Just landed</span>
+            <h2 id="release-expansion-heading">New: conversations, media and controls</h2>
+            <p>
+              Nine new components and seven upgraded ones. Chat, lists, a knob, a video player, a lightbox and a
+              compare slider are new; date ranges, trees, steps, images, the wizard and charts grew up. Every one of them
+              is running on the showcase page, in whatever theme you pick.
+            </p>
+            <a data-ui="button" data-variant="primary" data-size="lg" href="showcase/index.html" data-docs-release-cta>Open the component showcase</a>
+          </div>
+
+          <div data-docs-release-grid>
+            <article data-docs-release-item>
+              <h3>Conversations</h3>
+              <p>
+                Bubbles that run together, replies, reactions, files, voice notes and read receipts; a thread
+                that is a polite live log; a composer that grows and sends on Enter. The <code>chat</code> pattern
+                wires them into a messaging app with one <code>l-data</code> scope.
+              </p>
+              <div data-docs-release-artifact>
+                <div data-ui="chat-thread" role="log" aria-label="A conversation preview" tabindex="0" data-docs-home-expansion-thread>
+                  <ol data-part="messages">
+                    <li data-ui="chat-message" data-variant="incoming">
+                      <div data-part="bubble">
+                        <span data-part="label">Maya Chen</span>
+                        <p data-part="text">Did the new components land?</p>
+                        <span data-part="meta"><time>09:12</time></span>
+                      </div>
+                    </li>
+                    <li data-ui="chat-message" data-variant="outgoing">
+                      <div data-part="bubble">
+                        <span data-part="label">You</span>
+                        <p data-part="text">All of them, live on the showcase.</p>
+                        <span data-part="meta">
+                          <time>09:13</time>
+                          <span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span>
+                        </span>
+                      </div>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="showcase/index.html#showcase-conversations">The chat, live</a>
+                <a data-ui="link" href="components/patterns/chat.html">The chat pattern</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Trees &amp; steps</h3>
+              <p>
+                The tree view gained guide lines and icons, tri-state checkboxes, lazy folders, a filter,
+                multi-select and drag-and-drop with a keyboard path. The stepper gained error and optional steps,
+                and its steps can drive the wizard.
+              </p>
+              <div data-docs-release-artifact>
+                <ol data-ui="stepper" data-size="sm" aria-label="Checkout progress, a preview">
+                  <li data-part="step" data-state="completed">
+                    <span data-part="indicator">1</span>
+                    <span data-part="label">Cart</span>
+                    <span data-part="status">Completed</span>
+                  </li>
+                  <li data-part="connector" data-state="completed" aria-hidden="true"></li>
+                  <li data-part="step" data-state="error">
+                    <span data-part="indicator">2</span>
+                    <span data-part="label">Payment</span>
+                    <span data-part="status">Error</span>
+                  </li>
+                  <li data-part="connector" aria-hidden="true"></li>
+                  <li data-part="step" data-state="active" aria-current="step">
+                    <span data-part="indicator">3</span>
+                    <span data-part="label">Review</span>
+                  </li>
+                </ol>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="showcase/index.html#showcase-trees">Trees and steps, live</a>
+                <a data-ui="link" href="components/recipes/tree-view.html">The tree view</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Date ranges</h3>
+              <p>
+                Two months side by side, presets that pick a span in one click, and stay lengths that grey out
+                every end that would not fit. The date picker turns it into a start → end field that reads typed
+                dates in the page's language.
+              </p>
+              <div data-docs-release-artifact>
+                <pre tabindex="0"><code>&lt;div data-ui="calendar"
+  data-mode="range" data-months="2"
+  data-min-range="3" data-max-range="14"&gt;</code></pre>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="showcase/index.html#showcase-dates">Pick a range, live</a>
+                <a data-ui="link" href="components/recipes/calendar.html">The calendar</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Lists</h3>
+              <p>
+                Rows with leading media, a title, a meta and an action. Selectable, a list is a listbox with
+                type-ahead, ranges and sticky section headers; reorderable, every move — dragged or keyed — is
+                announced and emitted.
+              </p>
+              <div data-docs-release-artifact>
+                <pre tabindex="0"><code>&lt;div data-ui="list" data-selection="multi"
+  data-reorderable&gt;
+  &lt;ul data-part="items" role="listbox" …&gt;</code></pre>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="showcase/index.html#showcase-lists">Select and reorder, live</a>
+                <a data-ui="link" href="components/recipes/list.html">The list</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Media and controls</h3>
+              <p>
+                Images with a focal point, captions over the picture and placeholders; a lightbox, a before and
+                after slider, a captioned video player, and a knob that is a native range under a drawn dial.
+              </p>
+              <div data-docs-release-artifact>
+                <figure data-ui="image" data-size="lg" data-caption="overlay" data-ratio="3-2">
+                  <img data-part="img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2307112a'/%3E%3Cstop offset='1' stop-color='%231c3a5e'/%3E%3C/linearGradient%3E%3ClinearGradient id='a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%237bffcf' stop-opacity='0'/%3E%3Cstop offset='0.5' stop-color='%235cf2b5' stop-opacity='0.85'/%3E%3Cstop offset='1' stop-color='%232bb3a0' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23b38cff' stop-opacity='0'/%3E%3Cstop offset='0.5' stop-color='%239a7bff' stop-opacity='0.6'/%3E%3Cstop offset='1' stop-color='%235cf2b5' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='l' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231c3a5e'/%3E%3Cstop offset='1' stop-color='%2307112a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='600' height='400' fill='url(%23s)'/%3E%3Ccircle cx='39' cy='21' r='1.6' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='136' cy='75' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='234' cy='128' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='331' cy='182' r='0.9' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='428' cy='36' r='1.6' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='526' cy='90' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='23' cy='143' r='0.9' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='120' cy='197' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='217' cy='51' r='1.6' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='315' cy='104' r='0.9' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='412' cy='158' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='509' cy='12' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='7' cy='65' r='1.6' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='104' cy='119' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='201' cy='173' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='299' cy='27' r='0.9' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='396' cy='80' r='1.6' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='493' cy='134' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='590' cy='188' r='0.9' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='88' cy='41' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='185' cy='95' r='1.6' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='282' cy='149' r='0.9' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='380' cy='2' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='477' cy='56' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Ccircle cx='574' cy='110' r='1.6' fill='%23fff' opacity='0.95'/%3E%3Ccircle cx='72' cy='164' r='0.9' fill='%23fff' opacity='0.6'/%3E%3Cpath d='M-20 150 C80 60 180 170 300 90 S500 60 620 120 L620 170 C500 110 420 160 300 140 S90 130 -20 210 Z' fill='url(%23a)'/%3E%3Cpath d='M40 120 C140 50 260 120 360 60 S520 40 620 80 L620 110 C520 80 440 110 360 100 S150 110 40 160 Z' fill='url(%23b)'/%3E%3Cpath d='M0 400 L0 262 L0 235 L25 241 L50 247 L75 252 L100 256 L125 258 L150 260 L175 261 L200 262 L225 262 L250 262 L275 263 L300 265 L325 267 L350 271 L375 275 L400 280 L425 286 L450 293 L475 300 L500 306 L525 312 L550 316 L575 319 L600 321 L600 400 Z' fill='%230e1f3b'/%3E%3Crect y='292' width='600' height='108' fill='url(%23l)'/%3E%3Cpath d='M120 310 h120 M300 330 h160 M90 352 h80' stroke='%235cf2b5' stroke-width='3' stroke-linecap='round' opacity='.35'/%3E%3C/svg%3E" alt="Green and violet aurora above a dark ridge and a lake" width="600" height="400" loading="lazy">
+                  <figcaption data-part="caption">Aurora over Lake Inari — a twelve-second exposure at minus twenty</figcaption>
+                </figure>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="showcase/index.html#showcase-images">Images, live</a>
+                <a data-ui="link" href="showcase/index.html#showcase-video">The video player</a>
+                <a data-ui="link" href="showcase/index.html#showcase-controls">The knob</a>
+              </div>
+            </article>
+
+            <article data-docs-release-item>
+              <h3>Nine more chart kinds</h3>
+              <p>
+                Area, stacked column and bar, pie, donut, scatter, sparkline, radar and gauge, each drawn from
+                its own table the way column, bar and line are, with a label that reads every value.
+              </p>
+              <div data-docs-release-artifact>
+                <figure data-ui="chart" data-variant="donut" data-docs-home-chart>
+                  <figcaption data-part="caption">Messages this week</figcaption>
+                  <div data-part="plot"></div>
+                  <table data-part="data">
+                    <thead><tr><th scope="col">Day</th><th scope="col">Messages</th></tr></thead>
+                    <tbody>
+                      <tr><th scope="row">Mon</th><td>32</td></tr>
+                      <tr><th scope="row">Tue</th><td>48</td></tr>
+                      <tr><th scope="row">Wed</th><td>41</td></tr>
+                      <tr><th scope="row">Thu</th><td>66</td></tr>
+                      <tr><th scope="row">Fri</th><td>58</td></tr>
+                    </tbody>
+                  </table>
+                </figure>
+              </div>
+              <div data-ui="cluster" data-gap="3">
+                <a data-ui="link" href="showcase/index.html#showcase-charts">Every chart kind, live</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
         <section aria-labelledby="release-13-heading" data-docs-section data-docs-release>
           <div data-docs-section-heading>
             <span data-ui="badge" data-variant="primary">1.3</span>

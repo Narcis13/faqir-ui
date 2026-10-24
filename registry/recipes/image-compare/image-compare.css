@@ -1,0 +1,185 @@
+/* @ui:component image-compare */
+/* @ui:tokens palette-gray-50 palette-gray-950 image-radius radius-lg radius-full color-bg-muted space-3 space-0h space-2h space-1 font-ui text-xs weight-semibold leading-normal shadow-lg shadow-md duration-fast ease-out focus-ring-width focus-ring-style focus-ring-color */
+
+/* Two pictures in one cell; "before" is clipped at --image-compare-pos, which
+   the controller writes and the markup authors inline, so the split shows
+   before any script runs. */
+
+/* ── Root ── */
+[data-ui="image-compare"] {
+  --image-compare-pos: 50%;
+  --image-compare-line: var(--palette-gray-50);
+  --image-compare-grip: 2.75rem;
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--image-radius, var(--radius-lg));
+  background: var(--color-bg-muted);
+  cursor: ew-resize;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── The two pictures ── */
+[data-ui="image-compare"] > [data-part="before"],
+[data-ui="image-compare"] > [data-part="after"] {
+  grid-area: 1 / 1;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+[data-ui="image-compare"] > [data-part="before"] {
+  z-index: 1;
+  clip-path: inset(0 calc(100% - var(--image-compare-pos)) 0 0);
+}
+
+[data-ui="image-compare"]:dir(rtl) > [data-part="before"] {
+  clip-path: inset(0 0 0 calc(100% - var(--image-compare-pos)));
+}
+
+/* ── Labels: chips in the top corners ── */
+[data-ui="image-compare"] > [data-part="before-label"],
+[data-ui="image-compare"] > [data-part="after-label"] {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  z-index: 2;
+  padding: var(--space-0h) var(--space-2h);
+  border-radius: var(--radius-full);
+  background: color-mix(in oklch, var(--palette-gray-950) 62%, transparent);
+  color: var(--palette-gray-50);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: var(--leading-normal);
+  text-transform: uppercase;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(0.5rem);
+  backdrop-filter: blur(0.5rem);
+}
+
+[data-ui="image-compare"] > [data-part="before-label"] {
+  inset-inline-start: var(--space-3);
+}
+
+[data-ui="image-compare"] > [data-part="after-label"] {
+  inset-inline-end: var(--space-3);
+}
+
+/* ── The divider: a full-height line with a round grip ── */
+[data-ui="image-compare"] > [data-part="handle"] {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--image-compare-pos);
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  inline-size: var(--image-compare-grip);
+  margin-inline-start: calc(var(--image-compare-grip) / -2);
+  outline: none;
+}
+
+[data-ui="image-compare"] > [data-part="handle"]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 50%;
+  inline-size: 0.1875rem;
+  margin-inline-start: -0.09375rem;
+  background: var(--image-compare-line);
+  box-shadow: var(--shadow-md);
+}
+
+[data-ui="image-compare"] > :where([data-part="handle"]) > [data-part="grip"] {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: var(--image-compare-grip);
+  block-size: var(--image-compare-grip);
+  border-radius: 50%;
+  background: var(--image-compare-line);
+  box-shadow: var(--shadow-lg), 0 0 0 0.25rem color-mix(in oklch, var(--image-compare-line) 35%, transparent);
+  color: var(--palette-gray-950);
+  transition: scale var(--duration-fast) var(--ease-out);
+}
+
+[data-ui="image-compare"] > :where([data-part="handle"]) > :where([data-part="grip"]) > svg {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-ui="image-compare"]:hover > :where([data-part="handle"]) > [data-part="grip"],
+[data-ui="image-compare"][data-state="dragging"] > :where([data-part="handle"]) > [data-part="grip"] {
+  scale: 1.08;
+}
+
+[data-ui="image-compare"] > [data-part="handle"]:focus-visible > [data-part="grip"] {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--space-1);
+}
+
+/* ── Vertical: before on top, after below ── */
+[data-ui="image-compare"][data-orientation="vertical"] {
+  cursor: ns-resize;
+  touch-action: pan-x;
+}
+
+[data-ui="image-compare"][data-orientation="vertical"] > [data-part="before"],
+[data-ui="image-compare"][data-orientation="vertical"]:dir(rtl) > [data-part="before"] {
+  clip-path: inset(0 0 calc(100% - var(--image-compare-pos)) 0);
+}
+
+[data-ui="image-compare"][data-orientation="vertical"] > [data-part="after-label"] {
+  inset-block: auto var(--space-3);
+  inset-inline: var(--space-3) auto;
+}
+
+[data-ui="image-compare"][data-orientation="vertical"] > [data-part="handle"] {
+  inset-block: var(--image-compare-pos) auto;
+  inset-inline: 0;
+  inline-size: auto;
+  block-size: var(--image-compare-grip);
+  margin-inline-start: 0;
+  margin-block-start: calc(var(--image-compare-grip) / -2);
+}
+
+[data-ui="image-compare"][data-orientation="vertical"] > [data-part="handle"]::before {
+  inset-block: 50% auto;
+  inset-inline: 0;
+  inline-size: auto;
+  block-size: 0.1875rem;
+  margin-inline-start: 0;
+  margin-block-start: -0.09375rem;
+}
+
+[data-ui="image-compare"][data-orientation="vertical"] > :where([data-part="handle"]) > :where([data-part="grip"]) > svg {
+  rotate: 90deg;
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="image-compare"] > :where([data-part="handle"]) > [data-part="grip"] {
+    transition: none;
+  }
+}
+
+/* ── Forced colors: the divider must survive the palette swap ── */
+@media (forced-colors: active) {
+  [data-ui="image-compare"] > [data-part="handle"]::before,
+  [data-ui="image-compare"] > :where([data-part="handle"]) > [data-part="grip"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

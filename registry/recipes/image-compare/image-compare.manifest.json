@@ -1,0 +1,196 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "image-compare",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "data-display",
+  "description": "Before/after image comparison with a draggable, keyboard-operable divider (role=\"slider\"), labelled sides, hover-follow and vertical modes",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='image-compare']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "after": {
+      "selector": "[data-part='after']",
+      "required": true,
+      "tag_hint": "img",
+      "description": "The full picture underneath — the \"after\" side. Its alt should say so (\"After: …\")"
+    },
+    "before": {
+      "selector": "[data-part='before']",
+      "required": true,
+      "tag_hint": "img",
+      "description": "The picture on top, clipped at the divider — the \"before\" side, on the inline-start (or top) side. Same dimensions as after"
+    },
+    "before-label": {
+      "selector": "[data-part='before-label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Visible chip naming the before side (aria-hidden: the alts and the slider's value text carry it)"
+    },
+    "after-label": {
+      "selector": "[data-part='after-label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Visible chip naming the after side (aria-hidden)"
+    },
+    "handle": {
+      "selector": "[data-part='handle']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The divider: role=\"slider\", tabindex=\"0\", aria-label, aria-valuemin 0 / max 100; aria-valuenow is the percentage of the width (or height) that shows the before picture, and aria-valuetext reads \"60% before, 40% after\""
+    },
+    "grip": {
+      "selector": "[data-part='grip']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The round handle on the divider line, holding an aria-hidden arrows <svg>"
+    }
+  },
+  "variants": {},
+  "props": {
+    "orientation": {
+      "type": "enum",
+      "values": [
+        "horizontal",
+        "vertical"
+      ],
+      "default": "horizontal",
+      "attr": "data-orientation",
+      "description": "horizontal: before on the inline-start side of a vertical divider. vertical: before on top of a horizontal divider. The controller mirrors it into aria-orientation"
+    },
+    "mode": {
+      "type": "enum",
+      "values": [
+        "drag",
+        "hover"
+      ],
+      "default": "drag",
+      "attr": "data-mode",
+      "description": "drag: press and drag anywhere on the picture. hover: the divider also follows a mouse or pen without a press"
+    },
+    "position": {
+      "type": "number",
+      "default": 50,
+      "attr": "data-position",
+      "description": "Initial divider position, 0–100 (otherwise the handle's aria-valuenow). Also author style=\"--image-compare-pos: 50%\" so the static page splits"
+    },
+    "step": {
+      "type": "number",
+      "default": 1,
+      "attr": "data-step",
+      "description": "Arrow-key step in percent; PageUp/PageDown move ten steps"
+    }
+  },
+  "states": {
+    "dragging": {
+      "attr": "data-state=\"dragging\"",
+      "transient": true,
+      "applied_to": "root",
+      "description": "A pointer is dragging the divider"
+    }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "setPosition",
+        "params": "percent",
+        "description": "Move the divider to `percent` (0–100) of the way across."
+      },
+      {
+        "name": "getPosition",
+        "params": "",
+        "description": "Where the divider is, 0–100."
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
+  "a11y": {
+    "role": "slider",
+    "required_attrs": [
+      "role=\"slider\" on handle",
+      "aria-label on handle",
+      "aria-valuetext on handle",
+      "alt on before and after naming each side"
+    ],
+    "keyboard": {
+      "ArrowRight / ArrowUp": "move the divider one step toward the end (show more before); in RTL ArrowLeft",
+      "ArrowLeft / ArrowDown": "one step back; in RTL ArrowRight",
+      "ArrowDown / ArrowUp (vertical)": "move the divider down / up",
+      "PageUp / PageDown": "ten steps",
+      "Home": "all after (0%)",
+      "End": "all before (100%)"
+    },
+    "notes": [
+      "The handle is the only focusable element; a press anywhere on the picture moves it there and focuses it.",
+      "touch-action leaves the cross axis to the page, so a horizontal compare never traps a vertical scroll.",
+      "In RTL the before picture sits on the right, and the arrow keys follow the direction the divider moves."
+    ]
+  },
+  "tokens_used": [
+    "palette-gray-50",
+    "palette-gray-950",
+    "image-radius",
+    "radius-lg",
+    "radius-full",
+    "color-bg-muted",
+    "space-3",
+    "space-0h",
+    "space-2h",
+    "space-1",
+    "font-ui",
+    "text-xs",
+    "weight-semibold",
+    "leading-normal",
+    "shadow-lg",
+    "shadow-md",
+    "duration-fast",
+    "ease-out",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"image-compare\" style=\"--image-compare-pos: 50%\">\n  <img data-part=\"after\" src=\"{after_src}\" alt=\"After: {after_alt}\">\n  <img data-part=\"before\" src=\"{before_src}\" alt=\"Before: {before_alt}\">\n  <span data-part=\"before-label\" aria-hidden=\"true\">Before</span>\n  <span data-part=\"after-label\" aria-hidden=\"true\">After</span>\n  <div data-part=\"handle\" role=\"slider\" tabindex=\"0\" aria-label=\"Before and after divider\" aria-orientation=\"horizontal\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"50\" aria-valuetext=\"50% before, 50% after\">\n    <span data-part=\"grip\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"m9 7-5 5 5 5M15 7l5 5-5 5\"/></svg></span>\n  </div>\n</div>"
+  },
+  "safe_transforms": [
+    "swap-image-sources",
+    "change-labels",
+    "set-initial-position",
+    "set-orientation",
+    "set-hover-mode",
+    "change-step"
+  ],
+  "unsafe_transforms": [
+    "remove-role-slider",
+    "remove-handle",
+    "remove-image-alt",
+    "make-labels-focusable"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+  "files": {
+    "html": "image-compare.html",
+    "css": "image-compare.css",
+    "js": "image-compare.js",
+    "manifest": "image-compare.manifest.json"
+  },
+  "tests": [
+    "seeds-from-data-position-or-aria-valuenow",
+    "arrow-page-home-end-keys",
+    "rtl-arrow-keys-follow-the-divider",
+    "vertical-orientation-keys-and-aria",
+    "pointer-press-and-drag",
+    "hover-mode-follows-the-pointer",
+    "valuetext-names-both-sides",
+    "emits-faqir-change",
+    "prevents-double-initialization",
+    "destroy-removes-listeners"
+  ]
+}

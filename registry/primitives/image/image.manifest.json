@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "image",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "primitive",
   "category": "data-display",
-  "description": "Responsive image with variants for different display modes and print optimization",
+  "description": "Responsive image with display variants, fixed ratios with a focal point, fit control, below and overlay captions, blur and skeleton placeholders, and print optimization",
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "Four new props and two states, all additive. data-ratio (square, 16-9, 4-3, 3-2, 21-9, portrait) gives the picture a fixed shape and crops it to fill, and the --image-focus custom property (object-position, default 50% 50%) picks what every cropping fit keeps in frame; a hover zoom now leans in toward it too. data-fit (cover, contain, fill, scale-down) sets object-fit outright, letterboxing contain and scale-down on the muted background. data-caption places the caption: below (start-aligned under the picture) or overlay (over the bottom edge on a scrim, light on dark in every theme). data-placeholder paints a placeholder behind the picture until it arrives, with no script: blur softens a tiny --image-placeholder image, skeleton shimmers for a bounded time. A script may hold the picture back with data-state=\"loading\" and fade it in with \"loaded\". Markup without the new attributes renders exactly as before.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "A data-hover prop: zoom (the figure clips and the image leans in by 5%), lift (rises one spacing step) and fade (the image dims to 0.8). Each also answers to focus-within, so an image wrapped in a link gives the keyboard the same cue. Reduced motion removes the transitions. No change for markup without the attribute.",
@@ -35,7 +40,7 @@
       "selector": "[data-part='caption']",
       "required": false,
       "tag_hint": "figcaption",
-      "description": "Optional image caption"
+      "description": "Optional image caption: centred below by default, start-aligned below with data-caption=\"below\", over the picture with data-caption=\"overlay\""
     }
   },
 
@@ -54,10 +59,24 @@
     }
   },
 
-  "states": {},
+  "states": {
+    "loading": {
+      "attr": "data-state=\"loading\"",
+      "transient": true,
+      "description": "Optional, set by a script: the picture is held back (opacity 0) so its placeholder shows, and a skeleton shimmers until it is flipped"
+    },
+    "loaded": {
+      "attr": "data-state=\"loaded\"",
+      "description": "Optional, set by a script on the img load event: the picture fades in over its placeholder"
+    }
+  },
 
   "props": {
     "hover": {"type":"enum","values":["zoom","lift","fade"],"attr":"data-hover","description":"What the picture does under the pointer and under focus-within: zoom leans into the frame, lift rises, fade dims. For images that are, or sit inside, links."},
+    "ratio": {"type":"enum","values":["square","16-9","4-3","3-2","21-9","portrait"],"attr":"data-ratio","description":"A fixed shape for the picture, cropped to fill (object-fit: cover; the contain variant keeps containing). The focal point — the --image-focus custom property, an object-position set inline such as style=\"--image-focus: 78% 34%\", default 50% 50% — decides what the crop keeps."},
+    "fit": {"type":"enum","values":["cover","contain","fill","scale-down"],"attr":"data-fit","description":"object-fit outright, over any variant or ratio. contain and scale-down letterbox the picture on the muted background."},
+    "captionPlacement": {"type":"enum","values":["below","overlay"],"attr":"data-caption","description":"Caption placement. below: start-aligned under the picture. overlay: over the bottom edge on a dark scrim, light text in every theme. Absent: centred below, as before."},
+    "placeholder": {"type":"enum","values":["blur","skeleton"],"attr":"data-placeholder","description":"Painted behind the picture until the picture paints over it, with no script. blur: the --image-placeholder image (a tiny data: URI set inline as url(…)), softened; skeleton: a shimmer that stops after a few passes. Give the img width and height (or a data-ratio) so the box exists before the bytes do."},
     "src": { "type": "string", "default": "", "description": "Image source URL" },
     "alt": { "type": "string", "default": "", "description": "Image alt text (required for a11y)" },
     "loading": { "type": "string", "default": "lazy", "description": "Loading strategy: lazy or eager" }
@@ -69,15 +88,19 @@
   },
 
   "tokens_used": [
-    "color-bg-muted", "color-fg-muted", "radius-md", "space-2", "space-1", "text-xs", "font-body",
+    "color-bg-muted", "color-fg-muted", "color-bg-subtle", "radius-md", "space-2", "space-1",
+    "space-0h", "space-8", "space-4", "space-3", "text-xs", "text-sm", "font-body", "font-ui",
     "image-radius", "image-border-width", "image-border", "image-caption-size",
     "image-caption-color", "doc-font", "duration-normal", "duration-slower", "ease-out",
-    "ease-emphasized", "ease-default"
+    "ease-emphasized", "ease-default", "palette-gray-950", "palette-gray-50", "weight-medium"
   ],
 
   "templates": {
     "html": "<figure data-ui=\"image\" data-variant=\"{variant}\" data-size=\"{size}\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" loading=\"lazy\">\n</figure>",
-    "html_with_caption": "<figure data-ui=\"image\" data-variant=\"{variant}\" data-size=\"{size}\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" loading=\"lazy\">\n  <figcaption data-part=\"caption\">{caption}</figcaption>\n</figure>"
+    "html_with_caption": "<figure data-ui=\"image\" data-variant=\"{variant}\" data-size=\"{size}\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" loading=\"lazy\">\n  <figcaption data-part=\"caption\">{caption}</figcaption>\n</figure>",
+    "html_ratio_focus": "<figure data-ui=\"image\" data-ratio=\"{ratio}\" data-size=\"{size}\" style=\"--image-focus: {focus}\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" width=\"{width}\" height=\"{height}\" loading=\"lazy\">\n</figure>",
+    "html_overlay_caption": "<figure data-ui=\"image\" data-size=\"{size}\" data-caption=\"overlay\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" loading=\"lazy\">\n  <figcaption data-part=\"caption\">{caption}</figcaption>\n</figure>",
+    "html_placeholder": "<figure data-ui=\"image\" data-size=\"{size}\" data-placeholder=\"blur\" style=\"--image-placeholder: url({tiny_src})\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" width=\"{width}\" height=\"{height}\" loading=\"lazy\">\n</figure>"
   },
 
   "safe_transforms": [
@@ -87,7 +110,12 @@
     "change-alt-text",
     "add-caption",
     "remove-caption",
-    "set-hover"
+    "set-hover",
+    "set-ratio",
+    "set-focal-point",
+    "set-fit",
+    "set-caption-placement",
+    "add-placeholder"
   ],
 
   "unsafe_transforms": [
@@ -97,7 +125,7 @@
 
   "composition": {
     "contains": [],
-    "used_in": ["card", "document"]
+    "used_in": ["card", "document", "lightbox"]
   },
 
   "files": {
@@ -122,6 +150,16 @@
     "caption-slot-is-optional",
     "print-max-width-applied",
     "hover-zoom-clips-to-the-figure",
-    "hover-answers-to-focus-within"
+    "hover-answers-to-focus-within",
+    "focus-sets-object-position",
+    "ratio-crops-to-shape",
+    "contain-variant-keeps-containing-with-a-ratio",
+    "fit-overrides-object-fit",
+    "caption-overlay-sits-on-the-picture",
+    "caption-below-is-start-aligned",
+    "placeholder-paints-behind-the-picture",
+    "loading-state-holds-the-picture-back",
+    "skeleton-shimmer-is-bounded",
+    "reduced-motion-stops-placeholder-motion"
   ]
 }

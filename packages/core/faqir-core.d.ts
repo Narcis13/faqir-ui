@@ -424,6 +424,10 @@ export interface CalendarApi extends ControllerApi {
   setMin(value: string): void;
   setMax(value: string): void;
   setDisabledDates(list: string[]): void;
+  /** Months shown side by side, 1–3. */
+  setMonths(count: number): void;
+  /** Whether a date is outside min/max, disabled, or (mid-range) outside the range-length bounds. */
+  isDisabled(date: Date | string): boolean;
 }
 
 export interface CarouselApi extends ControllerApi {
@@ -451,6 +455,18 @@ export interface CommandPaletteApi extends ControllerApi {
   registerCommand(command: Record<string, unknown>): void;
 }
 
+export interface ComposerApi extends ControllerApi {
+  /** Sends unless a `faqir:send` listener cancels; false when there is nothing to send. */
+  send(): boolean;
+  clear(): void;
+  focus(): void;
+  setValue(text: string): void;
+  /** Returns how many files were added (duplicates are dropped). */
+  addFiles(files: Iterable<File> | ArrayLike<File>): number;
+  removeFile(index: number): boolean;
+  getFiles(): File[];
+}
+
 export interface ContextMenuApi extends ControllerApi {
   open(x?: number, y?: number): void;
   close(options?: { restoreFocus?: boolean }): void;
@@ -460,7 +476,8 @@ export interface DatePickerApi extends ControllerApi {
   open(): void;
   close(): void;
   getValue(): CalendarValue;
-  setValue(date: string): void;
+  /** One ISO date, or for `data-mode="range"` `"start,end"` / `{ start, end }`. */
+  setValue(date: string | { start: string; end?: string | null }): void;
   /** No date: empties the calendar, the visible input and the value part. */
   clear(): void;
   navigate(month: number, year: number): void;
@@ -493,6 +510,45 @@ export interface InputOtpApi extends ControllerApi {
   setValue(value: string): void;
   clear(): void;
   focus(): void;
+}
+
+export interface ImageCompareApi extends ControllerApi {
+  /** Divider position, 0–100 (percent of the before image shown). */
+  setPosition(percent: number): void;
+  getPosition(): number;
+}
+
+export interface KnobApi extends ControllerApi {
+  setValue(value: number): void;
+  getValue(): number;
+  /** Turns by whole steps; negative turns down. */
+  stepBy(steps: number): void;
+  /** Back to the native input's default value. */
+  reset(): void;
+  setFormatter(format: ((value: number) => string) | null): void;
+}
+
+export interface LightboxApi extends ControllerApi {
+  open(index?: number, from?: Element): void;
+  close(): void;
+  show(index: number): void;
+  next(): void;
+  prev(): void;
+  zoomIn(): void;
+  zoomOut(): void;
+  resetZoom(): void;
+}
+
+export interface ListApi extends ControllerApi {
+  select(target: string | number | Element, extend?: boolean): boolean;
+  toggle(target: string | number | Element): boolean;
+  selectAll(): boolean;
+  clear(): boolean;
+  /** The selected items' values, in document order. */
+  getSelected(): string[];
+  /** Moves an item to an index within its section; returns the index it landed at. */
+  move(target: string | number | Element, index: number): number;
+  refresh(): void;
 }
 
 export interface MenubarApi extends ControllerApi {
@@ -646,12 +702,34 @@ export interface TooltipApi extends ControllerApi {
 }
 
 export interface TreeViewApi extends ControllerApi {
-  select(target: string | Element): boolean;
-  expand(target: string | Element): boolean;
-  collapse(target: string | Element): boolean;
-  toggle(target: string | Element): boolean;
+  select(target: string | number | Element): boolean;
+  expand(target: string | number | Element): boolean;
+  collapse(target: string | number | Element): boolean;
+  toggle(target: string | number | Element): boolean;
+  /** Checkbox mode: check (true), uncheck (false) or toggle (omitted) an item and its enabled subtree. */
+  check(target: string | number | Element, state?: boolean): boolean;
+  selectAll(): boolean;
+  /** Returns the number of matching items. */
+  filter(query: string): number;
+  load(target: string | number | Element): boolean;
+  setLoader(fn: ((detail: { item: Element; value: string; label: string; attempt: number }) => unknown) | null): void;
+  move(source: string | number | Element, target: string | number | Element, position: "before" | "after" | "inside"): boolean;
   refresh(): void;
   getSelected(): Element | null;
+  getSelection(): Element[];
+}
+
+export interface VideoPlayerApi extends ControllerApi {
+  play(): void;
+  pause(): void;
+  toggle(): void;
+  seek(seconds: number): void;
+  /** 0–1. */
+  setVolume(volume: number): void;
+  toggleMute(): void;
+  setRate(rate: number): void;
+  toggleCaptions(on?: boolean): void;
+  toggleFullscreen(): void;
 }
 
 /**
@@ -673,13 +751,18 @@ export interface ControllerApis {
   carousel: CarouselApi;
   combobox: ComboboxApi;
   "command-palette": CommandPaletteApi;
+  composer: ComposerApi;
   "context-menu": ContextMenuApi;
   "date-picker": DatePickerApi;
   dialog: DialogApi;
   drawer: DrawerApi;
   dropdown: DropdownApi;
   "file-upload": FileUploadApi;
+  "image-compare": ImageCompareApi;
   "input-otp": InputOtpApi;
+  knob: KnobApi;
+  lightbox: LightboxApi;
+  list: ListApi;
   menubar: MenubarApi;
   pagination: PaginationApi;
   popover: PopoverApi;
@@ -695,6 +778,7 @@ export interface ControllerApis {
   "toggle-group": ToggleGroupApi;
   tooltip: TooltipApi;
   "tree-view": TreeViewApi;
+  "video-player": VideoPlayerApi;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -992,7 +1076,9 @@ declare namespace Faqir {
     DropdownApi, FileUploadApi, InputOtpApi, MenubarApi, PaginationApi,
     PopoverApi, QrCodeApi, SelectCustomApi, SheetApi, SidebarApi, SliderApi,
     TableSort, TableState, TableApi, TabsApi, TagInputApi, ToastApi,
-    ToggleGroupApi, TooltipApi, TreeViewApi, ControllerApis, ProtocolState,
+    ToggleGroupApi, TooltipApi, TreeViewApi, ImageCompareApi, KnobApi,
+    LightboxApi, VideoPlayerApi, ComposerApi, ListApi, ControllerApis,
+    ProtocolState,
     Inspection, DevtoolsScope, DevtoolsComponent, DevtoolsWarning, Devtools,
     ValidatorResult, ValidatorContext, FieldValidator, ValidateApi,
     RulesState, RulesApi, FaqirGlobal };
@@ -1043,6 +1129,8 @@ declare global {
       PaginationApi, PopoverApi, QrCodeApi, SelectCustomApi, SheetApi,
       SidebarApi, SliderApi, TableSort, TableState, TableApi, TabsApi,
       TagInputApi, ToastApi, ToggleGroupApi, TooltipApi, TreeViewApi,
+      ImageCompareApi, KnobApi, LightboxApi, VideoPlayerApi, ComposerApi,
+      ListApi,
       ControllerApis, ProtocolState, Inspection, DevtoolsScope,
       DevtoolsComponent, DevtoolsWarning, Devtools, ValidatorResult,
       ValidatorContext, FieldValidator, ValidateApi, RulesState, FaqirGlobal };

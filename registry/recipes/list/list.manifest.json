@@ -1,0 +1,409 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "list",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "data-display",
+  "description": "Rich list rows — leading avatar, icon tile or thumbnail; title, subtitle and right-aligned meta; trailing content — with grouped sections under sticky headers, dividers, inset cards and three densities. Plain list semantics by default; data-selection='single|multi' makes it a WAI-ARIA listbox with roving focus, type-ahead, Shift range selection and Ctrl/Cmd+A; data-reorderable adds pointer dragging by a handle with a drop indicator and keyboard reordering, every move announced and emitted as faqir:reorder.",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='list']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "toolbar": {
+      "selector": "[data-part='toolbar']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Row above the items — it stays put while a capped list scrolls its rows — for a count and the actions that apply to the selection ('3 selected · Archive'). It is the answer to per-row actions in a selectable list: an option may not contain controls, so act on getSelected() from here."
+    },
+    "items": {
+      "selector": "[data-part='items']",
+      "required": true,
+      "tag_hint": "ul",
+      "description": "The list. A <ul> or <ol> holding items, or sections. Selectable: the controller gives it role='listbox' and aria-multiselectable; give it an aria-label (or aria-labelledby). Inside a section, the inner [data-part='items'] holds that section's items and gets role='none'. It is the scroller: a list capped with --list-max-height scrolls here, under its sticky section headers."
+    },
+    "section": {
+      "selector": "[data-part='section']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "A group of items under a header. Selectable: role='group' with aria-labelledby pointing at its header (the controller wires both, giving the header an id when it has none)."
+    },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The section's sticky header — it sticks inside its own section, so the next one pushes it off. In a plain list make it a heading (<h3>) so it is in the outline; in a selectable list it must be a role='presentation' <span> (a listbox may hold only groups and options), named to its group by aria-labelledby."
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "li",
+      "description": "One row, a direct child of [data-part='items']. Selectable: role='option' with aria-selected and a roving tabindex. aria-disabled='true' dims it and takes it out of focus and selection. data-value is its identity; data-accent colours its icon tile."
+    },
+    "handle": {
+      "selector": "[data-part='handle']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Drag grip, shown only on a data-reorderable list. In a plain list a <button> (labelled 'Reorder {title}' when it has no label) that also offers a keyboard grab mode; in a selectable list a decorative aria-hidden <span> — the focused option moves with Alt+Up/Down instead."
+    },
+    "leading": {
+      "selector": "[data-part='leading']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Leading media: an avatar primitive, an icon primitive (drawn as an accent tile) or an <img> thumbnail. Decorative when the title names the row."
+    },
+    "content": {
+      "selector": "[data-part='content']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Stacks the title over the subtitle and takes the free width."
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "The row's name, truncated to one line; used for type-ahead and reorder announcements. In a plain list a link or button inside it stretches over the whole row."
+    },
+    "subtitle": {
+      "selector": "[data-part='subtitle']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Second line (a preview, an address, a status). Its presence puts the meta on the title line and lets a count or badge drop beneath it."
+    },
+    "meta": {
+      "selector": "[data-part='meta']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Right-aligned short text — a time, a value, a count. Beside the trailing part on a one-line row; on the title line of a two-line row (centred when a control sits beside it). Takes the accent while the row shows a count."
+    },
+    "trailing": {
+      "selector": "[data-part='trailing']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Trailing content: a count, a badge, a chevron, a switch — and, in a plain list only, action buttons (they sit above a stretched title link). In a selectable list keep it non-interactive. On a two-line row a count or badge here drops beneath the meta."
+    },
+    "count": {
+      "selector": "[data-part='count']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Inside trailing: an unread count drawn as a solid accent pill. While it is shown the row's meta turns accent too, and on a two-line row it drops beneath the meta. Put the number in an aria-hidden span and a visually hidden ' unread' beside it, so the option's name says what the number is."
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Shown when the list has no items (data-state='empty', which the controller sets and clears as items come and go)."
+    },
+    "live": {
+      "selector": "[data-part='live']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Visually hidden role='status' region the controller announces reorders in. Created on first use when absent; author one to control its placement."
+    }
+  },
+  "variants": {
+    "style": {
+      "values": [
+        "plain",
+        "divided",
+        "inset"
+      ],
+      "default": "plain",
+      "attr": "data-variant",
+      "applied_to": "root",
+      "description": "plain = rows only; divided = a hairline between rows, inset past the leading media; inset = each section (or the whole list) as a rounded card on a subtle ground, iOS settings style."
+    },
+    "size": {
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root",
+      "description": "Row density: padding, gaps and title size."
+    }
+  },
+  "states": {
+    "idle": {
+      "attr": "data-state=\"idle\"",
+      "default": true,
+      "applied_to": "root"
+    },
+    "empty": {
+      "attr": "data-state=\"empty\"",
+      "applied_to": "root",
+      "description": "No items: the items container is hidden and [data-part='empty'] shows."
+    },
+    "dragging": {
+      "attr": "data-state=\"dragging\"",
+      "transient": true,
+      "applied_to": "root, item",
+      "description": "A reorder is in progress: on the root, and on the item being moved — by the pointer (it follows it via --list-drag-y) or from the keyboard (held in grab mode)."
+    },
+    "drop-before": {
+      "attr": "data-state=\"drop-before\"",
+      "transient": true,
+      "applied_to": "item",
+      "description": "Pointer drag indicator: the dragged item will land before this one."
+    },
+    "drop-after": {
+      "attr": "data-state=\"drop-after\"",
+      "transient": true,
+      "applied_to": "item",
+      "description": "Pointer drag indicator: the dragged item will land after this one (the last row)."
+    },
+    "selected": {
+      "attr": "aria-selected",
+      "applied_to": "item",
+      "description": "Selectable lists only: aria-selected='true' on each selected option. The DOM is the source of truth — a binding may write it and getSelected() reads it back."
+    },
+    "disabled": {
+      "attr": "aria-disabled",
+      "applied_to": "item",
+      "description": "aria-disabled='true': dimmed, skipped by focus, type-ahead and range selection, never selected."
+    }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "select",
+        "params": "target, extend = false"
+      },
+      {
+        "name": "toggle",
+        "params": "target"
+      },
+      {
+        "name": "selectAll",
+        "params": ""
+      },
+      {
+        "name": "clear",
+        "params": ""
+      },
+      {
+        "name": "getSelected",
+        "params": ""
+      },
+      {
+        "name": "move",
+        "params": "target, index",
+        "description": "Move an item to `index` among its siblings; returns its new index."
+      },
+      {
+        "name": "refresh",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
+  "props": {
+    "selection": {
+      "type": "enum",
+      "values": [
+        "none",
+        "single",
+        "multi"
+      ],
+      "default": "none",
+      "attr": "data-selection",
+      "description": "none = a plain list (rows may hold links and buttons); single = a single-select listbox; multi = a multi-select listbox with a check mark per option."
+    },
+    "reorderable": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-reorderable",
+      "description": "Shows the handles and turns on pointer and keyboard reordering. Moves stay within the item's own items container (its section)."
+    },
+    "value": {
+      "type": "string",
+      "default": "",
+      "attr": "data-value",
+      "description": "On an item: its identity in faqir:select / faqir:reorder details and getSelected(). Falls back to the id, then the title text."
+    },
+    "--list-max-height": {
+      "type": "string",
+      "default": "none",
+      "description": "Cap the list's height (custom property): the items container then scrolls under its sticky section headers while the toolbar stays put."
+    },
+    "--list-bg": {
+      "type": "string",
+      "default": "var(--color-bg)",
+      "description": "The list's ground, which the sticky section headers are filled from (custom property). Match it to the surface the list sits on."
+    },
+    "--list-selected": {
+      "type": "string",
+      "default": "var(--color-primary-subtle)",
+      "description": "Fill of a selected option (custom property)."
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "an accessible name on the top-level items container (aria-label or aria-labelledby)",
+      "role=\"listbox\" on items when data-selection is single or multi",
+      "role=\"option\" and aria-selected on each item when selectable",
+      "aria-multiselectable on items when selectable",
+      "role=\"group\" with aria-labelledby on each section when selectable"
+    ],
+    "keyboard": {
+      "ArrowDown / ArrowUp": "selectable: move focus to the next / previous enabled option (no wrap)",
+      "Home / End": "selectable: move focus to the first / last enabled option",
+      "Space / Enter": "single: select the focused option; multi: toggle it",
+      "Shift + ArrowDown / ArrowUp": "multi: move focus and extend the selection from the anchor",
+      "Shift + Home / End": "multi: extend the selection to the first / last option",
+      "Shift + Space": "multi: select every option from the anchor to the focused one",
+      "Ctrl/Cmd + A": "multi: select every enabled option, or clear them all when all are selected",
+      "Printable characters": "selectable: type-ahead to the next option whose title starts with the typed text (500ms buffer)",
+      "Alt + ArrowUp / ArrowDown": "reorderable: move the focused option (selectable) or the focused handle's row (plain) one place, announced",
+      "Space / Enter on a handle": "plain + reorderable: grab the row; then ArrowUp / ArrowDown move it, Space / Enter drop it, Escape cancels and restores it, and moving focus away drops it",
+      "Escape during a pointer drag": "cancel the drag"
+    },
+    "pointer": {
+      "click": "single: select; multi: toggle",
+      "Ctrl/Cmd + click": "multi: toggle",
+      "Shift + click": "multi: select the range from the anchor",
+      "drag a handle": "reorderable: the row follows the pointer, an accent rule marks where it will land, release to drop"
+    },
+    "notes": [
+      "Selectable lists never put controls inside an option — role='option' is a single control, so a nested button is unreachable to assistive tech and an axe nested-interactive failure. Per-row actions belong in a plain list (data-selection absent), where rows are ordinary list items; actions on a selection belong in [data-part='toolbar'] (or anywhere outside the listbox), driven by getSelected() and faqir:select.",
+      "Focus is a roving tabindex on the options themselves (one tab stop for the list); aria-selected, not focus, is the selection.",
+      "Every reorder is announced in a polite status region as 'Moved {title} to position {n} of {total}', and grab mode announces its instructions when it starts.",
+      "Handles are pointer affordances in a selectable list (aria-hidden spans) because an option may not contain a button; there the keyboard path is Alt+ArrowUp/Down on the option itself.",
+      "Sticky section headers sit on a translucent fill over a backdrop blur so they stay legible over the rows scrolling beneath them; the multi-select tick is generated content with empty alt text, so only aria-selected is announced."
+    ]
+  },
+  "events": {
+    "faqir:select": {
+      "detail": "{ item, value, items, values }",
+      "description": "After any selection change by click, keyboard or select()/toggle()/selectAll()/clear(): item/value are the option acted on (null for clear), items/values the whole selection in DOM order."
+    },
+    "faqir:reorder": {
+      "detail": "{ item, value, from, to, values }",
+      "description": "After a row moves, by drag, keyboard or move(): from/to are indices among its siblings, values the new order. The DOM node has already moved; mirror it into your data (a keyed l-for then agrees)."
+    }
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-bg-subtle",
+    "color-primary-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-primary",
+    "color-border",
+    "color-bg-muted",
+    "color-surface-1-border",
+    "color-fg-subtle",
+    "color-primary-fg",
+    "space-4",
+    "space-2h",
+    "space-3",
+    "space-1h",
+    "space-5",
+    "space-2",
+    "space-8",
+    "space-12",
+    "space-0h",
+    "space-6",
+    "space-1",
+    "space-px",
+    "space-10",
+    "text-sm",
+    "text-xs",
+    "text-base",
+    "text-3xl",
+    "font-ui",
+    "weight-semibold",
+    "weight-medium",
+    "weight-bold",
+    "leading-tight",
+    "leading-snug",
+    "heading-transform",
+    "duration-fast",
+    "ease-default",
+    "radius-md",
+    "radius-xl",
+    "radius-full",
+    "radius-sm",
+    "corner-shape",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset",
+    "disabled-opacity",
+    "divider-width",
+    "divider-style",
+    "card-border-width",
+    "shadow-xs",
+    "shadow-lg",
+    "border-width-md",
+    "border-width-lg",
+    "border-width",
+    "measure-narrow"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"list\" data-variant=\"divided\">\n  <ul data-part=\"items\" aria-label=\"{label}\">\n    <li data-part=\"item\">\n      <span data-part=\"leading\"><span data-ui=\"avatar\"><span data-part=\"fallback\">{initials}</span></span></span>\n      <span data-part=\"content\">\n        <span data-part=\"title\"><a href=\"{href}\">{title}</a></span>\n        <span data-part=\"subtitle\">{subtitle}</span>\n      </span>\n      <span data-part=\"meta\">{meta}</span>\n    </li>\n  </ul>\n</div>",
+    "html_listbox": "<div data-ui=\"list\" data-selection=\"single\">\n  <ul data-part=\"items\" role=\"listbox\" aria-label=\"{label}\" aria-multiselectable=\"false\">\n    <li data-part=\"item\" role=\"option\" aria-selected=\"true\" tabindex=\"0\" data-value=\"{value}\">\n      <span data-part=\"leading\"><span data-ui=\"icon\" data-icon=\"{icon}\" aria-hidden=\"true\"></span></span>\n      <span data-part=\"content\"><span data-part=\"title\">{title}</span></span>\n      <span data-part=\"trailing\"><span data-ui=\"badge\" data-size=\"sm\">{count}</span></span>\n    </li>\n  </ul>\n</div>",
+    "html_sections": "<div data-ui=\"list\" data-selection=\"multi\" style=\"--list-max-height: {height}\">\n  <ul data-part=\"items\" role=\"listbox\" aria-label=\"{label}\" aria-multiselectable=\"true\">\n    <li data-part=\"section\" role=\"group\" aria-labelledby=\"{section_id}\">\n      <span data-part=\"header\" role=\"presentation\" id=\"{section_id}\">{section}</span>\n      <ul data-part=\"items\" role=\"none\">\n        <li data-part=\"item\" role=\"option\" aria-selected=\"false\" tabindex=\"0\" data-value=\"{value}\">\n          <span data-part=\"content\"><span data-part=\"title\">{title}</span><span data-part=\"subtitle\">{subtitle}</span></span>\n        </li>\n      </ul>\n    </li>\n  </ul>\n</div>",
+    "html_reorderable": "<div data-ui=\"list\" data-variant=\"divided\" data-reorderable>\n  <ol data-part=\"items\" aria-label=\"{label}\">\n    <li data-part=\"item\" data-value=\"{value}\">\n      <button type=\"button\" data-part=\"handle\" aria-label=\"Reorder {title}\"></button>\n      <span data-part=\"content\"><span data-part=\"title\">{title}</span></span>\n    </li>\n  </ol>\n</div>"
+  },
+  "safe_transforms": [
+    "add-item",
+    "remove-item",
+    "add-a-section-with-a-sticky-header",
+    "switch-style-between-plain-divided-and-inset",
+    "change-density",
+    "make-it-single-or-multi-select",
+    "make-it-reorderable",
+    "disable-an-item",
+    "render-items-with-a-keyed-l-for",
+    "add-a-selection-toolbar",
+    "cap-the-height-so-it-scrolls"
+  ],
+  "unsafe_transforms": [
+    "put-buttons-or-links-inside-a-selectable-option",
+    "remove-the-listbox-accessible-name",
+    "make-the-handle-a-focusable-button-in-a-selectable-list",
+    "nest-items-outside-an-items-container",
+    "signal-selection-with-colour-only"
+  ],
+  "composition": {
+    "contains": [
+      "avatar",
+      "badge",
+      "button",
+      "icon"
+    ],
+    "used_in": [
+      "chat"
+    ]
+  },
+  "files": {
+    "html": "list.html",
+    "css": "list.css",
+    "js": "list.js",
+    "manifest": "list.manifest.json"
+  },
+  "tests": [
+    "plain-list-keeps-list-semantics",
+    "selectable-list-becomes-a-labelled-listbox",
+    "single-select-click-and-keyboard",
+    "multi-select-toggle-range-and-select-all",
+    "shift-arrow-extends-from-the-anchor",
+    "disabled-options-are-skipped",
+    "typeahead-matches-title-prefix",
+    "roving-tabindex-follows-focus",
+    "keyboard-reorder-with-alt-arrows-is-announced",
+    "handle-grab-move-drop-and-cancel",
+    "pointer-drag-reorders-with-a-drop-indicator",
+    "reorder-event-carries-the-new-order",
+    "empty-state-tracks-item-count",
+    "prevents-double-initialization",
+    "destroy-removes-listeners-and-the-live-region"
+  ]
+}

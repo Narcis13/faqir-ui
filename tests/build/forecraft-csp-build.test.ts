@@ -117,8 +117,8 @@ describe("build:core — the evaluator seam", () => {
 
 describe("size budget", () => {
   test("the strict-CSP engine has its own enforced budget, and its dev twin is report-only", () => {
-    expect(BUDGETS.engineCsp).toBe(52 * KB);
-    expect(BUDGETS.engineWithControllers).toBe(47 * KB);
+    expect(BUDGETS.engineCsp).toBe(69 * KB);
+    expect(BUDGETS.engineWithControllers).toBe(64 * KB);
     const targets = collectDefaultTargets();
     const csp = targets.find((t: any) => t.entry === "registry/core/faqir-core.csp.js");
     const cspDev = targets.find((t: any) => t.entry === "registry/core/faqir-core.csp.dev.js");
@@ -153,7 +153,7 @@ describe("@faqir-ui/core — the strict-CSP artifacts", () => {
 
   test("the minified strict-CSP engine is within its gzip budget", () => {
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.csp.min.js"))).length;
-    expect(gzip).toBeLessThanOrEqual(52 * KB);
+    expect(gzip).toBeLessThanOrEqual(70 * KB);
   });
 
   test("the ESM build exports exactly what the default one does", () => {

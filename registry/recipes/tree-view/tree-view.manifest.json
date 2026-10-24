@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "tree-view",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "kind": "recipe",
   "category": "navigation",
-  "description": "Single-select hierarchical tree with complete WAI keyboard navigation, explicit positional ARIA, keyed-rendering support, and lazy expansion events",
+  "description": "Hierarchical WAI-ARIA tree: single, multiple or tri-state checkbox selection, lazy children with loading and retry, type-ahead, filtering, guide lines and folder/file icons, and drag-and-drop that also works from the keyboard",
   "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Additive. data-mode=\"multiple\" (Ctrl/Cmd-click, Shift-click and Shift+Arrow ranges, Ctrl+A) and data-mode=\"checkbox\" (tri-state aria-checked that propagates down to enabled descendants and up as mixed). Lazy items now load: expanding one fires faqir:load (answer with detail.respond(), or register setLoader()), shows aria-busy and a spinner, inserts the children and, on failure, a Retry. A wrapper form adds a filter input, an empty message and a status live region next to the tree part; filtering keeps matches' ancestors open, highlights the match and restores expansion when cleared. data-variant=\"lines\" draws indent guides; an icon part draws a folder (open while expanded) or a file. data-draggable=\"true\" moves items by pointer or by keyboard (Alt+Enter, arrows, Enter, Escape) with a drop indicator and announcements, and fires the cancelable faqir:move. The new item states are loading, error and grabbed. Markup that follows the 1.0 template is unchanged: single mode, same ARIA, same events.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "Nested components keep their own parts. The stylesheet reached items, labels, toggles and groups with descendant selectors, so a component in an item's label with parts of those names (a chip's label) took the tree's. A tree's items recurse to any depth, which child combinators cannot express, so each rule keeps one descendant step, from the root to an item or group, and everything below it is a child hop: an item is the root's or a group's child, a label and a group an item's, a toggle a label's. The hops are in :where(), so no rule changes specificity. No change for markup that follows the template.",
@@ -22,13 +27,13 @@
       "selector": "[data-part='item']",
       "required": true,
       "tag_hint": "li",
-      "description": "Tree node with role=treeitem, roving tabindex, selection state, and explicit aria-level/setsize/posinset"
+      "description": "Tree node with role=treeitem, roving tabindex, selection or check state, and explicit aria-level/setsize/posinset"
     },
     "label": {
       "selector": "[data-part='label']",
       "required": true,
       "tag_hint": "span",
-      "description": "Visible accessible label and pointer-selection target for an item"
+      "description": "Visible accessible label and pointer-selection target for an item; holds the toggle, checkbox and icon"
     },
     "toggle": {
       "selector": "[data-part='toggle']",
@@ -41,9 +46,73 @@
       "required": false,
       "tag_hint": "ul",
       "description": "Nested role=group owned by a parent treeitem; hidden while the parent is collapsed"
+    },
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Decorative (aria-hidden) glyph in a label after the toggle: a folder for a parent, open while expanded, a file for a leaf, an alert when a lazy load failed. Add data-ui=\"icon\" data-icon=\"…\" to use any icon instead"
+    },
+    "checkbox": {
+      "selector": "[data-part='checkbox']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Decorative (aria-hidden) box drawing the item's aria-checked in checkbox mode: a tick when true, a dash when mixed. The controller inserts one after the toggle when it is missing"
+    },
+    "spinner": {
+      "selector": "[data-part='spinner']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "data-ui=\"spinner\" the controller appends to a lazy item's label while its children load (aria-hidden; the item carries aria-busy)"
+    },
+    "retry": {
+      "selector": "[data-part='retry']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Pointer button the controller appends to a lazy item whose load failed; expanding the item again (Right Arrow) retries too, which is what the announcement tells keyboard users"
+    },
+    "tree": {
+      "selector": "[data-part='tree']",
+      "required": false,
+      "tag_hint": "ul",
+      "description": "Wrapper form only: the role=tree list, when the root is a wrapper that also holds a filter, an empty message and a status region"
+    },
+    "filter": {
+      "selector": "[data-part='filter']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "Wrapper form: a search input (compose data-ui=\"input\", give it an accessible name) that filters the tree as it is typed in; Down Arrow moves into the tree, Escape clears it"
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Wrapper form: a role=status region, visually hidden, that announces filter counts, loads and moves. Created when missing; a list root gets a visually-hidden sibling instead"
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Wrapper form: the message shown (un-hidden) while a filter matches nothing"
+    },
+    "drop-indicator": {
+      "selector": "[data-part='drop-indicator']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "aria-hidden element the controller places while dragging: a line before or after the target row, a ring around it for inside"
     }
   },
-  "variants": {},
+  "variants": {
+    "variant": {
+      "values": [
+        "default",
+        "lines"
+      ],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
   "states": {
     "idle": {
       "attr": "data-state=\"idle\"",
@@ -52,7 +121,8 @@
     },
     "selected": {
       "attr": "data-state=\"selected\"",
-      "applied_to": "root"
+      "applied_to": "root",
+      "description": "At least one item is selected (or checked, in checkbox mode)"
     },
     "collapsed": {
       "attr": "data-state=\"collapsed\"",
@@ -61,25 +131,95 @@
     "expanded": {
       "attr": "data-state=\"expanded\"",
       "applied_to": "item"
+    },
+    "loading": {
+      "attr": "data-state=\"loading\"",
+      "applied_to": "item",
+      "transient": true,
+      "description": "A lazy item whose children are being loaded; it also carries aria-busy=\"true\" and a spinner part"
+    },
+    "error": {
+      "attr": "data-state=\"error\"",
+      "applied_to": "item",
+      "transient": true,
+      "description": "A lazy item whose load failed; collapsed, with a retry part, until it is expanded again"
+    },
+    "grabbed": {
+      "attr": "data-state=\"grabbed\"",
+      "applied_to": "item",
+      "transient": true,
+      "description": "The item being moved, by pointer drag or after Alt+Enter, drawn dimmed until it drops or the move is cancelled"
+    },
+    "before": {
+      "attr": "data-state=\"before\"",
+      "applied_to": "drop-indicator",
+      "transient": true,
+      "description": "The drop lands before the target row"
+    },
+    "after": {
+      "attr": "data-state=\"after\"",
+      "applied_to": "drop-indicator",
+      "transient": true,
+      "description": "The drop lands after the target (and its subtree)"
+    },
+    "inside": {
+      "attr": "data-state=\"inside\"",
+      "applied_to": "drop-indicator",
+      "transient": true,
+      "description": "The drop lands inside the target parent, as its last child"
     }
   },
   "api": {
     "methods": [
       {
         "name": "select",
-        "params": "target"
+        "params": "target",
+        "description": "Select one item, replacing the selection; in checkbox mode, check it."
       },
       {
         "name": "expand",
-        "params": "target"
+        "params": "target",
+        "description": "Expand a parent item; an unloaded lazy item starts loading its children."
       },
       {
         "name": "collapse",
-        "params": "target"
+        "params": "target",
+        "description": "Collapse a parent item."
       },
       {
         "name": "toggle",
-        "params": "target"
+        "params": "target",
+        "description": "Expand a collapsed parent or collapse an expanded one."
+      },
+      {
+        "name": "check",
+        "params": "target, state",
+        "description": "Check or uncheck an item and every enabled item under it, then derive its ancestors (checkbox mode)."
+      },
+      {
+        "name": "selectAll",
+        "params": "",
+        "description": "Select every visible enabled item (multiple mode), or check them all (checkbox mode)."
+      },
+      {
+        "name": "filter",
+        "params": "query",
+        "description": "Show only items whose label contains `query` (case-insensitive), with their ancestors expanded, and announce the count."
+      },
+      {
+        "name": "load",
+        "params": "target",
+        "description": "Load a lazy item's children now — what expanding it does."
+      },
+      {
+        "name": "setLoader",
+        "params": "fn",
+        "description": "Register the function that loads a lazy item's children: it receives `{ item, value, label, attempt }` and returns (a Promise of) an array of `{ label, value, lazy, disabled, checked, children }`, item elements or markup."
+      },
+      {
+        "name": "move",
+        "params": "source, target, position",
+        "description": "Move an item before or after another, or inside a parent (as its last child), then renumber levels and positions."
       },
       {
         "name": "refresh",
@@ -87,11 +227,18 @@
       },
       {
         "name": "getSelected",
-        "params": ""
+        "params": "",
+        "description": "The selected item (single and multiple mode), or null."
+      },
+      {
+        "name": "getSelection",
+        "params": "",
+        "description": "Every selected item, or every checked item in checkbox mode, in tree order."
       },
       {
         "name": "destroy",
-        "params": ""
+        "params": "",
+        "description": "Remove every listener, the observer and the timers, and end any drag."
       }
     ]
   },
@@ -106,49 +253,102 @@
       "type": "boolean",
       "default": false,
       "attr": "data-lazy",
-      "description": "On an item: its children are loaded on first expand rather than present in the markup. The controller emits the load request instead of revealing a subtree."
+      "description": "On an item: its children are loaded on first expand rather than present in the markup. Expanding it fires faqir:expand (lazy: true) and then faqir:load; children appended by either listener, by detail.respond(), by setLoader() or by a later render end the load."
+    },
+    "mode": {
+      "type": "enum",
+      "values": [
+        "single",
+        "multiple",
+        "checkbox"
+      ],
+      "default": "single",
+      "attr": "data-mode",
+      "description": "On the root: single selection (aria-selected on one item), multiple selection (aria-multiselectable, aria-selected on many), or tri-state checkboxes (aria-checked true/false/mixed, propagating down to enabled descendants and up to ancestors)."
+    },
+    "draggable": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-draggable",
+      "description": "On the root: items can be moved — dragged with a pointer, or picked up with Alt+Enter, placed with Up/Down and dropped with Enter. A leaf accepts before/after; a parent also accepts inside. Every move fires the cancelable faqir:move."
     }
   },
   "a11y": {
     "required_attrs": [
-      "role=\"tree\" on root",
+      "role=\"tree\" on root, or on the tree part when the root is a wrapper",
+      "role=\"tree\" on tree",
       "aria-label on root",
-      "aria-multiselectable=\"false\" on root",
+      "aria-multiselectable on the tree: \"false\" in single mode, \"true\" in multiple and checkbox mode",
       "role=\"treeitem\" on item",
       "tabindex on item",
       "aria-selected on selectable item",
+      "aria-checked on every item in checkbox mode",
       "aria-level on item",
       "aria-setsize on item",
       "aria-posinset on item",
-      "role=\"group\" on group"
+      "role=\"group\" on group",
+      "aria-label on filter"
     ],
     "keyboard": {
-      "ArrowDown": "move focus to the next visible enabled item without wrapping",
-      "ArrowUp": "move focus to the previous visible enabled item without wrapping",
-      "ArrowRight": "expand a collapsed parent, or move from an expanded parent to its first enabled child",
+      "ArrowDown": "move focus to the next visible enabled item without wrapping (multiple mode: Shift extends the selection from the anchor)",
+      "ArrowUp": "move focus to the previous visible enabled item without wrapping (multiple mode: Shift extends the selection from the anchor)",
+      "ArrowRight": "expand a collapsed parent (a lazy one starts loading, or retries after a failure), or move from an expanded parent to its first enabled child",
       "ArrowLeft": "collapse an expanded parent, or move from a collapsed/leaf child to its enabled parent",
-      "Home": "move focus to the first visible enabled item",
-      "End": "move focus to the last visible enabled item",
-      "Enter": "select the focused item",
-      "Space": "select the focused item",
+      "Home": "move focus to the first visible enabled item (multiple mode: Ctrl+Shift+Home also selects up to it)",
+      "End": "move focus to the last visible enabled item (multiple mode: Ctrl+Shift+End also selects down to it)",
+      "Enter": "select the focused item; checkbox mode: toggle its check",
+      "Space": "select the focused item; multiple mode: toggle it in the selection (Shift+Space selects the range from the anchor); checkbox mode: toggle its check",
+      "Ctrl+A": "multiple mode: select every visible item; checkbox mode: check them",
       "Printable characters": "move focus by case-insensitive typeahead with a 500ms buffer",
-      "*": "expand every enabled parent at the focused item's sibling level"
+      "*": "expand every enabled parent at the focused item's sibling level",
+      "Alt+Enter": "data-draggable: pick up the focused item to move it",
+      "ArrowUp / ArrowDown (while moving)": "choose the previous or next place it can go — before, inside or after a row — announced with its level",
+      "Home / End (while moving)": "choose the first or last place",
+      "Enter / Space (while moving)": "drop it at the chosen place",
+      "Escape / Tab (while moving)": "cancel the move; it stays where it was",
+      "ArrowDown (in the filter)": "move focus into the first visible item",
+      "Escape (in the filter)": "clear the filter and restore the expansion from before it"
     },
     "notes": [
       "Only parent and data-lazy items expose aria-expanded; leaf items must not carry it.",
-      "The controller computes aria-level, aria-setsize, and aria-posinset after every keyed DOM reconciliation.",
+      "The controller computes aria-level, aria-setsize, and aria-posinset after every keyed DOM reconciliation and every move.",
       "DOM focus and aria-selected remain distinct until Enter, Space, or pointer selection.",
-      "Items with aria-disabled=true are omitted from the roving focus order and cannot be selected."
+      "Items with aria-disabled=true are omitted from the roving focus order and cannot be selected, checked or moved; in checkbox mode they keep their state when a parent is toggled.",
+      "Checkbox mode uses aria-checked instead of aria-selected, never both; the checkbox part is aria-hidden because the treeitem itself carries the state.",
+      "A lazy item is aria-busy while it loads; the status region announces loading, the number of items loaded, and a failure with the key that retries.",
+      "Filtering announces the number of matches politely once typing pauses; the match is highlighted with the CSS Custom Highlight API, so no label text is rewritten (no highlight where the API is missing).",
+      "Every step of a keyboard move is announced (the place and its level), as are the drop and a cancel; a pointer drop announces where the item went.",
+      "Filter, status and empty message cannot live inside a role=tree list, so they need the wrapper form: a root holding the tree part. A list root that announces gets a visually-hidden role=status sibling."
     ]
   },
   "events": {
     "faqir:select": {
-      "detail": "{ item, value, label, previousItem, previousValue }",
-      "description": "Fires after click, Enter, Space, or select() establishes the single selected item"
+      "detail": "{ item, value, label, previousItem, previousValue, items, values }",
+      "description": "Fires after click, Enter, Space, a range or select() changes the selection; items/values list the whole selection (one item in single mode)"
+    },
+    "faqir:check": {
+      "detail": "{ item, value, label, checked, items, values }",
+      "description": "Checkbox mode: fires after an item (and its subtree) is checked or unchecked; items/values list every fully checked item"
     },
     "faqir:expand": {
       "detail": "{ item, value, label, expanded, lazy }",
       "description": "Fires whenever a parent opens or closes; an app or l-source listener can provide children when expanded and lazy are true"
+    },
+    "faqir:load": {
+      "detail": "{ item, value, label, attempt, respond(result) }",
+      "description": "A lazy item needs its children. Call respond() with an array of { label, value, lazy, disabled, checked, children }, item elements or markup — or a Promise of one; a rejected Promise shows the error state"
+    },
+    "faqir:loaded": {
+      "detail": "{ item, value, label, count, error }",
+      "description": "A load finished: count children inserted, or error (null on success)"
+    },
+    "faqir:filter": {
+      "detail": "{ query, count }",
+      "description": "The filter changed; count items match"
+    },
+    "faqir:move": {
+      "detail": "{ item, value, label, target, targetValue, position, parent, parentValue, index }",
+      "description": "Cancelable. Fires before an item moves — position is before, after or inside the target; parent and index say where it will sit. preventDefault() keeps it in place"
     }
   },
   "tokens_used": [
@@ -159,11 +359,25 @@
     "color-primary",
     "color-primary-subtle",
     "color-ring",
+    "color-destructive",
+    "color-border",
+    "color-border-strong",
+    "color-bg",
+    "color-primary-fg",
+    "color-destructive-subtle",
+    "color-destructive-fg",
+    "color-warning-subtle",
+    "color-warning",
     "space-1",
     "space-2",
     "space-5",
+    "space-4",
+    "space-px",
+    "space-3",
     "radius-md",
+    "radius-full",
     "text-sm",
+    "text-xs",
     "font-ui",
     "weight-medium",
     "duration-fast",
@@ -171,10 +385,20 @@
     "focus-ring-width",
     "focus-ring-style",
     "focus-ring-color",
-    "focus-ring-offset"
+    "focus-ring-offset",
+    "disabled-opacity",
+    "border-width",
+    "border-width-strong",
+    "checkbox-size",
+    "checkbox-radius",
+    "leading-normal",
+    "z-raised"
   ],
   "templates": {
-    "html": "<ul data-ui=\"tree-view\" data-state=\"idle\" role=\"tree\" aria-label=\"Items\" aria-multiselectable=\"false\">\n  <li data-part=\"item\" data-state=\"expanded\" data-value=\"parent\" role=\"treeitem\" tabindex=\"0\" aria-selected=\"false\" aria-expanded=\"true\" aria-level=\"1\" aria-setsize=\"1\" aria-posinset=\"1\">\n    <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Parent</span>\n    <ul data-part=\"group\" role=\"group\">\n      <li data-part=\"item\" data-value=\"child\" role=\"treeitem\" tabindex=\"-1\" aria-selected=\"false\" aria-level=\"2\" aria-setsize=\"1\" aria-posinset=\"1\">\n        <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Child</span>\n      </li>\n    </ul>\n  </li>\n</ul>"
+    "html": "<ul data-ui=\"tree-view\" data-state=\"idle\" role=\"tree\" aria-label=\"Items\" aria-multiselectable=\"false\">\n  <li data-part=\"item\" data-state=\"expanded\" data-value=\"parent\" role=\"treeitem\" tabindex=\"0\" aria-selected=\"false\" aria-expanded=\"true\" aria-level=\"1\" aria-setsize=\"1\" aria-posinset=\"1\">\n    <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Parent</span>\n    <ul data-part=\"group\" role=\"group\">\n      <li data-part=\"item\" data-value=\"child\" role=\"treeitem\" tabindex=\"-1\" aria-selected=\"false\" aria-level=\"2\" aria-setsize=\"1\" aria-posinset=\"1\">\n        <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Child</span>\n      </li>\n    </ul>\n  </li>\n</ul>",
+    "html_files": "<ul data-ui=\"tree-view\" data-variant=\"lines\" data-state=\"idle\" role=\"tree\" aria-label=\"{label}\" aria-multiselectable=\"false\">\n  <li data-part=\"item\" data-state=\"expanded\" data-value=\"{folder_value}\" role=\"treeitem\" tabindex=\"0\" aria-selected=\"false\" aria-expanded=\"true\" aria-level=\"1\" aria-setsize=\"1\" aria-posinset=\"1\">\n    <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span><span data-part=\"icon\" aria-hidden=\"true\"></span>{folder}</span>\n    <ul data-part=\"group\" role=\"group\">\n      <li data-part=\"item\" data-value=\"{file_value}\" role=\"treeitem\" tabindex=\"-1\" aria-selected=\"false\" aria-level=\"2\" aria-setsize=\"2\" aria-posinset=\"1\">\n        <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span><span data-part=\"icon\" aria-hidden=\"true\"></span>{file}</span>\n      </li>\n      <li data-part=\"item\" data-state=\"collapsed\" data-value=\"{lazy_value}\" data-lazy=\"true\" role=\"treeitem\" tabindex=\"-1\" aria-selected=\"false\" aria-expanded=\"false\" aria-level=\"2\" aria-setsize=\"2\" aria-posinset=\"2\">\n        <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span><span data-part=\"icon\" aria-hidden=\"true\"></span>{lazy_folder}</span>\n      </li>\n    </ul>\n  </li>\n</ul>",
+    "html_checkbox": "<ul data-ui=\"tree-view\" data-mode=\"checkbox\" data-state=\"idle\" role=\"tree\" aria-label=\"{label}\" aria-multiselectable=\"true\">\n  <li data-part=\"item\" data-state=\"expanded\" data-value=\"{parent_value}\" role=\"treeitem\" tabindex=\"0\" aria-checked=\"false\" aria-expanded=\"true\" aria-level=\"1\" aria-setsize=\"1\" aria-posinset=\"1\">\n    <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span><span data-part=\"checkbox\" aria-hidden=\"true\"></span>{parent}</span>\n    <ul data-part=\"group\" role=\"group\">\n      <li data-part=\"item\" data-value=\"{child_value}\" role=\"treeitem\" tabindex=\"-1\" aria-checked=\"false\" aria-level=\"2\" aria-setsize=\"1\" aria-posinset=\"1\">\n        <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span><span data-part=\"checkbox\" aria-hidden=\"true\"></span>{child}</span>\n      </li>\n    </ul>\n  </li>\n</ul>",
+    "html_filter": "<div data-ui=\"tree-view\" data-state=\"idle\">\n  <input data-ui=\"input\" data-part=\"filter\" type=\"search\" placeholder=\"{filter_label}\" aria-label=\"{filter_label}\" aria-controls=\"{tree_id}\">\n  <ul data-part=\"tree\" id=\"{tree_id}\" role=\"tree\" aria-label=\"{label}\" aria-multiselectable=\"false\">\n    <li data-part=\"item\" data-value=\"{item_value}\" role=\"treeitem\" tabindex=\"0\" aria-selected=\"false\" aria-level=\"1\" aria-setsize=\"1\" aria-posinset=\"1\">\n      <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>{item}</span>\n    </li>\n  </ul>\n  <p data-part=\"empty\" hidden>{empty_message}</p>\n  <p data-part=\"status\" role=\"status\"></p>\n</div>"
   },
   "safe_transforms": [
     "add-item",
@@ -184,7 +408,12 @@
     "mark-item-disabled",
     "mark-parent-lazy",
     "change-tree-label",
-    "restyle-label-and-toggle"
+    "restyle-label-and-toggle",
+    "add-icon-part",
+    "switch-variant-to-lines",
+    "switch-mode-to-multiple-or-checkbox",
+    "enable-dragging",
+    "wrap-tree-with-filter"
   ],
   "unsafe_transforms": [
     "remove-tree-role",
@@ -195,10 +424,17 @@
     "remove-roving-tabindex",
     "remove-positional-aria",
     "remove-keyboard-navigation",
-    "allow-multiple-selected-items"
+    "allow-multiple-selected-items",
+    "use-aria-selected-and-aria-checked-together",
+    "make-checkbox-or-icon-focusable",
+    "put-filter-or-status-inside-the-tree-list"
   ],
   "composition": {
-    "contains": [],
+    "contains": [
+      "input",
+      "spinner",
+      "icon"
+    ],
     "used_in": [
       "sidebar",
       "file-browser"
@@ -227,6 +463,18 @@
     "dynamic-reconciliation-refreshes-positional-aria",
     "prevents-double-initialization",
     "destroy-removes-listeners-observer-and-timer",
-    "canonical-reference-is-audit-clean"
+    "canonical-reference-is-audit-clean",
+    "checkbox-mode-propagates-down-and-derives-mixed-up",
+    "checkbox-mode-keeps-disabled-state-and-never-sticks-on-mixed",
+    "lazy-load-respond-inserts-children-and-announces",
+    "lazy-load-failure-shows-retry-and-retries-on-expand",
+    "lazy-load-ends-when-the-app-appends-a-group",
+    "filter-keeps-ancestors-open-and-restores-expansion",
+    "filter-announces-count-and-shows-empty-message",
+    "multiple-mode-ctrl-shift-click-and-keyboard-ranges",
+    "keyboard-move-announces-every-step-and-drops",
+    "keyboard-move-never-enters-its-own-subtree",
+    "move-is-cancelable-and-renumbers-positional-aria",
+    "pointer-drag-and-drop-before-after-inside"
   ]
 }

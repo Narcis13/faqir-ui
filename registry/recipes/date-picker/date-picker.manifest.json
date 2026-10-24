@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "date-picker",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "kind": "recipe",
   "category": "forms",
-  "description": "Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe",
+  "description": "Date input with a calendar dropdown — single dates or ranges (start and end fields, presets, two months), dates typed in the page's own format, a clear button, and an inline variant with the calendar always shown; the month grid is the nested `calendar` recipe",
   "changes": [
+    {
+      "version": "2.2.0",
+      "note": "Ranges, typing, clearing, inline. (1) data-mode=\"range\" (on the picker; it is the nested calendar's mode too): an [data-part=\"input-end\"] field beside [data-part=\"input\"], with an optional [data-part=\"separator\"], shows the end; [data-part=\"value-end\"] is the hidden input that submits it, next to [data-part=\"value\"] for the start. The popup is the calendar in range mode — presets, hover preview and the summary come with it — and a calendar with data-months=\"2\" shows two months when the viewport is at least 48rem wide, one below that. A range is committed (popup closed, focus back on the input, faqir:date-change emitted) when its end is picked; a single input in range mode shows the whole range and is display-only. (2) Typing: a field without readonly reads what is typed on blur (change) and Enter, in the field order and month names of the nearest lang (Intl.DateTimeFormat formatToParts; navigator.language when no lang is set): 1–2 digit days and months, a month name, 2- or 4-digit years, any separators, and ISO YYYY-MM-DD or another year-first entry always. A real date inside min/max and not disabled is shown in full (\"March 14, 2026\"), stored and emitted; anything else keeps the text the person typed, gets aria-invalid=\"true\" and data-state=\"invalid\" (the field turns destructive), empties the submitted value, and shows an optional [data-part=\"error\"]. A range checks that the end is not before the start and that the span respects the calendar's data-min-range/data-max-range. A typed field with no placeholder shows the page's pattern (mm/dd/yyyy, dd.mm.yyyy, yyyy/mm/dd). (3) [data-part=\"field\"]: one input-styled box holding the field(s), the clear button and a [data-part=\"trigger\"] icon button — the markup for typing and for ranges; the classic [data-part=\"trigger\"] wrapper still works. (4) [data-part=\"clear\"]: a button with an accessible name, hidden until there is something to clear; it empties every field and value, emits faqir:date-change with null dates, and returns focus to the input. (5) data-variant=\"inline\": the calendar sits in the flow, always shown, with no popup, dialog role, aria-expanded or outside-click; picking a day fills the field without moving focus. open()/close() only flip data-state there, and the trigger slot is no longer required (it is for the popover). (6) Keyboard: ArrowDown (or Alt+ArrowDown) on a field opens the calendar and focuses the selected day — and Enter/Space on a read-only field — so a closed picker is reachable without a pointer; Escape closes as before. The combobox input now carries aria-controls naming the popup (axe aria-required-attr when expanded). (7) The display is formatted with Intl in the nearest lang; en-US output is unchanged (\"October 15, 2026\"). The decorative icon is the icon primitive (data-ui=\"icon\" data-icon=\"calendar\"), not an emoji. Existing markup, values and events behave as before.",
+      "breaking": false
+    },
     {
       "version": "2.1.0",
       "note": "A value part for forms. [data-part=\"value\"] is an optional <input type=\"hidden\"> directly inside the root that carries the field's name: the controller keeps the ISO date (2026-10-15) in it on every pick, setValue() and clear, and fires input and change on it so l-model, faqir-validate and faqir-rules see the answer. The visible [data-part=\"input\"] keeps the display text (\"October 15, 2026\") and loses its name, so FormData and a native submit send the ISO date instead of the display text. A value rendered into the hidden input is the picker's selection at start-up, and a form reset restores it. A new clear() method empties the calendar, the visible input and the value part (setValue still ignores anything that is not a date). Markup without the value part behaves exactly as before.",
@@ -34,29 +39,65 @@
       "tag_hint": "input",
       "description": "Inside a form: an <input type=\"hidden\"> directly inside the root, carrying the field's name. The controller keeps the ISO date (YYYY-MM-DD) in it and fires input/change on it whenever the value changes, so it is what FormData, a native submit, l-model and the rules read. The visible input then carries no name."
     },
+    "value-end": {
+      "selector": "[data-part='value-end']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "Range mode in a form: a second <input type=\"hidden\"> directly inside the root, carrying the end's name and ISO date (value carries the start). Same input/change events as value"
+    },
     "trigger": {
       "selector": "[data-part='trigger']",
-      "required": true,
+      "required": false,
       "tag_hint": "div",
-      "description": "Clickable area containing input and icon"
+      "description": "What opens the calendar: the classic clickable wrapper around input and icon, or — inside field — a <button> with an aria-label (\"Open calendar\"). Optional for the inline variant. Required for the popover; the inline variant has none"
+    },
+    "field": {
+      "selector": "[data-part='field']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "One input-styled box holding the field(s), an optional separator, clear and an icon-button trigger — the markup for typed dates and for ranges. The focus ring and the invalid border are drawn on it"
     },
     "input": {
       "selector": "[data-part='input']",
       "required": true,
       "tag_hint": "input",
-      "description": "Text input displaying the selected date as a person reads it (\"October 15, 2026\"). Inside a form it carries the label's id, required and the description wiring but no name — the value part is what submits"
+      "description": "Text input displaying the selected date as a person reads it (\"October 15, 2026\") — the start in range mode. readonly: a click (or Enter/Space/ArrowDown) opens the calendar; without readonly a typed date is read on blur and Enter. Inside a form it carries the label's id, required and the description wiring but no name — the value part is what submits"
+    },
+    "separator": {
+      "selector": "[data-part='separator']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Range: the decorative mark between the start and end fields (aria-hidden)"
+    },
+    "input-end": {
+      "selector": "[data-part='input-end']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "Range mode: the end date's field, a sibling of input inside field. Read-only opens the calendar; without readonly it is typed like input. Give it role=\"combobox\" aria-haspopup=\"dialog\" aria-expanded=\"false\" to open the popup from it too"
+    },
+    "clear": {
+      "selector": "[data-part='clear']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "A button with an aria-label (\"Clear date\") inside field or trigger, hidden by the controller until a field has text. Empties the fields and the value parts, emits faqir:date-change with null dates, and returns focus to input"
     },
     "icon": {
       "selector": "[data-part='icon']",
       "required": false,
       "tag_hint": "span",
-      "description": "Decorative calendar glyph inside the trigger (aria-hidden)"
+      "description": "Decorative calendar glyph inside the classic trigger (aria-hidden) — the icon primitive, data-ui=\"icon\" data-icon=\"calendar\""
+    },
+    "error": {
+      "selector": "[data-part='error']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Optional message directly inside the root, shown while a typed field is invalid (start it hidden). Point the field's aria-errormessage at its id"
     },
     "calendar": {
       "selector": "[data-part='calendar']",
       "required": true,
       "tag_hint": "div",
-      "description": "Calendar dropdown container. Canonically nests a [data-ui='calendar'] recipe that owns the header, month navigation and day grid; legacy markup with those parts placed directly inside this container keeps working"
+      "description": "Calendar container: a role=\"dialog\" popup with an aria-label, or for the inline variant a plain block in the flow. Canonically nests a [data-ui='calendar'] recipe that owns the header, month navigation, presets and day grid; legacy markup with those parts placed directly inside this container keeps working"
     }
   },
   "variants": {
@@ -69,6 +110,15 @@
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
+    },
+    "style": {
+      "values": [
+        "popover",
+        "inline"
+      ],
+      "default": "popover",
+      "attr": "data-variant",
+      "applied_to": "root"
     }
   },
   "states": {
@@ -78,6 +128,11 @@
     },
     "open": {
       "attr": "data-state=\"open\""
+    },
+    "invalid": {
+      "attr": "data-state=\"invalid\"",
+      "applied_to": "input",
+      "description": "On a typed field (input or input-end) whose text is not a valid date — also aria-invalid=\"true\". The text stays as typed; the field's box is drawn in the destructive colour"
     }
   },
   "api": {
@@ -96,7 +151,8 @@
       },
       {
         "name": "setValue",
-        "params": "dateStr"
+        "params": "value",
+        "description": "YYYY-MM-DD, or for a range \"start,end\" / { start, end }; anything that is not a date is ignored."
       },
       {
         "name": "clear",
@@ -120,27 +176,42 @@
     "value": {
       "type": "string",
       "default": "",
-      "description": "Selected date, ISO YYYY-MM-DD: the value part's value (and the visible input's data-value)"
+      "description": "Selected date, ISO YYYY-MM-DD: the value part's value (and the visible input's data-value). Range: value holds the start and value-end the end; setValue takes \"start,end\" or { start, end }"
     },
     "placeholder": {
       "type": "string",
       "default": "Select date",
       "description": "Input placeholder text"
+    },
+    "mode": {
+      "type": "enum",
+      "values": [
+        "single",
+        "range"
+      ],
+      "default": "single",
+      "description": "data-mode: one date, or a start and an end (input + input-end, value + value-end); passed to the nested calendar"
     }
   },
   "a11y": {
     "required_attrs": [
-      "aria-haspopup=\"dialog\" on input",
-      "aria-expanded on input",
-      "role=\"dialog\" and aria-label on the calendar container",
+      "aria-haspopup=\"dialog\" on input unless inline",
+      "aria-expanded and aria-controls on the combobox input(s), kept by the controller unless inline",
+      "role=\"dialog\" and aria-label on the calendar container unless inline",
       "role=\"grid\" on the nested calendar grid",
       "aria-label on day buttons with full date",
       "aria-label on nav-prev and nav-next",
-      "aria-selected=\"true\" on selected day"
+      "aria-selected=\"true\" on selected day",
+      "aria-label on clear and on a trigger button",
+      "aria-invalid=\"true\" on a typed field when its text is not a valid date (aria-errormessage may point at error)"
     ],
     "keyboard": {
-      "Escape": "close calendar",
-      "Enter/Space": "select focused day",
+      "Escape": "close calendar, focus returns to the input",
+      "ArrowDown / Alt+ArrowDown (field)": "open the calendar and focus the selected day",
+      "Enter/Space (read-only field)": "open the calendar",
+      "Enter (typed field)": "read the typed date and show it in full (the form still submits)",
+      "Tab (typed field)": "leaving the field reads the typed date",
+      "Enter/Space": "select focused day (range: start, then end)",
       "ArrowLeft": "focus previous day",
       "ArrowRight": "focus next day",
       "ArrowUp": "focus same day previous week",
@@ -158,9 +229,13 @@
     "color-border",
     "color-primary",
     "color-ring",
+    "color-destructive",
+    "color-border-strong",
+    "color-bg-muted",
     "shadow-lg",
     "radius-md",
     "radius-lg",
+    "radius-full",
     "space-1",
     "space-2",
     "space-3",
@@ -171,6 +246,7 @@
     "text-xs",
     "text-sm",
     "text-base",
+    "text-lg",
     "z-dropdown",
     "duration-fast",
     "ease-default",
@@ -179,11 +255,23 @@
     "focus-ring-width",
     "focus-ring-style",
     "focus-ring-color",
-    "focus-ring-offset"
+    "focus-ring-offset",
+    "focus-shadow",
+    "input-height",
+    "input-border-width",
+    "input-radius",
+    "input-fill",
+    "input-font",
+    "control-height-sm",
+    "control-height-lg",
+    "control-height-md"
   ],
   "templates": {
-    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" aria-hidden=\"true\">&#x1F4C5;</span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>",
-    "html_form": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <input data-part=\"value\" type=\"hidden\" name=\"{name}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" aria-hidden=\"true\">&#x1F4C5;</span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>"
+    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" data-ui=\"icon\" data-icon=\"calendar\" aria-hidden=\"true\"></span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>",
+    "html_form": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <input data-part=\"value\" type=\"hidden\" name=\"{name}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" data-ui=\"icon\" data-icon=\"calendar\" aria-hidden=\"true\"></span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>",
+    "html_range": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\" data-mode=\"range\">\n  <input data-part=\"value\" type=\"hidden\" name=\"{name}-start\">\n  <input data-part=\"value-end\" type=\"hidden\" name=\"{name}-end\">\n  <div data-part=\"field\">\n    <input data-part=\"input\" type=\"text\" role=\"combobox\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Start date\" placeholder=\"Start date\">\n    <span data-part=\"separator\" aria-hidden=\"true\">&rarr;</span>\n    <input data-part=\"input-end\" type=\"text\" role=\"combobox\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"End date\" placeholder=\"End date\">\n    <button data-part=\"clear\" type=\"button\" aria-label=\"Clear dates\" hidden><span data-ui=\"icon\" data-icon=\"x\" aria-hidden=\"true\"></span></button>\n    <button data-part=\"trigger\" type=\"button\" aria-label=\"Open calendar\" tabindex=\"-1\"><span data-ui=\"icon\" data-icon=\"calendar\" aria-hidden=\"true\"></span></button>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Choose a date range\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\" data-mode=\"range\" data-months=\"2\">\n      <div data-part=\"presets\" role=\"group\" aria-label=\"Quick ranges\">\n        <button data-part=\"preset\" type=\"button\" data-value=\"last-7-days\" aria-pressed=\"false\">Last 7 days</button>\n        <button data-part=\"preset\" type=\"button\" data-value=\"last-30-days\" aria-pressed=\"false\">Last 30 days</button>\n        <button data-part=\"preset\" type=\"button\" data-value=\"this-month\" aria-pressed=\"false\">This month</button>\n      </div>\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\" aria-live=\"polite\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n      <p data-part=\"summary\" aria-live=\"polite\">Pick a start date</p>\n    </div>\n  </div>\n</div>",
+    "html_typed": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <input data-part=\"value\" type=\"hidden\" name=\"{name}\">\n  <div data-part=\"field\">\n    <input data-part=\"input\" type=\"text\" role=\"combobox\" aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Date\" autocomplete=\"off\">\n    <button data-part=\"clear\" type=\"button\" aria-label=\"Clear date\" hidden><span data-ui=\"icon\" data-icon=\"x\" aria-hidden=\"true\"></span></button>\n    <button data-part=\"trigger\" type=\"button\" aria-label=\"Open calendar\" tabindex=\"-1\"><span data-ui=\"icon\" data-icon=\"calendar\" aria-hidden=\"true\"></span></button>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Choose a date\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\" aria-live=\"polite\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>",
+    "html_inline": "<div data-ui=\"date-picker\" data-state=\"closed\" data-variant=\"inline\" data-size=\"{size}\">\n  <input data-part=\"value\" type=\"hidden\" name=\"{name}\">\n  <div data-part=\"field\">\n    <input data-part=\"input\" type=\"text\" aria-label=\"Date\" autocomplete=\"off\">\n    <button data-part=\"clear\" type=\"button\" aria-label=\"Clear date\" hidden><span data-ui=\"icon\" data-icon=\"x\" aria-hidden=\"true\"></span></button>\n  </div>\n  <div data-part=\"calendar\">\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\" aria-live=\"polite\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>"
   },
   "safe_transforms": [
     "change-size",
@@ -191,7 +279,11 @@
     "restyle-selected-day",
     "restyle-today-highlight",
     "add-min-max-date",
-    "change-first-day-of-week"
+    "change-first-day-of-week",
+    "switch-to-range-mode",
+    "make-input-typeable",
+    "add-clear-button",
+    "switch-to-inline"
   ],
   "unsafe_transforms": [
     "remove-aria-expanded",
@@ -199,12 +291,15 @@
     "remove-day-aria-labels",
     "remove-keyboard-navigation",
     "remove-outside-click-handler",
-    "duplicate-grid-logic-outside-calendar-recipe"
+    "duplicate-grid-logic-outside-calendar-recipe",
+    "remove-value-parts-from-a-form",
+    "remove-clear-accessible-name"
   ],
   "composition": {
     "contains": [
       "calendar",
-      "button"
+      "button",
+      "icon"
     ],
     "used_in": []
   },
@@ -237,6 +332,28 @@
     "value-part-fires-input-and-change",
     "clear-empties-the-value-part",
     "server-rendered-value-is-the-initial-selection",
-    "form-reset-restores-initial-value"
-  ]
+    "form-reset-restores-initial-value",
+    "range-mode-fills-start-and-end",
+    "range-value-parts-submit-iso",
+    "range-closes-when-end-picked",
+    "presets-in-popover-commit-range",
+    "two-months-when-space-allows",
+    "typed-date-parsed-in-page-locale",
+    "typed-date-iso-always-accepted",
+    "typed-invalid-keeps-text-and-marks-aria-invalid",
+    "typed-date-checked-against-min-max-disabled",
+    "typed-range-end-before-start-invalid",
+    "clear-button-hidden-until-value-and-returns-focus",
+    "inline-calendar-always-visible",
+    "arrowdown-opens-from-field",
+    "combobox-has-aria-controls"
+  ],
+  "events": {
+    "faqir:date-change": {
+      "detail_single": "{ date: 'YYYY-MM-DD', dateObj: Date, preset? }",
+      "detail_range": "{ start, end: 'YYYY-MM-DD', startObj, endObj: Date, preset? } — when the range is complete",
+      "detail_cleared": "the same keys with null values, after the clear button",
+      "bubbles": true
+    }
+  }
 }
