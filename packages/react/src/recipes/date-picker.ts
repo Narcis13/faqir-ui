@@ -11,11 +11,16 @@ import { createDatePicker } from "../controllers/date-picker.js";
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on root). */
 export type LDatePickerSize = "sm" | "md" | "lg";
 
-export interface LDatePickerProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "size" | "trigger" | "input" | "icon" | "calendar" | "onCalendarChange" | "onDateChange"> {
+/** Allowed `styleVariant` values (manifest variant group "style", attr `data-variant` on root). */
+export type LDatePickerStyleVariant = "popover" | "inline";
+
+export interface LDatePickerProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "size" | "styleVariant" | "trigger" | "input" | "icon" | "calendar" | "onCalendarChange" | "onDateChange"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
   /** `data-size` on root; omitted when unset (manifest default: "md"). */
   size?: LDatePickerSize;
+  /** `data-variant` on root; omitted when unset (manifest default: "popover"). */
+  styleVariant?: LDatePickerStyleVariant;
   /** Content projected into the `[data-part="trigger"]` element. */
   trigger?: ReactNode;
   /** Content projected into the `[data-part="input"]` element. */
@@ -30,7 +35,7 @@ export interface LDatePickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
   onDateChange?: FaqirEventHandler;
 }
 
-/** `date-picker` — Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe Emits: `onCalendarChange`, `onDateChange` (payload: `(detail, event)`). Exposes via ref: `open()`, `close()`, `getValue()`, `setValue()`, `clear()`, `navigate()`, `selectDate()`. */
+/** `date-picker` — Date input with a calendar dropdown — single dates or ranges (start and end fields, presets, two months), dates typed in the page's own format, a clear button, and an inline variant with the calendar always shown; the month grid is the nested `calendar` recipe Emits: `onCalendarChange`, `onDateChange` (payload: `(detail, event)`). Exposes via ref: `open()`, `close()`, `getValue()`, `setValue()`, `clear()`, `navigate()`, `selectDate()`. */
 export const LDatePicker = createFaqirRecipe<LDatePickerProps>({
   name: "date-picker",
   create: createDatePicker,
@@ -41,8 +46,9 @@ export const LDatePicker = createFaqirRecipe<LDatePickerProps>({
   boolProps: [],
   variantProps: [
     { prop: "size", values: ["sm", "md", "lg"] },
+    { prop: "styleVariant", values: ["popover", "inline"] },
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["date-picker"]],["data-state",["closed"]]],"children":[{"tag":"div","attrs":[["data-part",["trigger"]]],"children":[{"tag":"input","attrs":[["data-part",["input"]],["type",["text"]],["placeholder",["Select a date"]],["readonly",true],["aria-haspopup",["dialog"]],["aria-expanded",["false"]],["aria-label",["Choose date"]]],"children":[],"slot":"input"},{"tag":"span","attrs":[["data-part",["icon"]],["aria-hidden",["true"]]],"children":["📅"],"slot":"icon"}],"slot":"trigger"},{"tag":"div","attrs":[["data-part",["calendar"]],["role",["dialog"]],["aria-label",["Date picker"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-ui",["calendar"]]],"children":[{"tag":"div","attrs":[["data-part",["header"]]],"children":[{"tag":"button","attrs":[["data-part",["nav-prev"]],["type",["button"]],["aria-label",["Previous month"]]],"children":["‹"]},{"tag":"span","attrs":[["data-part",["month-label"]]],"children":[]},{"tag":"button","attrs":[["data-part",["nav-next"]],["type",["button"]],["aria-label",["Next month"]]],"children":["›"]}]},{"tag":"table","attrs":[["data-part",["grid"]],["role",["grid"]],["aria-label",["Calendar"]]],"children":[{"tag":"thead","attrs":[],"children":[{"tag":"tr","attrs":[],"children":[{"tag":"th","attrs":[],"children":["Su"]},{"tag":"th","attrs":[],"children":["Mo"]},{"tag":"th","attrs":[],"children":["Tu"]},{"tag":"th","attrs":[],"children":["We"]},{"tag":"th","attrs":[],"children":["Th"]},{"tag":"th","attrs":[],"children":["Fr"]},{"tag":"th","attrs":[],"children":["Sa"]}]}]},{"tag":"tbody","attrs":[["data-part",["grid-body"]]],"children":[]}]}]}],"slot":"calendar"}],"dyn":[["size","data-size"]]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["date-picker"]],["data-state",["closed"]]],"children":[{"tag":"div","attrs":[["data-part",["trigger"]]],"children":[{"tag":"input","attrs":[["data-part",["input"]],["type",["text"]],["placeholder",["Select a date"]],["readonly",true],["aria-haspopup",["dialog"]],["aria-expanded",["false"]],["aria-label",["Choose date"]]],"children":[],"slot":"input"},{"tag":"span","attrs":[["data-part",["icon"]],["data-ui",["icon"]],["data-icon",["calendar"]],["aria-hidden",["true"]]],"children":[],"slot":"icon"}],"slot":"trigger"},{"tag":"div","attrs":[["data-part",["calendar"]],["role",["dialog"]],["aria-label",["Date picker"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-ui",["calendar"]]],"children":[{"tag":"div","attrs":[["data-part",["header"]]],"children":[{"tag":"button","attrs":[["data-part",["nav-prev"]],["type",["button"]],["aria-label",["Previous month"]]],"children":["‹"]},{"tag":"span","attrs":[["data-part",["month-label"]]],"children":[]},{"tag":"button","attrs":[["data-part",["nav-next"]],["type",["button"]],["aria-label",["Next month"]]],"children":["›"]}]},{"tag":"table","attrs":[["data-part",["grid"]],["role",["grid"]],["aria-label",["Calendar"]]],"children":[{"tag":"thead","attrs":[],"children":[{"tag":"tr","attrs":[],"children":[{"tag":"th","attrs":[],"children":["Su"]},{"tag":"th","attrs":[],"children":["Mo"]},{"tag":"th","attrs":[],"children":["Tu"]},{"tag":"th","attrs":[],"children":["We"]},{"tag":"th","attrs":[],"children":["Th"]},{"tag":"th","attrs":[],"children":["Fr"]},{"tag":"th","attrs":[],"children":["Sa"]}]}]},{"tag":"tbody","attrs":[["data-part",["grid-body"]]],"children":[]}]}]}],"slot":"calendar"}],"dyn":[["size","data-size"],["styleVariant","data-variant"]]} as unknown as RecipeNode,
 }, "LDatePicker");
 
 export default LDatePicker;

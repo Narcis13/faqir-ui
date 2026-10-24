@@ -43,9 +43,11 @@ const KB = 1024;
 // `engineWithControllers` has moved twice before, each time for a named
 // feature and recorded here: 42 → 43 KB for the 29th recipe controller, and
 // 43 → 44 KB for `inspect`/devtools. Wave 2 took it 44 → 45 KB: the shared exit-transition helper the four overlay controllers now wait on (`whenExitDone` — see W2-1's drawer bug), the unscoped-directive sweep that makes `<form l-validate>` bind at all, applying a scope root's own directives, and `$ui('#id')` for reaching another component's controller. Wave 3 took it 45 → 46 KB: `aria-activedescendant` in the four widgets that declared the combobox contract and never implemented it, the dismiss-on-destroy path in twelve overlay controllers, cleanup ownership that survives a detached template (`l-if`/`l-for`/`l-teleport`), `l-model` listener teardown, and the missing-part guards that name the part instead of throwing. The forecraft notes (1.2.5 downstream) took it 46 → 47 KB: QR versions 11–40 — ISO/IEC 18004 Table 9 for every version and ECL, packed one character per value (about 220 B gzip of the move), the computed codeword count and Annex E alignment centres — the qr-code and barcode `data-state="error"` + `faqir:error` reporting, command-palette `<a href>` items and `data-value`, and toggle-group following a `:checked` binding. The binding constraint was `tests/build/core-package.test.ts` (the packaged `faqir-core.min.js`), about 40 B under its 46 KB at the start.
+//
+// The component expansion took it 47 → 50 KB, measured at 49.29 KB, and the owner decided the move in advance: every recipe controller is inlined, and the budget had about 0.5 KB left. It bought date ranges — calendar's hover preview, multi-month grids, presets and min/max range length, and date-picker's range mode, locale-parsed typing, clear button and inline mode.
 export const BUDGETS = {
   engine: 14 * KB,
-  engineWithControllers: 47 * KB,
+  engineWithControllers: 50 * KB,
   plugin: 2 * KB,
   // @faqir-ui/template's core entry: the runtime that renders a compiled AST
   // (docs/template.md §15.1). The compiler is its own entry, run at save time.
@@ -53,7 +55,9 @@ export const BUDGETS = {
   // The strict-CSP engine (forecraft #50): engine + controllers with the
   // expression interpreter in place of `new Function` — measured at 51.01 KB,
   // about 4.7 KB of it the interpreter. Its own artifact, its own budget.
-  engineCsp: 52 * KB,
+  // The component expansion moved it with engineWithControllers, 52 → 54 KB,
+  // measured at 53.91 KB: the same controllers, carried by both engines.
+  engineCsp: 54 * KB,
 };
 
 // Per-plugin exceptions to BUDGETS.plugin, by file name. Each is named for the

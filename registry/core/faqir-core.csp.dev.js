@@ -3626,16 +3626,17 @@ function createBarcode(root) {
   // ── calendar ── (registry/recipes/calendar/calendar.js)
   var createCalendar = controllerRegistry["calendar"] = (function() {
 // @ui:controller calendar
-// @ui:provides getValue setValue clear navigate selectDate focusDate setMin setMax setDisabledDates destroy
+// @ui:provides getValue setValue clear navigate selectDate focusDate setMin setMax setDisabledDates setMonths isDisabled destroy
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const DAY_MS = 864e5;
 
-const DAY_NAMES = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-];
+// The words a day's name and the summary add to the locale-formatted dates.
+// "today" and the day count come from Intl, so they follow the page language.
+const RANGE_START = "range start";
+const RANGE_END = "range end";
+const IN_RANGE = "in range";
+const UNAVAILABLE = "unavailable";
+const PICK_END = "select an end date";
 
 function parseISO(str) {
   if (!str) return null;
@@ -3643,14 +3644,34 @@ function parseISO(str) {
   return isNaN(d.getTime()) ? null : d;
 }
 
+const pad = (n) => String(n).padStart(2, "0");
+const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/** Local midnight of `d`, moved `n` days. */
+const addDays = (d, n = 0) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+/** Months since year 0: month views compare and shift without Date overflow. */
+const monthIndex = (d) => d.getFullYear() * 12 + d.getMonth();
+
+/** The nearest `lang` (else the browser's language): the locale of every label. */
+function localeOf(el) {
+  const lang = el.closest("[lang]")?.lang || navigator.language;
+  try {
+    new Intl.DateTimeFormat(lang);
+    return lang;
+  } catch {
+    return "en-US";
+  }
+}
+
 function createCalendar(root) {
   // Prevent double-init
   if (root._faqirCalendar) return root._faqirCalendar;
 
-  const navPrev = root.querySelector("[data-part='nav-prev']");
-  const navNext = root.querySelector("[data-part='nav-next']");
-  const monthLabel = root.querySelector("[data-part='month-label']");
-  const gridBody = root.querySelector("[data-part='grid-body']");
+  const part = (name) => root.querySelector(`[data-part='${name}']`);
+  const navPrev = part("nav-prev");
+  const navNext = part("nav-next");
+  const monthLabel = part("month-label");
+  const gridBody = part("grid-body");
+  const summary = part("summary");
 
   // `grid-body` is the one part every render writes into: without it the first
   // `render()` throws on `gridBody.innerHTML`, taking the date-picker that
@@ -3672,14 +3693,28 @@ function createCalendar(root) {
       setMin() {},
       setMax() {},
       setDisabledDates() {},
+      setMonths() {},
+      isDisabled: () => false,
       destroy() {},
     };
     root._faqirCalendar = inert;
     return inert;
   }
 
-  const today = new Date();
+  const presets = [...root.querySelectorAll("[data-part='preset']")];
+  const locale = localeOf(root);
+  const fmt = (opts) => new Intl.DateTimeFormat(locale, { calendar: "gregory", ...opts });
+  const fullDate = fmt({ weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const monthYear = fmt({ month: "long", year: "numeric" });
+  const shortDate = fmt({ month: "short", day: "numeric", year: "numeric" });
+  const todayWord = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(0, "day");
+  const dayCount = new Intl.NumberFormat(locale, { style: "unit", unit: "day", unitDisplay: "long" });
+
+  const today = addDays(new Date());
   const mode = root.dataset.mode === "range" ? "range" : "single";
+  // Range length bounds, inclusive day counts (a 3-night stay is 4 days).
+  const minRange = parseInt(root.dataset.minRange, 10) || 0;
+  const maxRange = parseInt(root.dataset.maxRange, 10) || 0;
 
   let minDate = parseISO(root.dataset.min);
   let maxDate = parseISO(root.dataset.max);
@@ -3702,6 +3737,20 @@ function createCalendar(root) {
   let viewMonth = initialView.getMonth();
   let viewYear = initialView.getFullYear();
   let focusedDate = null;
+  // The day a pending range would end on (pointer hover or keyboard focus), as a time.
+  let previewAt = 0;
+
+  // Multi-month: one grid body per visible month. The authored grid is the
+  // first; data-months > 1 wraps it in a generated [data-part="months"] row of
+  // [data-part="month"] panels, each a title plus a copy of the grid.
+  const gridEl = gridBody.closest("[data-part='grid']") || gridBody;
+  let bodies = [];
+  let titles = [];
+  let months = null;
+  const idleSummary = summary ? summary.textContent : "";
+
+  // Month changes are announced politely, the way the APG date picker does it.
+  if (monthLabel && !monthLabel.hasAttribute("aria-live")) monthLabel.setAttribute("aria-live", "polite");
 
   function parseDateList(str) {
     const set = new Set();
@@ -3713,179 +3762,254 @@ function createCalendar(root) {
     return set;
   }
 
-  function formatDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
+  /** Outside [min, max] or listed in data-disabled-dates. */
+  function blocked(date) {
+    return !!((minDate && date < minDate) || (maxDate && date > maxDate) || disabledDates.has(toISO(date)));
   }
 
-  function formatAriaLabel(date) {
-    return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  /** The inclusive day count of [a, b] respects data-min-range / data-max-range. */
+  function spanOk(a, b) {
+    const n = Math.round((b - a) / DAY_MS) + 1;
+    return n >= Math.max(minRange, 1) && (!maxRange || n <= maxRange);
   }
 
-  function isSameDay(a, b) {
-    if (!a || !b) return false;
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
-  }
+  /** While a range waits for its end: a later day that cannot end it. */
+  const badEnd = (date) =>
+    mode === "range" && rangeStart && !rangeEnd && date > rangeStart && !spanOk(rangeStart, date);
 
-  function isToday(date) {
-    return isSameDay(date, today);
-  }
-
-  function isDisabled(date) {
-    if (minDate && date.getTime() < minDate.getTime()) return true;
-    if (maxDate && date.getTime() > maxDate.getTime()) return true;
-    return disabledDates.has(formatDate(date));
+  function stateOf(date) {
+    if (mode !== "range" || !rangeStart) return "";
+    if (+date === +rangeStart) return "range-start";
+    if (!rangeEnd) return "";
+    if (+date === +rangeEnd) return "range-end";
+    return date > rangeStart && date < rangeEnd ? "in-range" : "";
   }
 
   function clampToRange(date) {
-    if (minDate && date.getTime() < minDate.getTime()) return new Date(minDate);
-    if (maxDate && date.getTime() > maxDate.getTime()) return new Date(maxDate);
+    if (minDate && date < minDate) return new Date(minDate);
+    if (maxDate && date > maxDate) return new Date(maxDate);
     return date;
   }
 
-  function buildGrid() {
-    // First day of the displayed month
-    const firstDay = new Date(viewYear, viewMonth, 1);
-    const startDow = firstDay.getDay(); // 0=Sun
+  function setView(index) {
+    viewYear = Math.floor(index / 12);
+    viewMonth = index - viewYear * 12;
+  }
 
-    // Last day of the displayed month
-    const lastDay = new Date(viewYear, viewMonth + 1, 0);
-    const totalDays = lastDay.getDate();
+  const dayButton = (date) => root.querySelector(`[data-part='day'][data-date="${toISO(date)}"]`);
 
-    // Previous month trailing days
-    const prevMonthLast = new Date(viewYear, viewMonth, 0);
-    const prevMonthDays = prevMonthLast.getDate();
+  function dayCell(date, outside) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("data-part", "day");
+    // The button is the grid cell (its <td> is presentational), so
+    // aria-selected sits on a role that allows it.
+    btn.setAttribute("role", "gridcell");
+    btn.dataset.date = toISO(date);
+    btn.textContent = date.getDate();
+    const words = [fullDate.format(date)];
 
-    // Update label
-    if (monthLabel) monthLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+    if (outside) btn.dataset.outside = "true";
+    if (+date === +today) {
+      btn.dataset.today = "true";
+      words.push(todayWord);
+    }
+
+    const state = stateOf(date);
+    if (state) {
+      btn.dataset.state = state;
+      btn.setAttribute("aria-selected", "true");
+      words.push(state === "range-start" ? RANGE_START : state === "range-end" ? RANGE_END : IN_RANGE);
+      if (state === "range-start" && rangeEnd && +rangeEnd === +date) words.push(RANGE_END);
+    } else if (mode !== "range" && selectedDate && +date === +selectedDate) {
+      btn.setAttribute("aria-selected", "true");
+    }
+
+    if (blocked(date) || badEnd(date)) {
+      // aria-disabled (not the native attribute) keeps the cell reachable by
+      // the roving tabindex while blocking selection
+      btn.setAttribute("aria-disabled", "true");
+      btn.dataset.disabled = "true";
+      words.push(UNAVAILABLE);
+    }
+
+    btn.setAttribute("aria-label", words.join(", "));
+    btn.tabIndex = focusedDate && +date === +focusedDate ? 0 : -1;
+    return btn;
+  }
+
+  function fill(body, first, multi, title) {
+    const y = first.getFullYear();
+    const m = first.getMonth();
+    if (title) title.textContent = monthYear.format(first);
+    const lead = first.getDay(); // 0 = Sunday, the first column
+    const cells = Math.ceil((lead + new Date(y, m + 1, 0).getDate()) / 7) * 7;
+
+    body.innerHTML = "";
+    let row = null;
+    for (let i = 0; i < cells; i++) {
+      if (i % 7 === 0) row = body.appendChild(document.createElement("tr"));
+      const td = row.appendChild(document.createElement("td"));
+      td.setAttribute("role", "presentation");
+      const date = new Date(y, m, 1 - lead + i);
+      const outside = date.getMonth() !== m;
+      // Months side by side show each date once: their leading and trailing
+      // cells stay empty.
+      if (!(outside && multi)) td.appendChild(dayCell(date, outside));
+    }
+  }
+
+  function render() {
+    const n = bodies.length;
+    const first = new Date(viewYear, viewMonth, 1);
+    const label = n > 1
+      ? monthYear.formatRange(first, new Date(viewYear, viewMonth + n - 1, 1))
+      : monthYear.format(first);
+    if (monthLabel && monthLabel.textContent !== label) monthLabel.textContent = label;
 
     // A whole adjacent month out of bounds means its nav button is a dead end
-    if (navPrev) navPrev.disabled = !!(minDate && prevMonthLast.getTime() < minDate.getTime());
-    if (navNext) navNext.disabled = !!(maxDate && new Date(viewYear, viewMonth + 1, 1).getTime() > maxDate.getTime());
+    if (navPrev) navPrev.disabled = !!(minDate && new Date(viewYear, viewMonth, 0) < minDate);
+    if (navNext) navNext.disabled = !!(maxDate && new Date(viewYear, viewMonth + n, 1) > maxDate);
 
-    // Clear existing
-    gridBody.innerHTML = "";
+    bodies.forEach((body, i) => fill(body, new Date(viewYear, viewMonth + i, 1), n > 1, titles[i]));
 
-    let dayCount = 1;
-    let nextMonthDay = 1;
-    const totalCells = Math.ceil((startDow + totalDays) / 7) * 7;
-    let row = null;
-
-    for (let i = 0; i < totalCells; i++) {
-      // Start a new row every 7 cells
-      if (i % 7 === 0) {
-        row = document.createElement("tr");
-        gridBody.appendChild(row);
-      }
-
-      const td = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.setAttribute("data-part", "day");
-      btn.type = "button";
-
-      let date;
-      let isOutside = false;
-
-      if (i < startDow) {
-        // Previous month
-        const day = prevMonthDays - startDow + 1 + i;
-        date = new Date(viewYear, viewMonth - 1, day);
-        btn.textContent = day;
-        isOutside = true;
-      } else if (dayCount <= totalDays) {
-        // Current month
-        date = new Date(viewYear, viewMonth, dayCount);
-        btn.textContent = dayCount;
-        dayCount++;
-      } else {
-        // Next month
-        date = new Date(viewYear, viewMonth + 1, nextMonthDay);
-        btn.textContent = nextMonthDay;
-        nextMonthDay++;
-        isOutside = true;
-      }
-
-      btn.dataset.date = formatDate(date);
-      btn.setAttribute("aria-label", formatAriaLabel(date));
-
-      if (isOutside) {
-        btn.dataset.outside = "true";
-      }
-
-      if (isToday(date)) {
-        btn.dataset.today = "true";
-      }
-
-      if (isDisabled(date)) {
-        // aria-disabled (not the native attribute) keeps the cell reachable by
-        // the roving tabindex while blocking selection
-        btn.setAttribute("aria-disabled", "true");
-        btn.dataset.disabled = "true";
-      }
-
-      if (mode === "range") {
-        if (isSameDay(date, rangeStart)) {
-          btn.dataset.state = "range-start";
-          btn.setAttribute("aria-selected", "true");
-        } else if (isSameDay(date, rangeEnd)) {
-          btn.dataset.state = "range-end";
-          btn.setAttribute("aria-selected", "true");
-        } else if (
-          rangeStart && rangeEnd &&
-          date.getTime() > rangeStart.getTime() &&
-          date.getTime() < rangeEnd.getTime()
-        ) {
-          btn.dataset.state = "in-range";
-        }
-      } else if (isSameDay(date, selectedDate)) {
-        btn.setAttribute("aria-selected", "true");
-      }
-
-      if (isSameDay(date, focusedDate)) {
-        btn.tabIndex = 0;
-      } else {
-        btn.tabIndex = -1;
-      }
-
-      td.appendChild(btn);
-      row.appendChild(td);
-    }
-
-    // If no focused date set, make the selected or first-of-month focusable
-    if (!focusedDate) {
+    // Exactly one day in the tab order: the focused one when it is in view,
+    // else the selection (or range start) when that is, else the 1st.
+    if (!root.querySelector("[data-part='day'][tabindex='0']")) {
       const anchor = mode === "range" ? rangeStart : selectedDate;
-      const defaultFocusDate = anchor &&
-        anchor.getMonth() === viewMonth && anchor.getFullYear() === viewYear
-        ? anchor
-        : new Date(viewYear, viewMonth, 1);
-      const defaultBtn = gridBody.querySelector(
-        `[data-date="${formatDate(defaultFocusDate)}"]`
-      );
-      if (defaultBtn) defaultBtn.tabIndex = 0;
+      const btn = (anchor && dayButton(anchor)) || dayButton(first);
+      if (btn) btn.tabIndex = 0;
+    }
+
+    paintPreview();
+    syncPresets();
+    syncSummary();
+  }
+
+  // ── Range preview ───────────────────────────────────────────────────────────
+
+  /** Preview the span a pending range would have if it ended on `date`. */
+  function preview(date) {
+    const at = date && mode === "range" && rangeStart && !rangeEnd && date > rangeStart &&
+      spanOk(rangeStart, date) && !blocked(date) ? +date : 0;
+    if (at === previewAt) return;
+    previewAt = at;
+    paintPreview();
+  }
+
+  function paintPreview() {
+    const end = rangeStart && !rangeEnd ? previewAt : 0;
+    for (const btn of root.querySelectorAll("[data-part='day']")) {
+      const state = btn.dataset.state;
+      if (state && !state.startsWith("preview")) continue;
+      const t = +parseISO(btn.dataset.date);
+      if (end && t > rangeStart && t <= end) btn.dataset.state = t === end ? "preview-end" : "preview";
+      else if (state) delete btn.dataset.state;
     }
   }
 
-  function dayButton(date) {
-    return gridBody.querySelector(`[data-date="${formatDate(date)}"]`);
+  // ── Presets ─────────────────────────────────────────────────────────────────
+
+  /**
+   * A preset's [start, end], clamped to [min, max]; null when it cannot be
+   * picked here (empty after clamping, outside the range length bounds, or a
+   * span in single mode). data-value: today, yesterday, tomorrow,
+   * last-N-days, next-N-days, this|last|next-week|month|year; or explicit
+   * data-start / data-end.
+   */
+  function presetRange(btn) {
+    const v = btn.dataset.value || "";
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    let start = parseISO(btn.dataset.start);
+    let end = parseISO(btn.dataset.end) || start;
+    let match;
+    if (v === "today") start = end = today;
+    else if (v === "yesterday") start = end = addDays(today, -1);
+    else if (v === "tomorrow") start = end = addDays(today, 1);
+    else if ((match = /^(last|next)-(\d+)-days$/.exec(v))) {
+      const n = +match[2];
+      if (match[1] === "last") [start, end] = [addDays(today, 1 - n), today];
+      else [start, end] = [today, addDays(today, n - 1)];
+    } else if ((match = /^(this|last|next)-(week|month|year)$/.exec(v))) {
+      const k = match[1] === "this" ? 0 : match[1] === "last" ? -1 : 1;
+      if (match[2] === "week") {
+        start = addDays(today, 7 * k - today.getDay());
+        end = addDays(start, 6);
+      } else if (match[2] === "month") {
+        start = new Date(y, m + k, 1);
+        end = new Date(y, m + k + 1, 0);
+      } else {
+        start = new Date(y + k, 0, 1);
+        end = new Date(y + k, 11, 31);
+      }
+    }
+    if (!start || !end) return null;
+    if (minDate && start < minDate) start = minDate;
+    if (maxDate && end > maxDate) end = maxDate;
+    if (end < start || (mode === "range" ? !spanOk(start, end) : +start !== +end)) return null;
+    return [start, end];
   }
+
+  function syncPresets() {
+    for (const btn of presets) {
+      const r = presetRange(btn);
+      btn.disabled = !r;
+      const on = !!r && (mode === "range"
+        ? !!rangeEnd && +r[0] === +rangeStart && +r[1] === +rangeEnd
+        : !!selectedDate && +r[0] === +selectedDate);
+      btn.setAttribute("aria-pressed", on);
+    }
+  }
+
+  function applyPreset(btn) {
+    const r = presetRange(btn);
+    if (!r) return;
+    const [start, end] = r;
+    const preset = btn.dataset.value || null;
+    let detail;
+    if (mode === "range") {
+      rangeStart = start;
+      rangeEnd = end;
+      detail = { ...rangeDetail(), preset };
+    } else {
+      selectedDate = start;
+      detail = { date: toISO(start), dateObj: new Date(start), preset };
+    }
+    // Show the end month, and as much before it as the view holds.
+    setView(Math.max(monthIndex(start), monthIndex(end) - bodies.length + 1));
+    commit(start, detail);
+  }
+
+  function syncSummary() {
+    if (!summary) return;
+    const from = mode === "range" ? rangeStart : selectedDate;
+    const text = !from
+      ? idleSummary
+      : mode !== "range"
+        ? fullDate.format(from)
+        : !rangeEnd
+          ? `${shortDate.format(from)} – ${PICK_END}`
+          : `${shortDate.formatRange(from, rangeEnd)} · ${dayCount.format(Math.round((rangeEnd - from) / DAY_MS) + 1)}`;
+    if (summary.textContent !== text) summary.textContent = text;
+  }
+
+  // ── Focus & selection ───────────────────────────────────────────────────────
 
   function focusDate(date) {
-    const target = clampToRange(new Date(date));
+    const target = clampToRange(addDays(new Date(date)));
     focusedDate = target;
 
-    if (target.getMonth() !== viewMonth || target.getFullYear() !== viewYear) {
-      viewMonth = target.getMonth();
-      viewYear = target.getFullYear();
-      buildGrid();
+    const first = viewYear * 12 + viewMonth;
+    const at = monthIndex(target);
+    if (at < first || at >= first + bodies.length) {
+      // Bring the month into view: as the first month going back, as the last
+      // going forward, so focus moves seamlessly across a multi-month view.
+      setView(at < first ? at : at - bodies.length + 1);
+      render();
     } else {
-      // Update roving tabindex in the current grid
-      gridBody.querySelectorAll("[data-part='day']").forEach((btn) => {
+      // Update roving tabindex in the current grid(s)
+      root.querySelectorAll("[data-part='day']").forEach((btn) => {
         btn.tabIndex = -1;
       });
       const btn = dayButton(target);
@@ -3894,13 +4018,12 @@ function createCalendar(root) {
 
     const btn = dayButton(target);
     if (btn) btn.focus();
+    preview(target);
   }
 
   function moveFocus(days) {
     if (!focusedDate) return;
-    const next = new Date(focusedDate);
-    next.setDate(next.getDate() + days);
-    focusDate(next);
+    focusDate(addDays(focusedDate, days));
   }
 
   /** Move focus ±N months (PageUp/Down), clamping the day to the target month's length. */
@@ -3912,59 +4035,61 @@ function createCalendar(root) {
     focusDate(target);
   }
 
-  function selectDate(date) {
-    const chosen = new Date(date);
-    if (isDisabled(chosen)) return;
+  const rangeDetail = () => ({
+    start: toISO(rangeStart),
+    end: toISO(rangeEnd),
+    startObj: new Date(rangeStart),
+    endObj: new Date(rangeEnd),
+  });
 
-    // buildGrid() replaces the focused button — restore focus before emitting,
-    // so change listeners (e.g. date-picker closing the popup) keep the final
-    // word on where focus lands.
+  // render() replaces the focused button — restore focus before emitting, so
+  // change listeners (e.g. date-picker closing the popup) keep the final word
+  // on where focus lands. Focus on a preset is left where it is.
+  function commit(focusOn, detail) {
     const hadFocus = root.contains(document.activeElement);
-    focusedDate = chosen;
+    focusedDate = focusOn;
+    previewAt = 0;
+    render();
+    if (hadFocus && !root.contains(document.activeElement)) {
+      const btn = dayButton(focusOn);
+      if (btn) btn.focus();
+    }
+    if (detail) {
+      root.dispatchEvent(new CustomEvent("faqir:calendar-change", { detail, bubbles: true }));
+    }
+  }
+
+  function selectDate(date) {
+    const chosen = addDays(new Date(date));
+    if (blocked(chosen)) return;
 
     let detail = null;
-
     if (mode === "range") {
-      if (!rangeStart || rangeEnd || chosen.getTime() < rangeStart.getTime()) {
+      if (!rangeStart || rangeEnd || chosen < rangeStart) {
         // First click, restart after a complete range, or backwards pick
         rangeStart = chosen;
         rangeEnd = null;
+      } else if (!spanOk(rangeStart, chosen)) {
+        return; // shorter than data-min-range or longer than data-max-range
       } else {
         rangeEnd = chosen;
-        detail = {
-          start: formatDate(rangeStart),
-          end: formatDate(rangeEnd),
-          startObj: new Date(rangeStart),
-          endObj: new Date(rangeEnd),
-        };
+        detail = rangeDetail();
       }
     } else {
       selectedDate = chosen;
-      detail = { date: formatDate(selectedDate), dateObj: new Date(selectedDate) };
+      detail = { date: toISO(chosen), dateObj: new Date(chosen) };
     }
-
-    buildGrid();
-
-    if (hadFocus) {
-      const btn = dayButton(chosen);
-      if (btn) btn.focus();
-    }
-
-    if (detail) {
-      root.dispatchEvent(
-        new CustomEvent("faqir:calendar-change", { detail, bubbles: true })
-      );
-    }
+    commit(chosen, detail);
   }
 
   function getValue() {
     if (mode === "range") {
       return {
-        start: rangeStart ? formatDate(rangeStart) : null,
-        end: rangeEnd ? formatDate(rangeEnd) : null,
+        start: rangeStart ? toISO(rangeStart) : null,
+        end: rangeEnd ? toISO(rangeEnd) : null,
       };
     }
-    return selectedDate ? formatDate(selectedDate) : null;
+    return selectedDate ? toISO(selectedDate) : null;
   }
 
   /** Silent set — updates selection and view without emitting a change event. */
@@ -3975,33 +4100,30 @@ function createCalendar(root) {
       const end = parseISO(parts[1] && parts[1].trim());
       if (!start) return;
       rangeStart = start;
-      rangeEnd = end && end.getTime() >= start.getTime() ? end : null;
-      viewMonth = start.getMonth();
-      viewYear = start.getFullYear();
-      buildGrid();
-      return;
+      rangeEnd = end && end >= start ? end : null;
+      setView(monthIndex(start));
+    } else {
+      const parsed = parseISO(value);
+      if (!parsed) return;
+      selectedDate = parsed;
+      setView(monthIndex(parsed));
     }
-
-    const parsed = parseISO(value);
-    if (!parsed) return;
-    selectedDate = parsed;
-    viewMonth = parsed.getMonth();
-    viewYear = parsed.getFullYear();
-    buildGrid();
+    previewAt = 0;
+    render();
   }
 
   function clear() {
     selectedDate = null;
     rangeStart = null;
     rangeEnd = null;
-    buildGrid();
+    previewAt = 0;
+    render();
   }
 
   function navigate(month, year) {
-    viewMonth = month;
-    viewYear = year;
+    setView(year * 12 + month);
     focusedDate = new Date(viewYear, viewMonth, 1);
-    buildGrid();
+    render();
 
     const btn = dayButton(focusedDate);
     if (btn) btn.focus();
@@ -4009,31 +4131,67 @@ function createCalendar(root) {
 
   function setMin(value) {
     minDate = parseISO(value);
-    buildGrid();
+    render();
   }
 
   function setMax(value) {
     maxDate = parseISO(value);
-    buildGrid();
+    render();
   }
 
   function setDisabledDates(list) {
     disabledDates = parseDateList(Array.isArray(list) ? list.join(",") : list);
-    buildGrid();
+    render();
+  }
+
+  /** Show 1–3 consecutive months side by side; they wrap to a stack when the row is too narrow. */
+  function setMonths(count) {
+    const n = Math.min(3, Math.max(1, count | 0));
+    if (n === bodies.length) return;
+    if (months) {
+      months.before(gridEl);
+      gridEl.removeAttribute("aria-labelledby");
+      months.remove();
+      months = null;
+    }
+    bodies = [gridBody];
+    titles = [];
+    if (n > 1) {
+      const div = (name) => {
+        const el = document.createElement("div");
+        el.dataset.part = name;
+        return el;
+      };
+      months = div("months");
+      gridEl.before(months);
+      for (let i = 0; i < n; i++) {
+        const title = div("month-title");
+        title.id = uid("faqir-month");
+        const grid = i ? gridEl.cloneNode(true) : gridEl;
+        if (i) {
+          grid.removeAttribute("id");
+          bodies.push(grid.matches("[data-part='grid-body']") ? grid : grid.querySelector("[data-part='grid-body']"));
+        }
+        // Each month is its own APG grid, named by its own title.
+        grid.setAttribute("aria-labelledby", title.id);
+        months.appendChild(div("month")).append(title, grid);
+        titles.push(title);
+      }
+    }
+    render();
+  }
+
+  /** Whether a date (Date or YYYY-MM-DD) is outside min/max or listed as disabled. */
+  function isDisabled(date) {
+    const d = typeof date === "string" ? parseISO(date) : date && addDays(new Date(date));
+    return !d || blocked(d);
   }
 
   /** Show an adjacent month without moving DOM focus (nav-button clicks). */
   function shiftView(delta) {
-    viewMonth += delta;
-    if (viewMonth < 0) {
-      viewMonth = 11;
-      viewYear--;
-    } else if (viewMonth > 11) {
-      viewMonth = 0;
-      viewYear++;
-    }
+    setView(viewYear * 12 + viewMonth + delta);
     focusedDate = clampToRange(new Date(viewYear, viewMonth, 1));
-    buildGrid();
+    render();
   }
 
   function onPrevClick() {
@@ -4044,11 +4202,28 @@ function createCalendar(root) {
     shiftView(1);
   }
 
-  function onGridClick(e) {
+  function onClick(e) {
     const dayBtn = e.target.closest("[data-part='day']");
-    if (dayBtn && dayBtn.dataset.date && dayBtn.getAttribute("aria-disabled") !== "true") {
-      selectDate(parseISO(dayBtn.dataset.date));
+    if (dayBtn) {
+      if (dayBtn.dataset.date && dayBtn.getAttribute("aria-disabled") !== "true") {
+        selectDate(parseISO(dayBtn.dataset.date));
+      }
+      return;
     }
+    const preset = e.target.closest("[data-part='preset']");
+    if (preset && presets.includes(preset)) applyPreset(preset);
+  }
+
+  // Hovering a day previews the pending range up to it; the pointer leaving the
+  // grids (or the calendar) clears it.
+  function onPointerOver(e) {
+    const dayBtn = e.target.closest("[data-part='day']");
+    if (dayBtn) preview(parseISO(dayBtn.dataset.date));
+    else if (!e.target.closest("[data-part='grid']")) preview(null);
+  }
+
+  function onPointerLeave() {
+    preview(null);
   }
 
   function onKeyDown(e) {
@@ -4056,7 +4231,7 @@ function createCalendar(root) {
     const dayBtn = e.target.closest ? e.target.closest("[data-part='day']") : null;
     if (!dayBtn) return;
 
-    if (dayBtn.dataset.date && !isSameDay(focusedDate, parseISO(dayBtn.dataset.date))) {
+    if (dayBtn.dataset.date && !(focusedDate && dayBtn.dataset.date === toISO(focusedDate))) {
       focusedDate = parseISO(dayBtn.dataset.date);
     }
 
@@ -4087,19 +4262,11 @@ function createCalendar(root) {
         break;
       case "PageUp":
         e.preventDefault();
-        if (e.shiftKey) {
-          moveFocusMonths(-12);
-        } else {
-          moveFocusMonths(-1);
-        }
+        moveFocusMonths(e.shiftKey ? -12 : -1);
         break;
       case "PageDown":
         e.preventDefault();
-        if (e.shiftKey) {
-          moveFocusMonths(12);
-        } else {
-          moveFocusMonths(1);
-        }
+        moveFocusMonths(e.shiftKey ? 12 : 1);
         break;
       case "Enter":
       case " ":
@@ -4111,16 +4278,22 @@ function createCalendar(root) {
 
   navPrev?.addEventListener("click", onPrevClick);
   navNext?.addEventListener("click", onNextClick);
-  gridBody?.addEventListener("click", onGridClick);
+  root.addEventListener("click", onClick);
   root.addEventListener("keydown", onKeyDown);
+  root.addEventListener("pointerover", onPointerOver);
+  root.addEventListener("pointerleave", onPointerLeave);
 
-  buildGrid();
+  setMonths(parseInt(root.dataset.months, 10) || 1);
 
   function destroy() {
     navPrev?.removeEventListener("click", onPrevClick);
     navNext?.removeEventListener("click", onNextClick);
-    gridBody?.removeEventListener("click", onGridClick);
+    root.removeEventListener("click", onClick);
     root.removeEventListener("keydown", onKeyDown);
+    root.removeEventListener("pointerover", onPointerOver);
+    root.removeEventListener("pointerleave", onPointerLeave);
+    // Put the authored grid back where it was, without the generated months.
+    setMonths(1);
     delete root._faqirCalendar;
   }
 
@@ -4134,6 +4307,8 @@ function createCalendar(root) {
     setMin,
     setMax,
     setDisabledDates,
+    setMonths,
+    isDisabled,
     destroy,
   };
   root._faqirCalendar = api;
@@ -5055,24 +5230,39 @@ function createContextMenu(root) {
 // @ui:controller date-picker
 // @ui:provides open close getValue setValue clear navigate selectDate destroy
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+// Arabic-Indic, extended Arabic-Indic and full-width digits: each one's low
+// four bits are its value, so typed dates read the same in every script.
+const DIGITS = /[٠-٩۰-۹０-９]/g;
+const FIELD = { day: "dd", month: "mm", year: "yyyy" };
+const DAY_MS = 864e5;
+
+function parseISO(str) {
+  if (!str) return null;
+  const d = new Date(str + "T00:00:00");
+  return isNaN(d.getTime()) ? null : d;
+}
+
+const pad = (n) => String(n).padStart(2, "0");
+const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 function createDatePicker(root) {
   // Prevent double-init
   if (root._faqirDatePicker) return root._faqirDatePicker;
 
-  const trigger = root.querySelector("[data-part='trigger']");
-  const input = root.querySelector("[data-part='input']");
-  const popup = root.querySelector("[data-part='calendar']");
+  const part = (name) => root.querySelector(`[data-part='${name}']`);
+  const trigger = part("trigger");
+  const input = part("input");
+  const inputEnd = part("input-end");
+  const popup = part("calendar");
+  const clearBtn = part("clear");
+  const error = part("error");
   // The submitted value. The visible input shows "October 15, 2026"; a form
   // must send 2026-10-15, so a picker inside one carries a hidden input with
   // the field's `name`, and this controller keeps it holding the ISO date.
   // Optional: without it the picker works as before, the ISO date on
-  // `input.dataset.value`.
+  // `input.dataset.value`. A range carries a second one for its end.
   const valueInput = root.querySelector(":scope > [data-part='value']");
+  const valueEnd = root.querySelector(":scope > [data-part='value-end']");
 
   // The month grid is the standalone `calendar` recipe. Canonical markup nests
   // [data-ui="calendar"] inside the popup; legacy flat markup (grid parts
@@ -5103,49 +5293,212 @@ function createDatePicker(root) {
     root._faqirDatePicker = inert;
     return inert;
   }
+
+  // data-mode="range" on the picker is the calendar's mode too.
+  const range = (root.dataset.mode || calendarRoot.dataset.mode) === "range";
+  if (range) calendarRoot.dataset.mode = "range";
+  // Inline: the calendar sits in the flow, always shown — there is no popup.
+  const inline = root.dataset.variant === "inline";
   const calendar = createCalendar(calendarRoot);
+  const wantMonths = parseInt(calendarRoot.dataset.months, 10) || 1;
+
+  // The visible fields: the start (or only) date, then a range's end. A range
+  // shown in one field is display-only; typing needs the two.
+  const fields = range && inputEnd ? [input, inputEnd] : [input];
+  const hiddens = [valueInput, valueEnd];
+  const typed = fields.some((f) => !f.readOnly) && (!range || !!inputEnd);
+  const combos = fields.filter((f) => f === input || f.getAttribute("role") === "combobox");
 
   const today = new Date();
   let outsideClickCleanup = null;
 
-  function formatDisplay(date) {
-    return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  // ── Locale: display, field order and month names, from the nearest lang ──
+  let locale = root.closest("[lang]")?.lang || navigator.language;
+  try {
+    new Intl.DateTimeFormat(locale);
+  } catch {
+    locale = "en-US";
+  }
+  const fmt = (opts) => new Intl.DateTimeFormat(locale, { calendar: "gregory", ...opts });
+  const longDate = fmt({ year: "numeric", month: "long", day: "numeric" });
+  const shape = fmt({}).formatToParts(new Date(2026, 11, 31));
+  const order = shape.map((p) => p.type).filter((t) => t in FIELD);
+  const monthNames = [];
+  for (const month of ["long", "short"]) {
+    const f = fmt({ month });
+    for (let m = 0; m < 12; m++) {
+      monthNames.push([f.format(new Date(2026, m, 1)).toLowerCase().replace(/\.$/, ""), m + 1]);
+    }
+  }
+  // A typed field with no placeholder shows the page's own numeric pattern.
+  if (typed) {
+    for (const f of fields) if (!f.placeholder) f.placeholder = shape.map((p) => FIELD[p.type] || p.value).join("");
+  }
+  if (!inline) {
+    if (!popup.id) popup.id = uid("faqir-date");
+    for (const f of combos) f.setAttribute("aria-controls", popup.id);
+  } else {
+    popup.hidden = false;
   }
 
-  // `dateObj` null is no date. The submitted value is announced the way typing
+  function formatDisplay(date) {
+    return longDate.format(date);
+  }
+
+  /**
+   * A typed date, read in the page's own field order (`formatToParts`), with
+   * ISO and any year-first entry always accepted: 1–2 digit day and month (or
+   * a month name), 2 or 4 digit year, any separators. Null if it is not a real
+   * date.
+   */
+  function parse(text) {
+    const s = text.replace(DIGITS, (c) => c.charCodeAt(0) & 15).toLowerCase();
+    const nums = s.match(/\d+/g) || [];
+    let month = 0;
+    for (const word of s.match(/[\p{L}\p{M}]+/gu) || []) {
+      const hit = monthNames.find(([name]) => name === word) ||
+        (word.length > 2 && monthNames.find(([name]) => name.startsWith(word)));
+      if (hit) {
+        month = hit[1];
+        break;
+      }
+    }
+    let slots = nums[0] && nums[0].length > 2 ? ["year", "month", "day"] : order;
+    if (month) slots = slots.filter((f) => f !== "month");
+    if (nums.length !== slots.length) return null;
+    const v = { month };
+    slots.forEach((f, i) => (v[f] = nums[i]));
+    if (!/^\d{1,2}$/.test(v.day) || !/^\d{1,2}$/.test(v.month) || !/^(\d\d|\d{4})$/.test(v.year)) return null;
+    let y = +v.year;
+    // Two-digit years land within 20 years ahead, else the century before.
+    if (v.year.length === 2) y += y + 2000 > today.getFullYear() + 20 ? 1900 : 2000;
+    const d = new Date(y, v.month - 1, +v.day);
+    return d.getFullYear() === y && d.getMonth() === v.month - 1 && d.getDate() === +v.day ? d : null;
+  }
+
+  /** "" for an empty field, a Date for a valid one, null for one that is not. */
+  function read(field) {
+    const text = field.value.trim();
+    if (!text) return "";
+    const current = parseISO(field.dataset.value);
+    if (current && text === formatDisplay(current)) return current;
+    const d = parse(text);
+    return d && !calendar.isDisabled(d) ? d : null;
+  }
+
+  function spanOk(a, b) {
+    const n = Math.round((b - a) / DAY_MS) + 1;
+    const min = parseInt(calendarRoot.dataset.minRange, 10) || 1;
+    const max = parseInt(calendarRoot.dataset.maxRange, 10) || 0;
+    return b >= a && n >= min && (!max || n <= max);
+  }
+
+  // `date` null is no date. The submitted value is announced the way typing
   // into a field would be — `input` then `change`, bubbling — so l-model,
   // faqir-validate and faqir-rules all see the new answer; not when it did not
-  // change, and not on the `silent` sync at start-up.
-  function syncInput(dateStr, dateObj, silent) {
-    input.value = dateObj ? formatDisplay(dateObj) : "";
-    input.dataset.value = dateStr;
-    if (valueInput && valueInput.value !== dateStr) {
-      valueInput.value = dateStr;
+  // change, and not on the `silent` sync at start-up. `keep` leaves the text a
+  // person typed in place (an invalid entry is never wiped).
+  function put(i, date, silent, keep) {
+    const field = fields[i];
+    const hidden = hiddens[i];
+    const iso = date ? toISO(date) : "";
+    if (field) {
+      if (!keep) field.value = date ? formatDisplay(date) : "";
+      field.dataset.value = iso;
+    }
+    if (hidden && hidden.value !== iso) {
+      hidden.value = iso;
       if (!silent) {
-        for (const type of ["input", "change"]) valueInput.dispatchEvent(new Event(type, { bubbles: true }));
+        for (const type of ["input", "change"]) hidden.dispatchEvent(new Event(type, { bubbles: true }));
       }
     }
   }
 
+  /** Show [start, end] in the field(s) and the value part(s). */
+  function sync(start, end, silent, keep = []) {
+    put(0, start, silent, keep[0]);
+    if (range) put(1, end, silent, keep[1]);
+    // One display-only field shows the whole range ("March 10 – 15, 2026").
+    if (range && fields.length === 1 && start) {
+      input.value = end ? longDate.formatRange(start, end) : formatDisplay(start);
+    }
+    updateClear();
+  }
+
+  function updateClear() {
+    if (clearBtn) clearBtn.hidden = !fields.some((f) => f.value);
+  }
+
+  function mark(field, bad) {
+    if (bad) {
+      field.setAttribute("aria-invalid", "true");
+      field.dataset.state = "invalid";
+    } else {
+      field.removeAttribute("aria-invalid");
+      delete field.dataset.state;
+    }
+    if (error) error.hidden = !fields.some((f) => f.dataset.state === "invalid");
+  }
+
+  function emit(detail) {
+    root.dispatchEvent(new CustomEvent("faqir:date-change", { detail, bubbles: true }));
+  }
+
+  const detailOf = (start, end) =>
+    range
+      ? { start: start && toISO(start), end: end && toISO(end), startObj: start, endObj: end }
+      : { date: start && toISO(start), dateObj: start };
+
+  /**
+   * Commit what was typed (blur, Enter, opening the calendar): valid fields
+   * take the canonical display, an invalid one keeps its text and is marked
+   * aria-invalid / data-state="invalid", and the value parts carry only the
+   * valid dates. Emits faqir:date-change once the selection is complete and new.
+   */
+  function commitTyped() {
+    if (!typed) return;
+    const before = fields.map((f) => f.dataset.value).join();
+    const vals = fields.map(read);
+    const [start, end] = vals;
+    // An end before the start, or a span outside the length bounds, is the end's fault.
+    const badSpan = range && start && end && !spanOk(start, end);
+    const bad = vals.map((v, i) => v === null || (i === 1 && !!badSpan));
+    bad.forEach((b, i) => mark(fields[i], b));
+    const s = start || null;
+    const e = (!badSpan && end) || null;
+    if (s) calendar.setValue(range ? toISO(s) + (e ? "," + toISO(e) : "") : toISO(s));
+    else calendar.clear();
+    sync(s, e, false, bad);
+    if (fields.map((f) => f.dataset.value).join() !== before && s && (!range || e)) emit(detailOf(s, e));
+  }
+
+  function expand(on) {
+    for (const f of combos) f.setAttribute("aria-expanded", on);
+  }
+
   function open() {
     root.dataset.state = "open";
-    popup.hidden = false;
-    input.setAttribute("aria-expanded", "true");
+    commitTyped();
+    if (!inline) {
+      popup.hidden = false;
+      expand(true);
+      // Two months side by side when the viewport has room for them.
+      if (wantMonths > 1) calendar.setMonths(window.matchMedia?.("(min-width: 48rem)").matches ? wantMonths : 1);
+      if (outsideClickCleanup) outsideClickCleanup();
+      outsideClickCleanup = onOutsideClick(root, close);
+    }
 
-    // Focus the selected day, or the first of the current month
+    // Focus the selected day (a range's start), or the first of the current month
     const value = calendar.getValue();
-    const target = value
-      ? new Date(value + "T00:00:00")
-      : new Date(today.getFullYear(), today.getMonth(), 1);
-    calendar.focusDate(target);
-
-    outsideClickCleanup = onOutsideClick(root, close);
+    const at = parseISO(range ? value && value.start : value);
+    calendar.focusDate(at || new Date(today.getFullYear(), today.getMonth(), 1));
   }
 
   function close() {
     root.dataset.state = "closed";
+    if (inline) return;
     popup.hidden = true;
-    input.setAttribute("aria-expanded", "false");
+    expand(false);
 
     if (outsideClickCleanup) {
       outsideClickCleanup();
@@ -5163,22 +5516,27 @@ function createDatePicker(root) {
     return calendar.getValue();
   }
 
-  function setValue(dateStr) {
-    show(dateStr);
+  /** YYYY-MM-DD, or for a range "start,end" / { start, end }; anything that is not a date is ignored. */
+  function setValue(value) {
+    show(value);
   }
 
-  function show(dateStr, silent) {
-    const parsed = new Date(dateStr + "T00:00:00");
-    if (!isNaN(parsed.getTime())) {
-      calendar.setValue(dateStr);
-      syncInput(dateStr, parsed, silent);
-    }
+  function show(value, silent) {
+    const pair = value && typeof value === "object" ? [value.start, value.end] : String(value).split(",");
+    const start = parseISO(pair[0] && pair[0].trim());
+    if (!start) return;
+    let end = range ? parseISO(pair[1] && pair[1].trim()) : null;
+    if (end && end < start) end = null;
+    calendar.setValue(range ? toISO(start) + (end ? "," + toISO(end) : "") : toISO(start));
+    for (const f of fields) mark(f, false);
+    sync(start, end, silent);
   }
 
-  // No date: the calendar, the visible input and the submitted value all empty.
+  // No date: the calendar, the visible input(s) and the submitted value(s) all empty.
   function clear() {
     calendar.clear();
-    syncInput("", null);
+    for (const f of fields) mark(f, false);
+    sync(null, null);
   }
 
   function navigate(month, year) {
@@ -5187,45 +5545,69 @@ function createDatePicker(root) {
 
   // Event: calendar selection committed
   function onCalendarChange(e) {
-    if (!e.detail || !e.detail.date) return;
-    syncInput(e.detail.date, e.detail.dateObj);
-    close();
-    input.focus();
-
-    root.dispatchEvent(
-      new CustomEvent("faqir:date-change", {
-        detail: { date: e.detail.date, dateObj: e.detail.dateObj },
-        bubbles: true,
-      })
-    );
+    const d = e.detail;
+    if (!d || !(range ? d.end : d.date)) return;
+    for (const f of fields) mark(f, false);
+    sync(range ? d.startObj : d.dateObj, range ? d.endObj : null);
+    if (!inline) {
+      close();
+      input.focus();
+    }
+    emit({ ...d });
   }
 
   // Event: trigger/input click
   function onTriggerClick() {
-    if (root.dataset.state === "open") {
+    if (root.dataset.state === "open" && !inline) {
       close();
     } else {
       open();
     }
   }
 
-  // Event: escape on root (bubbles up from the calendar grid too)
+  // A read-only field outside the trigger opens the calendar like the trigger.
+  function onRootClick(e) {
+    if (fields.includes(e.target) && e.target.readOnly && !trigger?.contains(e.target) && !inline) onTriggerClick();
+  }
+
+  // The clear button empties everything and hands focus back to the field.
+  function onClear(e) {
+    // Inside the trigger it must not toggle the popup as well.
+    e.stopPropagation();
+    const had = fields.some((f) => f.dataset.value);
+    clear();
+    input.focus();
+    if (had) emit(detailOf(null, null));
+  }
+
   function onRootKeyDown(e) {
-    if (e.key === "Escape" && root.dataset.state === "open") {
+    if (e.key === "Escape" && root.dataset.state === "open" && !inline) {
       e.preventDefault();
       // Closing the calendar popup is the whole action — a date picker inside a
       // dialog must not take the dialog down with it. [W3-2]
       e.stopPropagation();
       close();
       input.focus();
+      return;
+    }
+    const field = e.target;
+    if (!fields.includes(field)) return;
+    // The APG combobox date picker: ArrowDown (Alt+ArrowDown) opens the grid; a
+    // read-only field opens on Enter/Space too, a typed one commits on Enter.
+    if (e.key === "ArrowDown" || (field.readOnly && (e.key === "Enter" || e.key === " "))) {
+      e.preventDefault();
+      open();
+    } else if (e.key === "Enter") {
+      commitTyped();
     }
   }
 
   // Start-up: a value the server rendered into the hidden input is the
   // selection — the calendar shows it and the visible input reads it as a
   // person would. Silent: nothing changed.
-  const initialValue = valueInput ? valueInput.value : "";
-  if (initialValue) show(initialValue, true);
+  const initialValue = [valueInput ? valueInput.value : "", valueEnd ? valueEnd.value : ""].join(",");
+  if (initialValue !== ",") show(initialValue, true);
+  else updateClear();
 
   // A form reset puts the visible input back to its default text but never
   // touches a hidden input, so the rendered value is restored here — after
@@ -5234,10 +5616,16 @@ function createDatePicker(root) {
   let resetTimer;
   function onFormReset() {
     clearTimeout(resetTimer);
-    resetTimer = setTimeout(() => (initialValue ? setValue(initialValue) : clear()));
+    resetTimer = setTimeout(() => (initialValue !== "," ? setValue(initialValue) : clear()));
   }
 
   trigger?.addEventListener("click", onTriggerClick);
+  clearBtn?.addEventListener("click", onClear);
+  for (const f of fields) {
+    f.addEventListener("change", commitTyped);
+    f.addEventListener("input", updateClear);
+  }
+  root.addEventListener("click", onRootClick);
   root.addEventListener("faqir:calendar-change", onCalendarChange);
   root.addEventListener("keydown", onRootKeyDown);
   form?.addEventListener("reset", onFormReset);
@@ -5248,6 +5636,12 @@ function createDatePicker(root) {
     // `context-menu` is the model — it has always closed itself here. [W3-2]
     close();
     trigger?.removeEventListener("click", onTriggerClick);
+    clearBtn?.removeEventListener("click", onClear);
+    for (const f of fields) {
+      f.removeEventListener("change", commitTyped);
+      f.removeEventListener("input", updateClear);
+    }
+    root.removeEventListener("click", onRootClick);
     root.removeEventListener("faqir:calendar-change", onCalendarChange);
     root.removeEventListener("keydown", onRootKeyDown);
     form?.removeEventListener("reset", onFormReset);

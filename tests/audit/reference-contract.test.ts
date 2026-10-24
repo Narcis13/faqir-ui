@@ -120,6 +120,10 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   // A single-page form renders its submit button (forecraft #2), and the
   // pattern is that render byte for byte. Nothing existing was recomposed.
   "patterns/form-page/form-page.html": "1 added button: the form's submit, in its footer",
+  // The component expansion: date ranges. Each reference gained one example per
+  // new capability; the existing examples were not recomposed.
+  "recipes/calendar/calendar.html": "range showcases (presets + two months, range length bounds): calendar 5 → 7",
+  "recipes/date-picker/date-picker.html": "range, typed and inline demos; icon primitive glyphs: calendar 3 → 6, date-picker 3 → 6, icon 0 → 9",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

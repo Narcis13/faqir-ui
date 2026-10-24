@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "calendar",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "kind": "recipe",
   "category": "forms",
-  "description": "Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max/disabled dates, and single or range selection — extracted from date-picker so availability grids and range pickers can use it directly",
+  "description": "Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max/disabled dates, and single or range selection — range mode adds a hover/focus preview of the span, preset ranges, range length bounds and 1–3 months side by side; extracted from date-picker so availability grids and range pickers can use it directly",
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "Date ranges, grown up. (1) Preview: once a range has a start, hovering a day — or moving keyboard focus to it — marks the span start→day with data-state=\"preview\" and the day itself \"preview-end\", drawn lighter than the committed band and with a dashed end ring; the pointer leaving the grids clears it. (2) data-months=\"2\" or \"3\" shows consecutive months side by side with one prev/next pair: the controller wraps the grid in generated [data-part=\"months\"] > [data-part=\"month\"] panels, each a [data-part=\"month-title\"] plus a copy of the grid named by it (aria-labelledby); the months wrap to a stack when the row is too narrow, arrow keys and PageUp/PageDown cross month boundaries without a jump, and a multi-month view leaves leading/trailing cells empty so each date appears once. setMonths(n) changes the count at run time. (3) Presets: an optional [data-part=\"presets\"] group of [data-part=\"preset\"] buttons — data-value today, yesterday, tomorrow, last-N-days, next-N-days, this|last|next-week|month|year, or explicit data-start/data-end — selects the range (clamped to min/max), moves the view to it, marks the matching preset aria-pressed=\"true\", and emits faqir:calendar-change with a `preset` field; a preset that cannot fit is disabled. They sit above the grid, and as a side rail from the lg tier up. (4) data-min-range / data-max-range bound the range length in days, inclusive: while an end is chosen, days that would break them are aria-disabled and named \"unavailable\". (5) An optional [data-part=\"summary\"] (aria-live) reads the selection back: \"Oct 12 – 18, 2026 · 7 days\". (6) Accessibility: a day button is now role=\"gridcell\" in a presentational <td>, so its aria-selected is an allowed attribute (axe aria-allowed-attr); every day of a committed range is aria-selected. A day's name adds \"today\" (localized), \"range start\", \"range end\", \"in range\" and \"unavailable\" to the full date, and the month label is aria-live=\"polite\" (set by the controller when the markup does not). Month labels, day names and the summary are formatted with Intl in the nearest lang (en-US output is unchanged). (7) The in-range days are drawn as one continuous band with capped ends behind the days (each cell's ::before) instead of separate rounded squares; restyle it through --calendar-range-bg / --calendar-preview-bg. Existing markup, values and events behave as before.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "Nested components keep their own parts. The stylesheet reached the header, month navigation, grid and days with descendant selectors, so a component nested inside with parts of the same name took this one's styles. Parts are root > header > month-label, nav-prev and nav-next (the header is optional, so they may also be the root's children), root > grid, and root > grid > tbody > tr > td > day for the days the controller renders. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
@@ -23,6 +28,18 @@
     "content_model": "slots"
   },
   "slots": {
+    "presets": {
+      "selector": "[data-part='presets']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Optional group (role=\"group\" with an aria-label) of preset buttons, placed before the header. A row of chips above the months; a side rail from the lg tier (64rem) up"
+    },
+    "preset": {
+      "selector": "[data-part='preset']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "One preset inside presets. data-value names a relative range — today, yesterday, tomorrow, last-N-days, next-N-days (any N), this-week, last-week, next-week, this-month, last-month, next-month, this-year, last-year, next-year (weeks start on Sunday, the first column) — or data-start / data-end (YYYY-MM-DD) give a fixed one. The controller clamps it to data-min/data-max, sets disabled when it cannot be picked (empty, outside data-min-range/data-max-range, or a span in single mode) and aria-pressed=\"true\" on the one matching the selection; a click selects it, shows it and emits faqir:calendar-change"
+    },
     "header": {
       "selector": "[data-part='header']",
       "required": false,
@@ -45,7 +62,7 @@
       "selector": "[data-part='month-label']",
       "required": true,
       "tag_hint": "span",
-      "description": "Displays current month and year"
+      "description": "Displays current month and year (for several months the span, \"October – November 2026\", visually hidden while the panels show their own titles). aria-live=\"polite\": the controller adds it if the markup does not"
     },
     "grid": {
       "selector": "[data-part='grid']",
@@ -59,11 +76,35 @@
       "tag_hint": "tbody",
       "description": "Body the controller fills with week rows of day buttons"
     },
+    "months": {
+      "selector": "[data-part='months']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Generated by the controller for data-months > 1: the row of month panels, in the grid's place (the authored grid becomes the first panel's). Wraps to a stack when the row is too narrow; destroy() puts the grid back. Never authored by hand"
+    },
+    "month": {
+      "selector": "[data-part='month']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Generated: one month panel inside months — a month-title and a copy of the grid"
+    },
+    "month-title": {
+      "selector": "[data-part='month-title']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Generated: the panel's visible month and year, and the accessible name of its grid (aria-labelledby). The header's month-label is then visually hidden and announces the span"
+    },
     "day": {
       "selector": "[data-part='day']",
       "required": false,
       "tag_hint": "button",
-      "description": "Individual day button — generated by the controller, never authored by hand"
+      "description": "Individual day button — generated by the controller, never authored by hand. role=\"gridcell\" (its <td> is presentational), data-date=\"YYYY-MM-DD\", an aria-label with the full date plus today / range start / range end / in range / unavailable, aria-selected on the selection, aria-disabled on a day that cannot be picked"
+    },
+    "summary": {
+      "selector": "[data-part='summary']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Optional live text after the grid (give it aria-live=\"polite\"). The controller writes the selection into it — the full date, \"Oct 12, 2026 – select an end date\", or \"Oct 12 – 18, 2026 · 7 days\" — and restores the authored text when nothing is selected"
     }
   },
   "variants": {
@@ -87,7 +128,7 @@
     "in-range": {
       "attr": "data-state=\"in-range\"",
       "applied_to": "day",
-      "description": "Day strictly between the selected range endpoints"
+      "description": "Day strictly between the selected range endpoints — aria-selected too, drawn as a continuous band"
     },
     "range-end": {
       "attr": "data-state=\"range-end\"",
@@ -103,6 +144,16 @@
       "attr": "data-outside=\"true\"",
       "applied_to": "day",
       "description": "A leading/trailing day belonging to the adjacent month, written by the controller — dimmed, still focusable, and still selectable"
+    },
+    "preview": {
+      "attr": "data-state=\"preview\"",
+      "applied_to": "day",
+      "description": "While a range has a start and no end: a day inside the span the hovered (or focused) day would close. Drawn as a lighter band than the committed range"
+    },
+    "preview-end": {
+      "attr": "data-state=\"preview-end\"",
+      "applied_to": "day",
+      "description": "The hovered (or focused) day a pending range would end on — a dashed ring at the end of the preview band"
     }
   },
   "api": {
@@ -145,6 +196,16 @@
         "params": "list"
       },
       {
+        "name": "setMonths",
+        "params": "count",
+        "description": "Show 1–3 consecutive months side by side; they wrap to a stack when the row is too narrow."
+      },
+      {
+        "name": "isDisabled",
+        "params": "date",
+        "description": "Whether a date (Date or YYYY-MM-DD) is outside min/max or listed as disabled."
+      },
+      {
         "name": "destroy",
         "params": ""
       }
@@ -175,12 +236,39 @@
       "type": "string",
       "default": "",
       "description": "data-disabled-dates: comma/space separated YYYY-MM-DD dates that cannot be selected"
+    },
+    "months": {
+      "type": "number",
+      "default": 1,
+      "description": "data-months: how many consecutive months to show side by side, 1–3 (they wrap to a stack on a narrow row). One prev/next pair moves them all by a month"
+    },
+    "min-range": {
+      "type": "number",
+      "default": 0,
+      "description": "data-min-range: shortest range in days, inclusive (3 = start and end at least two days apart). While an end is chosen, closer days are unavailable; presets shorter than this are disabled"
+    },
+    "max-range": {
+      "type": "number",
+      "default": 0,
+      "description": "data-max-range: longest range in days, inclusive; 0 is unbounded"
+    },
+    "start": {
+      "type": "string",
+      "attr": "data-start",
+      "default": "",
+      "description": "On a preset (not the root): the first day of a fixed range, YYYY-MM-DD — with data-end, in place of a relative data-value"
+    },
+    "end": {
+      "type": "string",
+      "attr": "data-end",
+      "default": "",
+      "description": "On a preset (not the root): the last day of a fixed range, YYYY-MM-DD; omitted, the range is the data-start day alone"
     }
   },
   "events": {
     "faqir:calendar-change": {
-      "detail_single": "{ date: 'YYYY-MM-DD', dateObj: Date }",
-      "detail_range": "{ start, end: 'YYYY-MM-DD', startObj, endObj: Date } — emitted when the range completes",
+      "detail_single": "{ date: 'YYYY-MM-DD', dateObj: Date, preset? }",
+      "detail_range": "{ start, end: 'YYYY-MM-DD', startObj, endObj: Date, preset? } — emitted when the range completes; `preset` is the data-value of the preset that picked it (null for a data-start/data-end one)",
       "bubbles": true
     }
   },
@@ -188,10 +276,15 @@
     "required_attrs": [
       "role=\"grid\" on grid",
       "aria-label on grid",
-      "aria-label on day buttons with full date",
+      "Generated: role=\"gridcell\" on each day button, its <td> role=\"presentation\"",
+      "aria-label on day buttons with full date, plus today / range start / range end / in range / unavailable",
       "aria-label on nav-prev and nav-next",
-      "aria-selected=\"true\" on selected day(s)",
-      "aria-disabled=\"true\" on out-of-range or disabled days (kept focusable for the roving tabindex)"
+      "Generated: aria-selected=\"true\" on the selected day, or on every day of a committed range",
+      "aria-disabled=\"true\" on out-of-range or disabled days, and in range mode on days that would break data-min-range/data-max-range (kept focusable for the roving tabindex)",
+      "Month changes: aria-live=\"polite\" on month-label (added by the controller when missing)",
+      "Presets: role=\"group\" and an aria-label on presets; aria-pressed on each preset (kept by the controller)",
+      "Several months: aria-labelledby on each grid, pointing at its month-title (generated)",
+      "Summary: aria-live=\"polite\" on summary"
     ],
     "keyboard": {
       "ArrowLeft": "focus previous day",
@@ -204,14 +297,16 @@
       "PageDown": "focus same day next month",
       "Shift+PageUp": "focus same day previous year",
       "Shift+PageDown": "focus same day next year",
-      "Enter/Space": "select focused day"
+      "Enter/Space": "select focused day — in range mode the first press sets the start, the second the end",
+      "Arrows/Home/End/PageUp/PageDown (range, start chosen)": "moving focus previews the span start→focused day",
+      "Tab": "presets, nav buttons and the one focusable day (roving tabindex)",
+      "Pointer": "click a day to select (range: start, then end; an earlier day restarts); with a start chosen, hovering previews the span and leaving the grids clears it; click a preset to select its range"
     }
   },
   "tokens_used": [
     "color-bg",
     "color-fg",
     "color-fg-muted",
-    "color-fg-subtle",
     "color-border",
     "color-primary",
     "color-primary-fg",
@@ -223,6 +318,12 @@
     "space-0",
     "space-1",
     "space-2",
+    "space-4",
+    "space-6",
+    "space-0h",
+    "space-1h",
+    "space-3",
+    "space-2h",
     "text-xs",
     "text-sm",
     "text-base",
@@ -235,10 +336,12 @@
     "focus-ring-style",
     "focus-ring-color",
     "focus-ring-offset",
-    "disabled-opacity"
+    "disabled-opacity",
+    "leading-normal"
   ],
   "templates": {
-    "html": "<div data-ui=\"calendar\" data-size=\"{size}\">\n  <div data-part=\"header\">\n    <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n    <span data-part=\"month-label\"></span>\n    <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n  </div>\n  <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n    <tbody data-part=\"grid-body\"></tbody>\n  </table>\n</div>"
+    "html": "<div data-ui=\"calendar\" data-size=\"{size}\">\n  <div data-part=\"header\">\n    <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n    <span data-part=\"month-label\"></span>\n    <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n  </div>\n  <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n    <tbody data-part=\"grid-body\"></tbody>\n  </table>\n</div>",
+    "html_range": "<div data-ui=\"calendar\" data-size=\"{size}\" data-mode=\"range\" data-months=\"2\">\n  <div data-part=\"presets\" role=\"group\" aria-label=\"Quick ranges\">\n    <button data-part=\"preset\" type=\"button\" data-value=\"last-7-days\" aria-pressed=\"false\">Last 7 days</button>\n    <button data-part=\"preset\" type=\"button\" data-value=\"last-30-days\" aria-pressed=\"false\">Last 30 days</button>\n    <button data-part=\"preset\" type=\"button\" data-value=\"this-month\" aria-pressed=\"false\">This month</button>\n    <button data-part=\"preset\" type=\"button\" data-value=\"last-month\" aria-pressed=\"false\">Last month</button>\n  </div>\n  <div data-part=\"header\">\n    <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n    <span data-part=\"month-label\" aria-live=\"polite\"></span>\n    <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n  </div>\n  <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n    <tbody data-part=\"grid-body\"></tbody>\n  </table>\n  <p data-part=\"summary\" aria-live=\"polite\">No dates selected</p>\n</div>"
   },
   "safe_transforms": [
     "change-size",
@@ -247,14 +350,20 @@
     "restyle-range-band",
     "add-min-max-date",
     "add-disabled-dates",
-    "change-first-day-of-week"
+    "change-first-day-of-week",
+    "add-presets",
+    "change-months-shown",
+    "add-range-length-bounds",
+    "restyle-range-preview"
   ],
   "unsafe_transforms": [
     "remove-grid-role",
     "remove-day-aria-labels",
     "remove-keyboard-navigation",
     "remove-roving-tabindex",
-    "hand-author-day-cells"
+    "hand-author-day-cells",
+    "remove-day-gridcell-role",
+    "hand-author-month-panels"
   ],
   "composition": {
     "contains": [],
@@ -290,6 +399,17 @@
     "navigate-api-changes-view",
     "today-is-highlighted",
     "day-buttons-have-aria-label",
-    "double-init-returns-same-api"
+    "double-init-returns-same-api",
+    "range-hover-preview-and-clear",
+    "keyboard-focus-previews-range",
+    "multi-month-renders-consecutive-grids",
+    "multi-month-focus-crosses-month-boundary",
+    "multi-month-grids-labelled-by-titles",
+    "presets-select-range-and-mark-pressed",
+    "presets-clamped-or-disabled",
+    "min-max-range-length-disable-ends",
+    "day-gridcell-role-and-status-labels",
+    "summary-reads-selection",
+    "locale-formats-labels"
   ]
 }

@@ -141,7 +141,7 @@ describe("theme density", () => {
 describe("minified engine artifact", () => {
   test("the package report uses the assembled runtime budget", () => {
     const build = readFileSync(join(ROOT, "scripts", "build-core-package.mjs"), "utf8");
-    expect(build).toContain("const ASSEMBLED_GZIP_BUDGET = 45 * 1024");
+    expect(build).toContain("const ASSEMBLED_GZIP_BUDGET = 50 * 1024");
     expect(build).not.toContain("Recipe controllers are still inlined in the engine");
     expect(build).not.toContain("controller de-duplication (0.3-04) bring this under budget");
   });
@@ -242,8 +242,12 @@ describe("minified engine artifact", () => {
     // `Faqir.ui` (#28/#10), QR versions 11–40 (#44) and the date-picker's ISO
     // value part (#29) need the room. `bun run size` still holds the registry
     // engine + controllers to 46 KB (scripts/check-size.mjs).
+    //
+    // 47 → 50 KB for the component expansion, decided by the owner up front
+    // (measured at 49.64 KB): the controllers it adds and upgrades are all
+    // inlined here. The ledger is in scripts/check-size.mjs.
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
-    expect(gzip).toBeLessThanOrEqual(47 * 1024);
+    expect(gzip).toBeLessThanOrEqual(50 * 1024);
   });
 });
 

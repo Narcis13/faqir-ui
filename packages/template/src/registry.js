@@ -3816,6 +3816,14 @@ export const components = {
       "lg"
      ],
      "default": "md"
+    },
+    "variant": {
+     "attr": "data-variant",
+     "values": [
+      "popover",
+      "inline"
+     ],
+     "default": "popover"
     }
    },
    "states": {
@@ -3912,15 +3920,25 @@ export const components = {
           ]
          ],
          [
+          "data-ui",
+          [
+           "icon"
+          ]
+         ],
+         [
+          "data-icon",
+          [
+           "calendar"
+          ]
+         ],
+         [
           "aria-hidden",
           [
            "true"
           ]
          ]
         ],
-        "children": [
-         "📅"
-        ],
+        "children": [],
         "slot": "icon"
        }
       ],
@@ -4149,6 +4167,10 @@ export const components = {
      [
       "size",
       "data-size"
+     ],
+     [
+      "variant",
+      "data-variant"
      ]
     ]
    }

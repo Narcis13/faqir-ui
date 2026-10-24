@@ -2642,7 +2642,7 @@ export type { LCommandPaletteProps, LCommandPaletteSize } from "./recipes/comman
 export { LContextMenu } from "./recipes/context-menu.js";
 export type { LContextMenuProps } from "./recipes/context-menu.js";
 export { LDatePicker } from "./recipes/date-picker.js";
-export type { LDatePickerProps, LDatePickerSize } from "./recipes/date-picker.js";
+export type { LDatePickerProps, LDatePickerSize, LDatePickerStyleVariant } from "./recipes/date-picker.js";
 export { LDialog } from "./recipes/dialog.js";
 export type { LDialogProps, LDialogSize, LDialogTone } from "./recipes/dialog.js";
 export { LDrawer } from "./recipes/drawer.js";

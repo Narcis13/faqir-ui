@@ -1322,26 +1322,26 @@
       "name": "calendar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "files": [
         {
           "path": "calendar.css",
-          "sha256": "9631b2007b9b583b50c463379bfc40ed152e034bd7a84f7f219898f71dce666e"
+          "sha256": "7cf48ba7b73c9a3da6b13ff2d85763e9e40d5cefad943dfa07732c4585a5536c"
         },
         {
           "path": "calendar.html",
-          "sha256": "5e1abef4067ea4933a30c5d822e276317f773f8e9ec1188b58e3aab60a630bb2"
+          "sha256": "9b980b7e537bd38d689e339f7b21d6d66f4df0ba587146551c9e02a5cd7e011c"
         },
         {
           "path": "calendar.js",
-          "sha256": "8635c8987d42648a19db5f4452a53e1200fe2d7f7bf6aa2831a5097534fa8a34"
+          "sha256": "336a98462b2f3a9eabe054e05fde26237bfffd5defcbf49f27ce56fbc2d3a37e"
         },
         {
           "path": "calendar.manifest.json",
-          "sha256": "18c73e5db96293ca4de6e226695746d2dcc7e64094ac21a75cb9ba98dc63c88e"
+          "sha256": "47cceaf8828da708d79c311678521c85a34b81be13ce3ec22223ef018bb8b887"
         }
       ],
-      "hash": "c8eeb13eed31a8458f04cde2629e90ce7eec99b03ce4c88e66fe07eccaee12a7",
+      "hash": "835efca2bcc0fc6784688e3b44ff73ab09b41f4d518848ba8cd6ee6dad4b88a3",
       "deps": []
     },
     {
@@ -1454,29 +1454,30 @@
       "name": "date-picker",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "files": [
         {
           "path": "date-picker.css",
-          "sha256": "1fbf88099fe776b76355e12f44bf82fa52df12f9b74c73cb3b431309abaf3e0e"
+          "sha256": "22a9f1b990af41048078c358c4719274bcf2334e7004062b8624267e9e3f4bfd"
         },
         {
           "path": "date-picker.html",
-          "sha256": "21d3d94accb9ea30ac50490633471611cd6915ea2641910e4b48c23dec85548e"
+          "sha256": "30fd695cd6f271449744ef3903426f59a030bf179f1fd6ec5cf7fcd5d6c08e62"
         },
         {
           "path": "date-picker.js",
-          "sha256": "9c220ef6810c5a13db34b1f2c85c351b5e5ed21ffa4a102d16501c6b654239e9"
+          "sha256": "eedcf7b94bacd27555e9a0b921d76e3784c14743f95421618d73c3ff9b836e30"
         },
         {
           "path": "date-picker.manifest.json",
-          "sha256": "47dcc10af9f2337f587b39ef98253518232fa615fc65619075fca0c532fb68ba"
+          "sha256": "26894ac51a18d5346ae29d30376aaad6e37da00a1600bcacdf26cfa7a5c2f886"
         }
       ],
-      "hash": "c149d89c2c84dc9f37a94bc62a863842231be5dbddb23ac6624fea1694c386ac",
+      "hash": "bde4070a3d82bdc042d00249cc8ab36d4b027b8f0b2dfeeec2fb846b7fee82d5",
       "deps": [
         "calendar",
-        "button"
+        "button",
+        "icon"
       ]
     },
     {

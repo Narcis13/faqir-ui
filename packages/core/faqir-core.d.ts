@@ -424,6 +424,10 @@ export interface CalendarApi extends ControllerApi {
   setMin(value: string): void;
   setMax(value: string): void;
   setDisabledDates(list: string[]): void;
+  /** Months shown side by side, 1–3. */
+  setMonths(count: number): void;
+  /** Whether a date is outside min/max, disabled, or (mid-range) outside the range-length bounds. */
+  isDisabled(date: Date | string): boolean;
 }
 
 export interface CarouselApi extends ControllerApi {
@@ -460,7 +464,8 @@ export interface DatePickerApi extends ControllerApi {
   open(): void;
   close(): void;
   getValue(): CalendarValue;
-  setValue(date: string): void;
+  /** One ISO date, or for `data-mode="range"` `"start,end"` / `{ start, end }`. */
+  setValue(date: string | { start: string; end?: string | null }): void;
   /** No date: empties the calendar, the visible input and the value part. */
   clear(): void;
   navigate(month: number, year: number): void;
