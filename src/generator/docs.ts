@@ -5293,7 +5293,7 @@ function renderHeadersFile(machine: MachineFile[]): SiteFile {
     "  Referrer-Policy: strict-origin-when-cross-origin",
     "  Permissions-Policy: camera=(), geolocation=(), microphone=()",
     "  X-Frame-Options: SAMEORIGIN",
-    "  Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; frame-src 'self'; frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'",
+    "  Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; frame-src 'self'; frame-ancestors 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'",
     "",
   ];
   for (const f of machine) {

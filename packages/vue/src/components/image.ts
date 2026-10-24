@@ -14,9 +14,13 @@ export interface LImageProps {
   variant?: LImageVariant;
   /** `data-size`; omitted when unset (manifest default: "md"). */
   size?: LImageSize;
+  /** Sets `data-state="loading"`. */
+  loading?: boolean;
+  /** Sets `data-state="loaded"`. */
+  loaded?: boolean;
 }
 
-/** `image` — Responsive image with variants for different display modes and print optimization */
+/** `image` — Responsive image with display variants, fixed ratios with a focal point, fit control, below and overlay captions, blur and skeleton placeholders, and print optimization */
 export const LImage = defineFaqirPrimitive<LImageProps>({
   name: "image",
   tag: "figure",
@@ -24,7 +28,10 @@ export const LImage = defineFaqirPrimitive<LImageProps>({
     { prop: "variant", attr: "data-variant", values: ["responsive", "thumbnail", "cover", "contain"] },
     { prop: "size", attr: "data-size", values: ["xs", "sm", "md", "lg", "full"] },
   ],
-  states: [],
+  states: [
+    { prop: "loading", attr: "data-state", value: "loading", kind: "value" },
+    { prop: "loaded", attr: "data-state", value: "loaded", kind: "value" },
+  ],
   slots: [
     { name: "img", tag: "img", required: true, isVoid: true },
     { name: "caption", tag: "figcaption", required: false, isVoid: false },

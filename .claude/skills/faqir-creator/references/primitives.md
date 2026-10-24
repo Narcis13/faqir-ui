@@ -658,7 +658,7 @@ CSS-only icon: a data-URI SVG rendered via mask-image on a currentColor box. Inh
 
 _kind: primitive · category: data-display_
 
-Responsive image with variants for different display modes and print optimization
+Responsive image with display variants, fixed ratios with a focal point, fit control, below and overlay captions, blur and skeleton placeholders, and print optimization
 
 ```html
 <figure data-ui="image" data-variant="{variant}" data-size="{size}">
@@ -671,7 +671,7 @@ Responsive image with variants for different display modes and print optimizatio
 ```text
 [data-ui='image']  ·  <figure> · content: slots
 ├─ [data-part='img']  <img>  required  — The image element
-└─ [data-part='caption']  <figcaption>  optional  — Optional image caption
+└─ [data-part='caption']  <figcaption>  optional  — Optional image caption: centred below by default, start-aligned below with data-caption="below", over the picture with data-caption="overlay"
 ```
 
 **Variants**
@@ -681,7 +681,7 @@ Responsive image with variants for different display modes and print optimizatio
 | variant | `responsive`, `thumbnail`, `cover`, `contain` | `responsive` | `data-variant` | root |
 | size | `xs`, `sm`, `md`, `lg`, `full` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-size`, `change-variant`, `swap-image-src`, `change-alt-text`, `add-caption`, `remove-caption`, `set-hover`
+- **Safe transforms:** `change-size`, `change-variant`, `swap-image-src`, `change-alt-text`, `add-caption`, `remove-caption`, `set-hover`, `set-ratio`, `set-focal-point`, `set-fit`, `set-caption-placement`, `add-placeholder`
 - **Unsafe (never do):** `remove-alt-attribute`, `remove-img-element`
 - **Required ARIA:** `img must have non-empty alt attribute`
 

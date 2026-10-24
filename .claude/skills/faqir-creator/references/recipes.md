@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-29 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+33 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -762,6 +762,55 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **A11y:** keys: Tab, Enter, Space, Tab on remove, Enter or Space on remove
 - **Required ARIA:** `type="file" on input`; `aria-describedby on input`; `aria-live="polite" on status`
 
+## image-compare
+
+_kind: recipe · category: data-display · controller: createImageCompare()_
+
+Before/after image comparison with a draggable, keyboard-operable divider (role="slider"), labelled sides, hover-follow and vertical modes
+
+```html
+<div data-ui="image-compare" style="--image-compare-pos: 50%">
+  <img data-part="after" src="{after_src}" alt="After: {after_alt}">
+  <img data-part="before" src="{before_src}" alt="Before: {before_alt}">
+  <span data-part="before-label" aria-hidden="true">Before</span>
+  <span data-part="after-label" aria-hidden="true">After</span>
+  <div data-part="handle" role="slider" tabindex="0" aria-label="Before and after divider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="50% before, 50% after">
+    <span data-part="grip"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 7-5 5 5 5M15 7l5 5-5 5"/></svg></span>
+  </div>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='image-compare']  ·  <div> · content: slots
+├─ [data-part='after']  <img>  required  — The full picture underneath — the "after" side. Its alt should say so ("After: …")
+├─ [data-part='before']  <img>  required  — The picture on top, clipped at the divider — the "before" side, on the inline-start (or top) side. Same dimensions as after
+├─ [data-part='before-label']  <span>  optional  — Visible chip naming the before side (aria-hidden: the alts and the slider's value text carry it)
+├─ [data-part='after-label']  <span>  optional  — Visible chip naming the after side (aria-hidden)
+├─ [data-part='handle']  <div>  required  — The divider: role="slider", tabindex="0", aria-label, aria-valuemin 0 / max 100; aria-valuenow is the percentage of the width (or height) that shows the before picture, and aria-valuetext reads "60% before, 40% after"
+└─ [data-part='grip']  <span>  optional  — The round handle on the divider line, holding an aria-hidden arrows <svg>
+```
+
+**Variants**
+
+_No variants._
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createImageCompare(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `setPosition(percent)` | Move the divider to `percent` (0–100) of the way across. |
+| `getPosition()` | Where the divider is, 0–100. |
+| `destroy()` | — |
+
+- **Safe transforms:** `swap-image-sources`, `change-labels`, `set-initial-position`, `set-orientation`, `set-hover-mode`, `change-step`
+- **Unsafe (never do):** `remove-role-slider`, `remove-handle`, `remove-image-alt`, `make-labels-focusable`
+- **A11y:** role=slider · keys: ArrowRight / ArrowUp, ArrowLeft / ArrowDown, ArrowDown / ArrowUp (vertical), PageUp / PageDown, Home, End
+- **Required ARIA:** `role="slider" on handle`; `aria-label on handle`; `aria-valuetext on handle`; `alt on before and after naming each side`
+
 ## input-otp
 
 _kind: recipe · category: forms · controller: createInputOtp()_
@@ -814,6 +863,147 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Unsafe (never do):** `remove-real-input`, `split-into-per-segment-inputs`, `remove-autocomplete-one-time-code`, `remove-input-accessible-name`, `make-segments-focusable`, `remove-aria-hidden-from-segments`
 - **A11y:** keys: 0-9 / a-z, Backspace, Delete, ArrowLeft, ArrowRight, Home, End, Paste
 - **Required ARIA:** `autocomplete="one-time-code" on input`; `aria-label on input`
+
+## knob
+
+_kind: recipe · category: forms · controller: createKnob()_
+
+Rotary control over a native range input: drag, wheel and keyboard turning, a token-drawn value arc (unipolar or bipolar), sizes, form participation and l-model support
+
+```html
+<div data-ui="knob" data-value-suffix="{suffix}" style="--knob-pos: {fraction}">
+  <label data-part="label" for="{id}">{label}</label>
+  <div data-part="control">
+    <input data-part="input" id="{id}" type="range" name="{name}" min="{min}" max="{max}" step="{step}" value="{value}">
+    <span data-part="cap" aria-hidden="true"></span>
+    <svg data-part="dial" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <path data-part="scale" d="M 16.059 83.941 A 48 48 0 1 1 83.941 83.941" pathLength="100"/>
+      <path data-part="track" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+      <path data-part="arc" d="M 21.716 78.284 A 40 40 0 1 1 78.284 78.284" pathLength="100"/>
+      <line data-part="indicator" x1="50" y1="27" x2="50" y2="39"/>
+    </svg>
+  </div>
+  <output data-part="output" for="{id}" aria-hidden="true">{value}{suffix}</output>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='knob']  ·  <div> · content: slots
+├─ [data-part='label']  <label>  optional  — Visible name, a <label for> pointing at the input
+├─ [data-part='control']  <div>  required  — The round hit area: takes the pointer drag, the wheel and the double-click, and draws the focus ring while the input has keyboard focus
+├─ [data-part='input']  <input>  required  — A native <input type="range"> carrying name, min, max, step and value. It is the focusable, accessible slider, the form field and the l-model target; it lies invisibly over the dial, and is the visible control when scripting is off
+├─ [data-part='cap']  <span>  required  — The knob body inside the ring (decorative, aria-hidden)
+├─ [data-part='dial']  <svg>  required  — aria-hidden SVG (viewBox 0 0 100 100) holding the track, arc and indicator
+├─ [data-part='scale']  <path>  optional  — Optional tick scale: an arc just outside the track (pathLength="100") drawn as eleven dots
+├─ [data-part='track']  <path>  required  — The 270° sweep, a path with pathLength="100"
+├─ [data-part='arc']  <path>  required  — The same path, dashed by the stylesheet from --knob-origin to --knob-pos
+├─ [data-part='indicator']  <line>  required  — The pointer line on the cap, rotated to the value
+└─ [data-part='output']  <output>  optional  — Visible value readout, written by the controller with the same text as aria-valuetext (aria-hidden, so the value is not announced twice)
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createKnob(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `setValue(value)` | Set the value (snapped and clamped); fires `input` and `change`. |
+| `getValue()` | The current value as a number. |
+| `stepBy(n)` | Move by `n` steps (negative turns anticlockwise). |
+| `reset()` | Return to the authored default (the input's `value` attribute). |
+| `setFormatter(fn)` | Format the readout and aria-valuetext: `fn(value) → string`, or null. |
+| `destroy()` | — |
+
+- **Safe transforms:** `change-min-max-step`, `change-initial-value`, `add-value-suffix`, `set-page-step`, `set-bipolar-origin`, `set-angular-drag`, `toggle-label`, `toggle-output`, `change-size`, `toggle-disabled`, `bind-l-model`, `restyle-arc-colours`
+- **Unsafe (never do):** `remove-native-input`, `change-input-type`, `remove-input-label`, `remove-aria-hidden-from-dial`, `remove-keyboard-handler`, `remove-control`
+- **A11y:** role=slider · keys: ArrowUp, ArrowRight, ArrowDown, ArrowLeft, PageUp, PageDown, Home, End
+- **Required ARIA:** `a <label for> or aria-label naming the input`; `aria-hidden="true" on dial`; `aria-hidden="true" on cap`
+
+## lightbox
+
+_kind: recipe · category: overlay · controller: createLightbox()_
+
+Image gallery whose pictures open in a modal viewer with zoom and pan, keyboard and swipe navigation, captions, and focus returned to the picture that opened it
+
+```html
+<div data-ui="lightbox" data-state="closed">
+  <ul data-part="gallery" aria-label="{gallery_label}">
+    <li><a data-part="item" href="{full_src}" aria-haspopup="dialog" title="{caption}">
+      <figure data-ui="image" data-ratio="4-3" data-size="full" data-hover="zoom">
+        <img data-part="img" src="{thumb_src}" alt="{alt}" loading="lazy">
+      </figure>
+    </a></li>
+  </ul>
+  <div data-part="overlay" hidden></div>
+  <div data-part="panel" role="dialog" aria-modal="true" aria-label="Image viewer" tabindex="-1" hidden>
+    <div data-part="toolbar">
+      <span data-part="counter" aria-hidden="true"></span>
+      <button data-part="zoom-out" type="button" aria-label="Zoom out" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.5-4.5M8 11h6"/></svg></button>
+      <button data-part="zoom-in" type="button" aria-label="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.5-4.5M8 11h6M11 8v6"/></svg></button>
+      <button data-part="close" type="button" aria-label="Close viewer"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div data-part="stage"><img data-part="image" alt="" draggable="false"></div>
+    <button data-part="prev" type="button" aria-label="Previous image"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7"/></svg></button>
+    <button data-part="next" type="button" aria-label="Next image"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7"/></svg></button>
+    <p data-part="caption"></p>
+    <span data-part="status" role="status"></span>
+  </div>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='lightbox']  ·  <div> · content: slots
+├─ [data-part='gallery']  <ul>  optional  — The thumbnail grid (auto-fill columns, 11rem minimum). A <ul> of <li>, or items as direct children
+├─ [data-part='item']  <a>  required  — A link to the full-size picture (href) wrapping its thumbnail — usually an image primitive. Without script it simply opens the picture; with it, the viewer. The thumbnail's alt is the viewer's alt; the link's title is the caption (and, as a title, its accessible description and hover hint)
+├─ [data-part='overlay']  <div>  required  — The darkroom backdrop; a click closes. Authored hidden
+├─ [data-part='panel']  <div>  required  — The viewer: role="dialog", aria-modal="true", aria-label, tabindex="-1", authored hidden. Focus is trapped inside while open
+├─ [data-part='toolbar']  <div>  optional  — Top row: the counter, then the zoom and close buttons
+├─ [data-part='counter']  <span>  optional  — "2 / 6" (aria-hidden; the status region announces the same)
+├─ [data-part='zoom-out']  <button>  optional  — Zoom out by 0.5×; aria-disabled at 1×
+├─ [data-part='zoom-in']  <button>  optional  — Zoom in by 0.5×; aria-disabled at 4×
+├─ [data-part='close']  <button>  required  — Closes the viewer; needs an accessible name
+├─ [data-part='stage']  <div>  required  — Holds the picture and takes the wheel, the pan drag and the swipe; a click on its empty area closes. data-state loading | loaded while the full-size picture arrives
+├─ [data-part='image']  <img>  required  — The full-size picture (src and alt written by the controller; draggable="false"). data-state="zoomed" above 1×
+├─ [data-part='prev']  <button>  optional  — Previous picture (wraps); hidden for a single picture
+├─ [data-part='next']  <button>  optional  — Next picture (wraps); hidden for a single picture
+├─ [data-part='caption']  <p>  optional  — The open picture's caption: the item's title, else its alt
+└─ [data-part='status']  <span>  optional  — Visually hidden role="status" region: "Image 2 of 6: <alt>" on every move
+```
+
+**Variants**
+
+_No variants._
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createLightbox(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open(i, from)` | — |
+| `close()` | — |
+| `show(i)` | — |
+| `next()` | The next picture (wrapping). |
+| `prev()` | The previous picture (wrapping). |
+| `zoomIn()` | Zoom in half a step, up to 4×. |
+| `zoomOut()` | Zoom out half a step, down to 1×. |
+| `resetZoom()` | Back to 1×, centred. |
+| `destroy()` | — |
+
+- **Safe transforms:** `add-gallery-item`, `remove-gallery-item`, `change-captions`, `swap-image-sources`, `remove-zoom-buttons`, `change-viewer-label`
+- **Unsafe (never do):** `remove-item-href`, `remove-role-dialog`, `remove-aria-modal`, `remove-close-button`, `remove-thumbnail-alt`, `remove-overlay`
+- **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · return-focus→the item that opened the viewer · keys: 0, Enter (on an item), Escape, ArrowLeft / ArrowRight, ArrowUp / ArrowDown, Home / End, + or =, -, Tab / Shift+Tab
+- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-label on close`; `aria-label on prev`; `aria-label on next`
 
 ## menubar
 
@@ -1640,3 +1830,113 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Unsafe (never do):** `remove-tree-role`, `remove-tree-accessible-name`, `remove-treeitem-role`, `place-children-outside-group`, `put-aria-expanded-on-leaf`, `remove-roving-tabindex`, `remove-positional-aria`, `remove-keyboard-navigation`, `allow-multiple-selected-items`, `use-aria-selected-and-aria-checked-together`, `make-checkbox-or-icon-focusable`, `put-filter-or-status-inside-the-tree-list`
 - **A11y:** keys: ArrowDown, ArrowUp, ArrowRight, ArrowLeft, Home, End, Enter, Space, Ctrl+A, Printable characters, *, Alt+Enter, ArrowUp / ArrowDown (while moving), Home / End (while moving), Enter / Space (while moving), Escape / Tab (while moving), ArrowDown (in the filter), Escape (in the filter)
 - **Required ARIA:** `role="tree" on root, or on the tree part when the root is a wrapper`; `role="tree" on tree`; `aria-label on root`; `aria-multiselectable on the tree: "false" in single mode, "true" in multiple and checkbox mode`; `role="treeitem" on item`; `tabindex on item`; `aria-selected on selectable item`; `aria-checked on every item in checkbox mode`; `aria-level on item`; `aria-setsize on item`; `aria-posinset on item`; `role="group" on group`; `aria-label on filter`
+
+## video-player
+
+_kind: recipe · category: data-display · controller: createVideoPlayer()_
+
+Custom controls over a native video: play/pause, a scrubber with buffered range and hover time, volume and mute, playback rate, captions, picture-in-picture, fullscreen and keyboard shortcuts, with the browser's own controls as the no-script fallback
+
+```html
+<div data-ui="video-player" data-state="paused" role="group" aria-label="{title}" tabindex="-1">
+  <video data-part="video" controls playsinline preload="metadata" poster="{poster}" src="{src}">
+    <track kind="captions" srclang="en" label="English" default src="{captions}">
+  </video>
+  <div data-part="cue" aria-hidden="true" hidden></div>
+  <span data-part="spinner" aria-hidden="true"></span>
+  <button data-part="big-play" type="button" aria-label="Play" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4.5H8"/></svg>
+  </button>
+  <p data-part="message" role="alert" hidden>This video can’t be played.</p>
+  <div data-part="controls" hidden>
+    <div data-part="scrubber" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0 seconds of 0 seconds">
+      <span data-part="buffered"></span>
+      <span data-part="progress"></span>
+      <span data-part="thumb"></span>
+      <span data-part="tooltip" hidden>0:00</span>
+    </div>
+    <div data-part="bar">
+      <button data-part="play" type="button" aria-label="Play">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect fill="currentColor" x="6" y="5" width="4" height="14" rx="1.2"/><rect fill="currentColor" x="14" y="5" width="4" height="14" rx="1.2"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4.5H8"/></svg>
+      </button>
+      <button data-part="mute" type="button" aria-label="Mute" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11 5 6.5 8.8H3.5v6.4h3L11 19Z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.4 6.2a8.2 8.2 0 0 1 0 11.6"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11 5 6.5 8.8H3.5v6.4h3L11 19Z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/></svg>
+      </button>
+      <div data-part="volume" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="100%"><span data-part="level"></span></div>
+      <span data-part="time"><span data-part="elapsed">0:00</span><span aria-hidden="true"> / </span><span data-part="duration">0:00</span></span>
+      <button data-part="captions" type="button" aria-label="Captions" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10.4 10.3a2.3 2.3 0 1 0 0 3.4M17 10.3a2.3 2.3 0 1 0 0 3.4"/></svg>
+      </button>
+      <button data-part="rate" type="button" aria-label="Playback speed 1×">1×</button>
+      <button data-part="pip" type="button" aria-label="Picture in picture" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><rect fill="currentColor" x="12" y="11.5" width="7" height="5.5" rx="1"/></svg>
+      </button>
+      <button data-part="fullscreen" type="button" aria-label="Full screen" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 3.5h-3a2 2 0 0 0-2 2v3M20.5 8.5v-3a2 2 0 0 0-2-2h-3M3.5 15.5v3a2 2 0 0 0 2 2h3M15.5 20.5h3a2 2 0 0 0 2-2v-3"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 3.5v3a2 2 0 0 1-2 2h-3M20.5 8.5h-3a2 2 0 0 1-2-2v-3M3.5 15.5h3a2 2 0 0 1 2 2v3M15.5 20.5v-3a2 2 0 0 1 2-2h3"/></svg>
+      </button>
+    </div>
+  </div>
+  <span data-part="status" role="status"></span>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='video-player']  ·  <div> · content: slots
+├─ [data-part='video']  <video>  required  — The native <video>, authored WITH the controls attribute (the no-script fallback). The controller removes it on init and restores it on destroy. Put <track kind="captions"> children inside for the captions toggle
+├─ [data-part='cue']  <div>  optional  — Where the active caption cue is drawn, above the control bar (aria-hidden, hidden until a cue is showing)
+├─ [data-part='spinner']  <span>  optional  — Loading ring, shown in the buffering state (aria-hidden)
+├─ [data-part='big-play']  <button>  optional  — Large centre play button, in the theme's primary colours; shown paused and ended (with a replay glyph), hidden while playing. Authored hidden; the controller reveals it. Holds a play <svg> then a replay <svg>
+├─ [data-part='message']  <p>  optional  — role="alert" text shown in the error state; authored hidden
+├─ [data-part='controls']  <div>  required  — The control overlay: the scrubber row and the button bar. Authored hidden (the native controls run without script); data-state="hidden" while it auto-hides during playback
+├─ [data-part='scrubber']  <div>  required  — role="slider" seek bar (tabindex="0", aria-label). aria-valuenow/max are whole seconds and aria-valuetext reads "1 minute 5 seconds of 3 minutes"
+├─ [data-part='buffered']  <span>  optional  — How much of the media has loaded, from --video-player-buffered
+├─ [data-part='progress']  <span>  required  — Played portion, from --video-player-progress
+├─ [data-part='thumb']  <span>  optional  — Handle at the playhead, grown on hover, focus and drag
+├─ [data-part='tooltip']  <span>  optional  — The time under the pointer while hovering or dragging the scrubber; authored hidden
+├─ [data-part='bar']  <div>  required  — Row of buttons, the volume slider and the time readout
+├─ [data-part='play']  <button>  required  — Play/pause button whose aria-label the controller keeps as Play, Pause or Replay. Holds play, pause and replay <svg> glyphs, in that order
+├─ [data-part='mute']  <button>  optional  — Toggle button (aria-label="Mute", aria-pressed = muted). Holds a speaker <svg> then a muted <svg>
+├─ [data-part='volume']  <div>  optional  — role="slider" volume, 0–100 (aria-valuetext "60%" or "Muted"). Shown from a 40rem-wide player up; ↑/↓ set the volume at any width
+├─ [data-part='level']  <span>  optional  — The volume fill, from --video-player-volume
+├─ [data-part='time']  <span>  optional  — Elapsed / duration readout; pushes the buttons after it to the end of the bar
+├─ [data-part='elapsed']  <span>  optional  — Current time as m:ss (h:mm:ss past an hour)
+├─ [data-part='duration']  <span>  optional  — Total duration as m:ss
+├─ [data-part='captions']  <button>  optional  — Toggle button (aria-label="Captions", aria-pressed) for the first captions/subtitles track; hidden when the video has none. Starts on for a track marked default
+├─ [data-part='rate']  <button>  optional  — Cycles the playback rate 0.5× → 0.75× → 1× → 1.25× → 1.5× → 2×; shows the rate and is named "Playback speed 1×"
+├─ [data-part='pip']  <button>  optional  — Picture-in-picture toggle (aria-pressed); hidden where the browser has no PiP or the video sets disablepictureinpicture
+├─ [data-part='fullscreen']  <button>  optional  — Full screen toggle for the player root (aria-pressed). Holds an enter <svg> then an exit <svg>; hidden where full screen is unavailable
+└─ [data-part='status']  <span>  optional  — Visually hidden role="status" region announcing what a keyboard shortcut did ("Muted", "Speed 1.5×", "Captions off", "0:15")
+```
+
+**Variants**
+
+_No variants._
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createVideoPlayer(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `play()` | — |
+| `pause()` | — |
+| `toggle()` | — |
+| `seek(t)` | — |
+| `setVolume(v)` | — |
+| `toggleMute()` | — |
+| `setRate(r)` | — |
+| `toggleCaptions(force)` | — |
+| `toggleFullscreen()` | — |
+| `destroy()` | — |
+
+- **Safe transforms:** `swap-video-src`, `swap-poster`, `add-captions-track`, `remove-optional-buttons`, `change-aspect-ratio`, `change-root-label`
+- **Unsafe (never do):** `remove-controls-attribute-from-video`, `remove-hidden-from-authored-controls`, `remove-role-slider`, `remove-scrubber-valuetext`, `remove-button-labels`, `remove-captions-track`
+- **A11y:** role=group · keys: Space / K, ArrowLeft / ArrowRight, J / L, ArrowUp / ArrowDown, PageUp / PageDown, Home / End, 0–9, M, C, F, < / >
+- **Required ARIA:** `aria-label on root`; `role="slider" on scrubber`; `aria-label on scrubber`; `aria-valuetext on scrubber`; `aria-label on play`; `aria-pressed on mute`; `aria-pressed on captions`

@@ -454,8 +454,24 @@
   "recipes/file-upload/file-upload.html": {
     "file-upload": 1
   },
+  "recipes/image-compare/image-compare.html": {
+    "container": 3,
+    "image-compare": 3
+  },
   "recipes/input-otp/input-otp.html": {
     "input-otp": 4
+  },
+  "recipes/knob/knob.html": {
+    "button": 4,
+    "cluster": 5,
+    "knob": 12,
+    "stack": 1,
+    "surface": 1,
+    "text": 1
+  },
+  "recipes/lightbox/lightbox.html": {
+    "image": 6,
+    "lightbox": 1
   },
   "recipes/menubar/menubar.html": {
     "menubar": 1
@@ -503,5 +519,9 @@
   },
   "recipes/tree-view/tree-view.html": {
     "tree-view": 1
+  },
+  "recipes/video-player/video-player.html": {
+    "container": 2,
+    "video-player": 2
   }
 }

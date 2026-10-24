@@ -500,6 +500,33 @@ export interface InputOtpApi extends ControllerApi {
   focus(): void;
 }
 
+export interface ImageCompareApi extends ControllerApi {
+  /** Divider position, 0–100 (percent of the before image shown). */
+  setPosition(percent: number): void;
+  getPosition(): number;
+}
+
+export interface KnobApi extends ControllerApi {
+  setValue(value: number): void;
+  getValue(): number;
+  /** Turns by whole steps; negative turns down. */
+  stepBy(steps: number): void;
+  /** Back to the native input's default value. */
+  reset(): void;
+  setFormatter(format: ((value: number) => string) | null): void;
+}
+
+export interface LightboxApi extends ControllerApi {
+  open(index?: number, from?: Element): void;
+  close(): void;
+  show(index: number): void;
+  next(): void;
+  prev(): void;
+  zoomIn(): void;
+  zoomOut(): void;
+  resetZoom(): void;
+}
+
 export interface MenubarApi extends ControllerApi {
   open(index?: number, focus?: string): void;
   close(restoreFocus?: boolean): void;
@@ -668,6 +695,19 @@ export interface TreeViewApi extends ControllerApi {
   getSelection(): Element[];
 }
 
+export interface VideoPlayerApi extends ControllerApi {
+  play(): void;
+  pause(): void;
+  toggle(): void;
+  seek(seconds: number): void;
+  /** 0–1. */
+  setVolume(volume: number): void;
+  toggleMute(): void;
+  setRate(rate: number): void;
+  toggleCaptions(on?: boolean): void;
+  toggleFullscreen(): void;
+}
+
 /**
  * Every recipe controller the shipped engine registers, keyed by its
  * `data-ui` value. The method NAMES are held against each recipe's
@@ -693,7 +733,10 @@ export interface ControllerApis {
   drawer: DrawerApi;
   dropdown: DropdownApi;
   "file-upload": FileUploadApi;
+  "image-compare": ImageCompareApi;
   "input-otp": InputOtpApi;
+  knob: KnobApi;
+  lightbox: LightboxApi;
   menubar: MenubarApi;
   pagination: PaginationApi;
   popover: PopoverApi;
@@ -709,6 +752,7 @@ export interface ControllerApis {
   "toggle-group": ToggleGroupApi;
   tooltip: TooltipApi;
   "tree-view": TreeViewApi;
+  "video-player": VideoPlayerApi;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1006,7 +1050,8 @@ declare namespace Faqir {
     DropdownApi, FileUploadApi, InputOtpApi, MenubarApi, PaginationApi,
     PopoverApi, QrCodeApi, SelectCustomApi, SheetApi, SidebarApi, SliderApi,
     TableSort, TableState, TableApi, TabsApi, TagInputApi, ToastApi,
-    ToggleGroupApi, TooltipApi, TreeViewApi, ControllerApis, ProtocolState,
+    ToggleGroupApi, TooltipApi, TreeViewApi, ImageCompareApi, KnobApi,
+    LightboxApi, VideoPlayerApi, ControllerApis, ProtocolState,
     Inspection, DevtoolsScope, DevtoolsComponent, DevtoolsWarning, Devtools,
     ValidatorResult, ValidatorContext, FieldValidator, ValidateApi,
     RulesState, RulesApi, FaqirGlobal };
@@ -1057,6 +1102,7 @@ declare global {
       PaginationApi, PopoverApi, QrCodeApi, SelectCustomApi, SheetApi,
       SidebarApi, SliderApi, TableSort, TableState, TableApi, TabsApi,
       TagInputApi, ToastApi, ToggleGroupApi, TooltipApi, TreeViewApi,
+      ImageCompareApi, KnobApi, LightboxApi, VideoPlayerApi,
       ControllerApis, ProtocolState, Inspection, DevtoolsScope,
       DevtoolsComponent, DevtoolsWarning, Devtools, ValidatorResult,
       ValidatorContext, FieldValidator, ValidateApi, RulesState, FaqirGlobal };

@@ -1,0 +1,290 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "lightbox",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "overlay",
+  "description": "Image gallery whose pictures open in a modal viewer with zoom and pan, keyboard and swipe navigation, captions, and focus returned to the picture that opened it",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='lightbox']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "gallery": {
+      "selector": "[data-part='gallery']",
+      "required": false,
+      "tag_hint": "ul",
+      "description": "The thumbnail grid (auto-fill columns, 11rem minimum). A <ul> of <li>, or items as direct children"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "a",
+      "description": "A link to the full-size picture (href) wrapping its thumbnail — usually an image primitive. Without script it simply opens the picture; with it, the viewer. The thumbnail's alt is the viewer's alt; the link's title is the caption (and, as a title, its accessible description and hover hint)"
+    },
+    "overlay": {
+      "selector": "[data-part='overlay']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The darkroom backdrop; a click closes. Authored hidden"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The viewer: role=\"dialog\", aria-modal=\"true\", aria-label, tabindex=\"-1\", authored hidden. Focus is trapped inside while open"
+    },
+    "toolbar": {
+      "selector": "[data-part='toolbar']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Top row: the counter, then the zoom and close buttons"
+    },
+    "counter": {
+      "selector": "[data-part='counter']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "\"2 / 6\" (aria-hidden; the status region announces the same)"
+    },
+    "zoom-out": {
+      "selector": "[data-part='zoom-out']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Zoom out by 0.5×; aria-disabled at 1×"
+    },
+    "zoom-in": {
+      "selector": "[data-part='zoom-in']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Zoom in by 0.5×; aria-disabled at 4×"
+    },
+    "close": {
+      "selector": "[data-part='close']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Closes the viewer; needs an accessible name"
+    },
+    "stage": {
+      "selector": "[data-part='stage']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Holds the picture and takes the wheel, the pan drag and the swipe; a click on its empty area closes. data-state loading | loaded while the full-size picture arrives"
+    },
+    "image": {
+      "selector": "[data-part='image']",
+      "required": true,
+      "tag_hint": "img",
+      "description": "The full-size picture (src and alt written by the controller; draggable=\"false\"). data-state=\"zoomed\" above 1×"
+    },
+    "prev": {
+      "selector": "[data-part='prev']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Previous picture (wraps); hidden for a single picture"
+    },
+    "next": {
+      "selector": "[data-part='next']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Next picture (wraps); hidden for a single picture"
+    },
+    "caption": {
+      "selector": "[data-part='caption']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "The open picture's caption: the item's title, else its alt"
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Visually hidden role=\"status\" region: \"Image 2 of 6: <alt>\" on every move"
+    }
+  },
+  "variants": {},
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    },
+    "closing": {
+      "attr": "data-state=\"closing\"",
+      "transient": true,
+      "description": "The panel's exit motion is running; it becomes closed when it ends"
+    },
+    "loading": {
+      "attr": "data-state=\"loading\"",
+      "applied_to": "stage",
+      "transient": true,
+      "description": "The full-size picture is on its way; a ring turns"
+    },
+    "loaded": {
+      "attr": "data-state=\"loaded\"",
+      "applied_to": "stage"
+    },
+    "zoomed": {
+      "attr": "data-state=\"zoomed\"",
+      "applied_to": "image",
+      "description": "Zoomed past 1×: a drag pans and the arrows pan"
+    }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": "i, from"
+      },
+      {
+        "name": "close",
+        "params": ""
+      },
+      {
+        "name": "show",
+        "params": "i"
+      },
+      {
+        "name": "next",
+        "params": "",
+        "description": "The next picture (wrapping)."
+      },
+      {
+        "name": "prev",
+        "params": "",
+        "description": "The previous picture (wrapping)."
+      },
+      {
+        "name": "zoomIn",
+        "params": "",
+        "description": "Zoom in half a step, up to 4×."
+      },
+      {
+        "name": "zoomOut",
+        "params": "",
+        "description": "Zoom out half a step, down to 1×."
+      },
+      {
+        "name": "resetZoom",
+        "params": "",
+        "description": "Back to 1×, centred."
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
+  "a11y": {
+    "role": "dialog",
+    "aria-modal": true,
+    "focus_trap": true,
+    "escape_closes": true,
+    "return_focus": "the item that opened the viewer",
+    "required_attrs": [
+      "role=\"dialog\" on panel",
+      "aria-modal=\"true\" on panel",
+      "aria-label on close",
+      "aria-label on prev",
+      "aria-label on next"
+    ],
+    "keyboard": {
+      "0": "back to 1×",
+      "Enter (on an item)": "open the viewer on that picture",
+      "Escape": "close and return focus to the item",
+      "ArrowLeft / ArrowRight": "previous / next picture (wrapping), or pan when zoomed; mirrored in RTL",
+      "ArrowUp / ArrowDown": "pan when zoomed",
+      "Home / End": "first / last picture",
+      "+ or =": "zoom in",
+      "-": "zoom out",
+      "Tab / Shift+Tab": "cycle through the viewer's buttons (focus is trapped)"
+    },
+    "notes": [
+      "Each item is a real link to the full picture, so the gallery works with no script and opens in a new tab with a modifier key.",
+      "Zoom: the buttons and +/- step by 0.5×, the wheel and a pinch-free double-click zoom around the pointer, up to 4×; a zoomed picture never pans past its own edges.",
+      "Every move is announced through the status region as \"Image 2 of 6: <alt>\".",
+      "The zoom buttons use aria-disabled at their limits so they stay focusable."
+    ]
+  },
+  "tokens_used": [
+    "palette-gray-50",
+    "palette-gray-950",
+    "space-3",
+    "space-1",
+    "space-4",
+    "space-2",
+    "space-6",
+    "space-5",
+    "image-radius",
+    "radius-lg",
+    "radius-md",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset",
+    "z-overlay",
+    "z-modal",
+    "duration-normal",
+    "duration-fast",
+    "ease-default",
+    "ease-out",
+    "ease-linear",
+    "font-ui",
+    "text-sm",
+    "weight-medium",
+    "shadow-xl",
+    "leading-normal",
+    "disabled-opacity",
+    "border-width-lg"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"lightbox\" data-state=\"closed\">\n  <ul data-part=\"gallery\" aria-label=\"{gallery_label}\">\n    <li><a data-part=\"item\" href=\"{full_src}\" aria-haspopup=\"dialog\" title=\"{caption}\">\n      <figure data-ui=\"image\" data-ratio=\"4-3\" data-size=\"full\" data-hover=\"zoom\">\n        <img data-part=\"img\" src=\"{thumb_src}\" alt=\"{alt}\" loading=\"lazy\">\n      </figure>\n    </a></li>\n  </ul>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Image viewer\" tabindex=\"-1\" hidden>\n    <div data-part=\"toolbar\">\n      <span data-part=\"counter\" aria-hidden=\"true\"></span>\n      <button data-part=\"zoom-out\" type=\"button\" aria-label=\"Zoom out\" aria-disabled=\"true\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20.5 20.5-4.5-4.5M8 11h6\"/></svg></button>\n      <button data-part=\"zoom-in\" type=\"button\" aria-label=\"Zoom in\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20.5 20.5-4.5-4.5M8 11h6M11 8v6\"/></svg></button>\n      <button data-part=\"close\" type=\"button\" aria-label=\"Close viewer\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 6l12 12M18 6 6 18\"/></svg></button>\n    </div>\n    <div data-part=\"stage\"><img data-part=\"image\" alt=\"\" draggable=\"false\"></div>\n    <button data-part=\"prev\" type=\"button\" aria-label=\"Previous image\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"m15 5-7 7 7 7\"/></svg></button>\n    <button data-part=\"next\" type=\"button\" aria-label=\"Next image\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"m9 5 7 7-7 7\"/></svg></button>\n    <p data-part=\"caption\"></p>\n    <span data-part=\"status\" role=\"status\"></span>\n  </div>\n</div>"
+  },
+  "safe_transforms": [
+    "add-gallery-item",
+    "remove-gallery-item",
+    "change-captions",
+    "swap-image-sources",
+    "remove-zoom-buttons",
+    "change-viewer-label"
+  ],
+  "unsafe_transforms": [
+    "remove-item-href",
+    "remove-role-dialog",
+    "remove-aria-modal",
+    "remove-close-button",
+    "remove-thumbnail-alt",
+    "remove-overlay"
+  ],
+  "composition": {
+    "contains": [
+      "image"
+    ],
+    "used_in": []
+  },
+  "files": {
+    "html": "lightbox.html",
+    "css": "lightbox.css",
+    "js": "lightbox.js",
+    "manifest": "lightbox.manifest.json"
+  },
+  "tests": [
+    "item-click-opens-on-that-picture",
+    "modified-click-follows-the-link",
+    "focus-moves-into-the-panel-and-is-trapped",
+    "escape-closes-and-returns-focus",
+    "overlay-close-button-and-empty-stage-close",
+    "arrows-home-end-navigate-and-wrap",
+    "rtl-arrows-mirror",
+    "zoom-buttons-keys-wheel-and-double-click",
+    "zoom-limits-and-aria-disabled",
+    "pan-is-bounded-to-the-picture",
+    "swipe-navigates-at-1x",
+    "status-announces-position-and-alt",
+    "single-picture-hides-prev-next",
+    "prevents-double-initialization",
+    "destroy-removes-listeners-and-closes"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 107,
+  "count": 111,
   "components": [
     {
       "name": "aspect-ratio",
@@ -487,22 +487,22 @@
       "name": "image",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "image.css",
-          "sha256": "35e675668ad55e535a677165c30cb95b5d1524df7d57fc585b926d5dfd4d1942"
+          "sha256": "147c754279936cf6384ccdb6ec9824378133c87ce90701c58b8fcc327ad8165a"
         },
         {
           "path": "image.html",
-          "sha256": "0e4929f155505a76e000bcf3b391b598c9a241e358b4704a5210a3ef5d2df0b3"
+          "sha256": "7896f449edcf97f2ea82860f17608a684f7250bc3283c2b943f4d2539aeab610"
         },
         {
           "path": "image.manifest.json",
-          "sha256": "969056c6aaae6db3f8f4942a419ba538c3262cb8cdffd8698143de020920dc9c"
+          "sha256": "a458a1146e6db4b5ebca0975e703569d83c1f6b760e31f0e04948d36f0ab4d0c"
         }
       ],
-      "hash": "0a8861c55c1ef77f331f3d20d3dfe5b4699822e197362d2104dbb37658f1fe29",
+      "hash": "f779dda919b85d6cdd4d0e5eec68e6435daede6c21be8dde1a420cb52c5f7e3f",
       "deps": []
     },
     {
@@ -1589,6 +1589,32 @@
       "deps": []
     },
     {
+      "name": "image-compare",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "image-compare.css",
+          "sha256": "be9f054e802c79948785fd3c44b24ff5266fa67e1a671ded38e476b49ff819d4"
+        },
+        {
+          "path": "image-compare.html",
+          "sha256": "874386c658faf6ae6eeeedb03127c7646fbd9eea8fca087e4c4e43373d429288"
+        },
+        {
+          "path": "image-compare.js",
+          "sha256": "aa89e5ba13e4a091af46b5165aa5d209a4e335a173238606c884f08075eb926b"
+        },
+        {
+          "path": "image-compare.manifest.json",
+          "sha256": "4b736c4a69218576754917d35865c656685a4c11f0dfc51343a5e626b203a9d9"
+        }
+      ],
+      "hash": "808e1743d4b5ea34a44510a998464750feed94a12f8c01de46156d4d2b65d807",
+      "deps": []
+    },
+    {
       "name": "input-otp",
       "kind": "recipe",
       "layer": "recipes",
@@ -1613,6 +1639,60 @@
       ],
       "hash": "0fa4f8fc84f7a94ee1607b3d87e5614008693cd15e1583bf719245e239001214",
       "deps": []
+    },
+    {
+      "name": "knob",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "knob.css",
+          "sha256": "236e91326dc49c242f1a316bcb112089cb0aa6767a82d05c01683205b54fbf48"
+        },
+        {
+          "path": "knob.html",
+          "sha256": "745008d127df76443ab5a0379c124ef23e475cd8f5c5f076c40ee8cfc469f9dd"
+        },
+        {
+          "path": "knob.js",
+          "sha256": "00e3b6944a44826ac5c75baa19ea901e37ad1f5507c67667ffa8fc50d92afcbe"
+        },
+        {
+          "path": "knob.manifest.json",
+          "sha256": "8137248a4a7d2f8fb5c59915a81cadbba38feaea72e7ca9e43ccb701caec2d36"
+        }
+      ],
+      "hash": "200ec268be974169ece1e6e33401c343e0575161f250a571f559108ef713f40c",
+      "deps": []
+    },
+    {
+      "name": "lightbox",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "lightbox.css",
+          "sha256": "d640d1c6c25c49076c897e2c0096de2569042406f78dca7cedc294969b9a09cc"
+        },
+        {
+          "path": "lightbox.html",
+          "sha256": "4bdb8d29a80b5b81aec6d32d0be93f373e31acc8e53b598096b8867ce32e01cc"
+        },
+        {
+          "path": "lightbox.js",
+          "sha256": "acc7def084178b53e2114dde4407fabf1c2232efac79c3a0b4ac5aa566f07e4a"
+        },
+        {
+          "path": "lightbox.manifest.json",
+          "sha256": "7499ac59bee2741f2da55e1ba9761b67770ec6a40bd948960ef26b105c2dd872"
+        }
+      ],
+      "hash": "9c2eaa2e384153a37c3123db7e0f1fc363bdece1bc5639188356712589fd39da",
+      "deps": [
+        "image"
+      ]
     },
     {
       "name": "menubar",
@@ -2029,6 +2109,32 @@
         "spinner",
         "icon"
       ]
+    },
+    {
+      "name": "video-player",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "video-player.css",
+          "sha256": "abca7051c130ee3dd846f7d1ffbf9ab6369b0d1f67b24fe8dffc668329ca942e"
+        },
+        {
+          "path": "video-player.html",
+          "sha256": "837ea431daa38fa46c831714612657a676d157398815066c2cce4ce4abb0b228"
+        },
+        {
+          "path": "video-player.js",
+          "sha256": "c4adbec62f80a9634aebfc2a58d1261c9caf47b98ea8ebee401d003540a35883"
+        },
+        {
+          "path": "video-player.manifest.json",
+          "sha256": "ef058a3152e338dc68847f620cc51ed47e7d2ccffff2e395aa12e0e4980001c6"
+        }
+      ],
+      "hash": "bf763f919126d78ff64147047a5d02cb5d68b345dba9e7806e0d85a0ae1d21d3",
+      "deps": []
     },
     {
       "name": "article",

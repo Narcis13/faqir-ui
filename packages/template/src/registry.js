@@ -56,8 +56,17 @@ export const components = {
   "file-upload": [
    "file-upload.js"
   ],
+  "image-compare": [
+   "image-compare.js"
+  ],
   "input-otp": [
    "input-otp.js"
+  ],
+  "knob": [
+   "knob.js"
+  ],
+  "lightbox": [
+   "lightbox.js"
   ],
   "menubar": [
    "menubar.js"
@@ -103,6 +112,9 @@ export const components = {
   ],
   "tree-view": [
    "tree-view.js"
+  ],
+  "video-player": [
+   "video-player.js"
   ]
  },
  "components": {
@@ -6024,7 +6036,18 @@ export const components = {
      "default": "responsive"
     }
    },
-   "states": {},
+   "states": {
+    "loading": {
+     "attr": "data-state",
+     "value": "loading",
+     "kind": "value"
+    },
+    "loaded": {
+     "attr": "data-state",
+     "value": "loaded",
+     "kind": "value"
+    }
+   },
    "props": {
     "alt": {
      "default": ""
@@ -6090,6 +6113,245 @@ export const components = {
       "size",
       "data-size"
      ]
+    ]
+   }
+  },
+  "image-compare": {
+   "defaultSlot": false,
+   "slots": {
+    "before-label": {
+     "required": false
+    },
+    "after-label": {
+     "required": false
+    },
+    "handle": {
+     "required": false
+    },
+    "grip": {
+     "required": false
+    }
+   },
+   "variants": {},
+   "states": {
+    "dragging": {
+     "attr": "data-state",
+     "value": "dragging",
+     "kind": "value"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "image-compare"
+      ]
+     ],
+     [
+      "style",
+      [
+       "--image-compare-pos: 50%"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "img",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "after"
+        ]
+       ],
+       [
+        "alt",
+        [
+         "After: "
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "after"
+     },
+     {
+      "tag": "img",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "before"
+        ]
+       ],
+       [
+        "alt",
+        [
+         "Before: "
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "before"
+     },
+     {
+      "tag": "span",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "before-label"
+        ]
+       ],
+       [
+        "aria-hidden",
+        [
+         "true"
+        ]
+       ]
+      ],
+      "children": [
+       "Before"
+      ],
+      "slot": "before-label"
+     },
+     {
+      "tag": "span",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "after-label"
+        ]
+       ],
+       [
+        "aria-hidden",
+        [
+         "true"
+        ]
+       ]
+      ],
+      "children": [
+       "After"
+      ],
+      "slot": "after-label"
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "handle"
+        ]
+       ],
+       [
+        "role",
+        [
+         "slider"
+        ]
+       ],
+       [
+        "tabindex",
+        [
+         "0"
+        ]
+       ],
+       [
+        "aria-label",
+        [
+         "Before and after divider"
+        ]
+       ],
+       [
+        "aria-orientation",
+        [
+         "horizontal"
+        ]
+       ],
+       [
+        "aria-valuemin",
+        [
+         "0"
+        ]
+       ],
+       [
+        "aria-valuemax",
+        [
+         "100"
+        ]
+       ],
+       [
+        "aria-valuenow",
+        [
+         "50"
+        ]
+       ],
+       [
+        "aria-valuetext",
+        [
+         "50% before, 50% after"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "span",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "grip"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "svg",
+          "attrs": [
+           [
+            "viewBox",
+            [
+             "0 0 24 24"
+            ]
+           ],
+           [
+            "aria-hidden",
+            [
+             "true"
+            ]
+           ],
+           [
+            "focusable",
+            [
+             "false"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "path",
+            "attrs": [
+             [
+              "d",
+              [
+               "m9 7-5 5 5 5M15 7l5 5-5 5"
+              ]
+             ]
+            ],
+            "children": []
+           }
+          ]
+         }
+        ],
+        "slot": "grip"
+       }
+      ],
+      "slot": "handle"
+     }
     ]
    }
   },
@@ -6537,6 +6799,349 @@ export const components = {
     ]
    }
   },
+  "knob": {
+   "defaultSlot": false,
+   "slots": {
+    "label": {
+     "required": false
+    },
+    "control": {
+     "required": false
+    },
+    "cap": {
+     "required": false
+    },
+    "dial": {
+     "required": false
+    },
+    "scale": {
+     "required": false
+    },
+    "track": {
+     "required": false
+    },
+    "arc": {
+     "required": false
+    },
+    "indicator": {
+     "required": false
+    },
+    "output": {
+     "required": false
+    }
+   },
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    }
+   },
+   "states": {
+    "dragging": {
+     "attr": "data-state",
+     "value": "dragging",
+     "kind": "value"
+    }
+   },
+   "props": {
+    "valueSuffix": {
+     "default": ""
+    }
+   },
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "knob"
+      ]
+     ],
+     [
+      "data-value-suffix",
+      [
+       {
+        "p": "valueSuffix"
+       }
+      ]
+     ],
+     [
+      "style",
+      [
+       "--knob-pos: "
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "label",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "label"
+        ]
+       ],
+       [
+        "for",
+        [
+         {
+          "p": "id"
+         }
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "label",
+      "sample": true
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "control"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "input",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "input"
+          ]
+         ],
+         [
+          "id",
+          [
+           {
+            "p": "id"
+           }
+          ]
+         ],
+         [
+          "type",
+          [
+           "range"
+          ]
+         ]
+        ],
+        "children": [],
+        "slot": "input"
+       },
+       {
+        "tag": "span",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "cap"
+          ]
+         ],
+         [
+          "aria-hidden",
+          [
+           "true"
+          ]
+         ]
+        ],
+        "children": [],
+        "slot": "cap"
+       },
+       {
+        "tag": "svg",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "dial"
+          ]
+         ],
+         [
+          "viewBox",
+          [
+           "0 0 100 100"
+          ]
+         ],
+         [
+          "aria-hidden",
+          [
+           "true"
+          ]
+         ],
+         [
+          "focusable",
+          [
+           "false"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "path",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "scale"
+            ]
+           ],
+           [
+            "d",
+            [
+             "M 16.059 83.941 A 48 48 0 1 1 83.941 83.941"
+            ]
+           ],
+           [
+            "pathLength",
+            [
+             "100"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "scale"
+         },
+         {
+          "tag": "path",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "track"
+            ]
+           ],
+           [
+            "d",
+            [
+             "M 21.716 78.284 A 40 40 0 1 1 78.284 78.284"
+            ]
+           ],
+           [
+            "pathLength",
+            [
+             "100"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "track"
+         },
+         {
+          "tag": "path",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "arc"
+            ]
+           ],
+           [
+            "d",
+            [
+             "M 21.716 78.284 A 40 40 0 1 1 78.284 78.284"
+            ]
+           ],
+           [
+            "pathLength",
+            [
+             "100"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "arc"
+         },
+         {
+          "tag": "line",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "indicator"
+            ]
+           ],
+           [
+            "x1",
+            [
+             "50"
+            ]
+           ],
+           [
+            "y1",
+            [
+             "27"
+            ]
+           ],
+           [
+            "x2",
+            [
+             "50"
+            ]
+           ],
+           [
+            "y2",
+            [
+             "39"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "indicator"
+         }
+        ],
+        "slot": "dial"
+       }
+      ],
+      "slot": "control"
+     },
+     {
+      "tag": "output",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "output"
+        ]
+       ],
+       [
+        "for",
+        [
+         {
+          "p": "id"
+         }
+        ]
+       ],
+       [
+        "aria-hidden",
+        [
+         "true"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "output",
+      "sample": true
+     }
+    ],
+    "dyn": [
+     [
+      "size",
+      "data-size"
+     ]
+    ]
+   }
+  },
   "label": {
    "defaultSlot": true,
    "slots": {},
@@ -6596,6 +7201,713 @@ export const components = {
       "size",
       "data-size"
      ]
+    ]
+   }
+  },
+  "lightbox": {
+   "defaultSlot": false,
+   "slots": {
+    "gallery": {
+     "required": false
+    },
+    "item": {
+     "required": false
+    },
+    "overlay": {
+     "required": false
+    },
+    "panel": {
+     "required": false
+    },
+    "toolbar": {
+     "required": false
+    },
+    "counter": {
+     "required": false
+    },
+    "zoom-out": {
+     "required": false
+    },
+    "zoom-in": {
+     "required": false
+    },
+    "close": {
+     "required": false
+    },
+    "stage": {
+     "required": false,
+     "states": {
+      "loaded": {
+       "attr": "data-state",
+       "value": "loaded",
+       "kind": "value"
+      }
+     }
+    },
+    "prev": {
+     "required": false
+    },
+    "next": {
+     "required": false
+    },
+    "caption": {
+     "required": false
+    },
+    "status": {
+     "required": false
+    }
+   },
+   "variants": {},
+   "states": {
+    "open": {
+     "attr": "data-state",
+     "value": "open",
+     "kind": "value"
+    },
+    "closing": {
+     "attr": "data-state",
+     "value": "closing",
+     "kind": "value"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "lightbox"
+      ]
+     ],
+     [
+      "data-state",
+      [
+       "closed"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "ul",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "gallery"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "li",
+        "attrs": [],
+        "children": [
+         {
+          "tag": "a",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "item"
+            ]
+           ],
+           [
+            "aria-haspopup",
+            [
+             "dialog"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "figure",
+            "attrs": [
+             [
+              "data-ui",
+              [
+               "image"
+              ]
+             ],
+             [
+              "data-ratio",
+              [
+               "4-3"
+              ]
+             ],
+             [
+              "data-size",
+              [
+               "full"
+              ]
+             ],
+             [
+              "data-hover",
+              [
+               "zoom"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "img",
+              "attrs": [
+               [
+                "data-part",
+                [
+                 "img"
+                ]
+               ],
+               [
+                "loading",
+                [
+                 "lazy"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "item"
+         }
+        ]
+       }
+      ],
+      "slot": "gallery"
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "overlay"
+        ]
+       ],
+       [
+        "hidden",
+        true
+       ]
+      ],
+      "children": [],
+      "slot": "overlay"
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "panel"
+        ]
+       ],
+       [
+        "role",
+        [
+         "dialog"
+        ]
+       ],
+       [
+        "aria-modal",
+        [
+         "true"
+        ]
+       ],
+       [
+        "aria-label",
+        [
+         "Image viewer"
+        ]
+       ],
+       [
+        "tabindex",
+        [
+         "-1"
+        ]
+       ],
+       [
+        "hidden",
+        true
+       ]
+      ],
+      "children": [
+       {
+        "tag": "div",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "toolbar"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "counter"
+            ]
+           ],
+           [
+            "aria-hidden",
+            [
+             "true"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "counter"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "zoom-out"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Zoom out"
+            ]
+           ],
+           [
+            "aria-disabled",
+            [
+             "true"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "circle",
+              "attrs": [
+               [
+                "cx",
+                [
+                 "11"
+                ]
+               ],
+               [
+                "cy",
+                [
+                 "11"
+                ]
+               ],
+               [
+                "r",
+                [
+                 "7"
+                ]
+               ]
+              ],
+              "children": []
+             },
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "m20.5 20.5-4.5-4.5M8 11h6"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "zoom-out"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "zoom-in"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Zoom in"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "circle",
+              "attrs": [
+               [
+                "cx",
+                [
+                 "11"
+                ]
+               ],
+               [
+                "cy",
+                [
+                 "11"
+                ]
+               ],
+               [
+                "r",
+                [
+                 "7"
+                ]
+               ]
+              ],
+              "children": []
+             },
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "m20.5 20.5-4.5-4.5M8 11h6M11 8v6"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "zoom-in"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "close"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Close viewer"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "M6 6l12 12M18 6 6 18"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "close"
+         }
+        ],
+        "slot": "toolbar"
+       },
+       {
+        "tag": "div",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "stage"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "img",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "image"
+            ]
+           ],
+           [
+            "alt",
+            []
+           ],
+           [
+            "draggable",
+            [
+             "false"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "image"
+         }
+        ],
+        "slot": "stage"
+       },
+       {
+        "tag": "button",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "prev"
+          ]
+         ],
+         [
+          "type",
+          [
+           "button"
+          ]
+         ],
+         [
+          "aria-label",
+          [
+           "Previous image"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "svg",
+          "attrs": [
+           [
+            "viewBox",
+            [
+             "0 0 24 24"
+            ]
+           ],
+           [
+            "aria-hidden",
+            [
+             "true"
+            ]
+           ],
+           [
+            "focusable",
+            [
+             "false"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "path",
+            "attrs": [
+             [
+              "d",
+              [
+               "m15 5-7 7 7 7"
+              ]
+             ]
+            ],
+            "children": []
+           }
+          ]
+         }
+        ],
+        "slot": "prev"
+       },
+       {
+        "tag": "button",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "next"
+          ]
+         ],
+         [
+          "type",
+          [
+           "button"
+          ]
+         ],
+         [
+          "aria-label",
+          [
+           "Next image"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "svg",
+          "attrs": [
+           [
+            "viewBox",
+            [
+             "0 0 24 24"
+            ]
+           ],
+           [
+            "aria-hidden",
+            [
+             "true"
+            ]
+           ],
+           [
+            "focusable",
+            [
+             "false"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "path",
+            "attrs": [
+             [
+              "d",
+              [
+               "m9 5 7 7-7 7"
+              ]
+             ]
+            ],
+            "children": []
+           }
+          ]
+         }
+        ],
+        "slot": "next"
+       },
+       {
+        "tag": "p",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "caption"
+          ]
+         ]
+        ],
+        "children": [],
+        "slot": "caption"
+       },
+       {
+        "tag": "span",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "status"
+          ]
+         ],
+         [
+          "role",
+          [
+           "status"
+          ]
+         ]
+        ],
+        "children": [],
+        "slot": "status"
+       }
+      ],
+      "slot": "panel"
+     }
     ]
    }
   },
@@ -12594,6 +13906,1394 @@ export const components = {
       "variant",
       "data-variant"
      ]
+    ]
+   }
+  },
+  "video-player": {
+   "defaultSlot": false,
+   "slots": {
+    "video": {
+     "required": false
+    },
+    "cue": {
+     "required": false
+    },
+    "spinner": {
+     "required": false
+    },
+    "big-play": {
+     "required": false
+    },
+    "message": {
+     "required": false
+    },
+    "controls": {
+     "required": false
+    },
+    "scrubber": {
+     "required": false
+    },
+    "buffered": {
+     "required": false
+    },
+    "progress": {
+     "required": false
+    },
+    "thumb": {
+     "required": false
+    },
+    "tooltip": {
+     "required": false
+    },
+    "bar": {
+     "required": false
+    },
+    "play": {
+     "required": false
+    },
+    "mute": {
+     "required": false
+    },
+    "volume": {
+     "required": false
+    },
+    "level": {
+     "required": false
+    },
+    "time": {
+     "required": false
+    },
+    "elapsed": {
+     "required": false
+    },
+    "duration": {
+     "required": false
+    },
+    "captions": {
+     "required": false
+    },
+    "rate": {
+     "required": false
+    },
+    "pip": {
+     "required": false
+    },
+    "fullscreen": {
+     "required": false
+    },
+    "status": {
+     "required": false
+    }
+   },
+   "variants": {},
+   "states": {
+    "playing": {
+     "attr": "data-state",
+     "value": "playing",
+     "kind": "value"
+    },
+    "buffering": {
+     "attr": "data-state",
+     "value": "buffering",
+     "kind": "value"
+    },
+    "ended": {
+     "attr": "data-state",
+     "value": "ended",
+     "kind": "value"
+    },
+    "error": {
+     "attr": "data-state",
+     "value": "error",
+     "kind": "value"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "video-player"
+      ]
+     ],
+     [
+      "data-state",
+      [
+       "paused"
+      ]
+     ],
+     [
+      "role",
+      [
+       "group"
+      ]
+     ],
+     [
+      "tabindex",
+      [
+       "-1"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "video",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "video"
+        ]
+       ],
+       [
+        "controls",
+        true
+       ],
+       [
+        "playsinline",
+        true
+       ],
+       [
+        "preload",
+        [
+         "metadata"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "track",
+        "attrs": [
+         [
+          "kind",
+          [
+           "captions"
+          ]
+         ],
+         [
+          "srclang",
+          [
+           "en"
+          ]
+         ],
+         [
+          "label",
+          [
+           "English"
+          ]
+         ],
+         [
+          "default",
+          true
+         ]
+        ],
+        "children": []
+       }
+      ],
+      "slot": "video"
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "cue"
+        ]
+       ],
+       [
+        "aria-hidden",
+        [
+         "true"
+        ]
+       ],
+       [
+        "hidden",
+        true
+       ]
+      ],
+      "children": [],
+      "slot": "cue"
+     },
+     {
+      "tag": "span",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "spinner"
+        ]
+       ],
+       [
+        "aria-hidden",
+        [
+         "true"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "spinner"
+     },
+     {
+      "tag": "button",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "big-play"
+        ]
+       ],
+       [
+        "type",
+        [
+         "button"
+        ]
+       ],
+       [
+        "aria-label",
+        [
+         "Play"
+        ]
+       ],
+       [
+        "hidden",
+        true
+       ]
+      ],
+      "children": [
+       {
+        "tag": "svg",
+        "attrs": [
+         [
+          "viewBox",
+          [
+           "0 0 24 24"
+          ]
+         ],
+         [
+          "aria-hidden",
+          [
+           "true"
+          ]
+         ],
+         [
+          "focusable",
+          [
+           "false"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "path",
+          "attrs": [
+           [
+            "fill",
+            [
+             "currentColor"
+            ]
+           ],
+           [
+            "d",
+            [
+             "M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z"
+            ]
+           ]
+          ],
+          "children": []
+         }
+        ]
+       },
+       {
+        "tag": "svg",
+        "attrs": [
+         [
+          "viewBox",
+          [
+           "0 0 24 24"
+          ]
+         ],
+         [
+          "aria-hidden",
+          [
+           "true"
+          ]
+         ],
+         [
+          "focusable",
+          [
+           "false"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "path",
+          "attrs": [
+           [
+            "d",
+            [
+             "M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4.5H8"
+            ]
+           ]
+          ],
+          "children": []
+         }
+        ]
+       }
+      ],
+      "slot": "big-play"
+     },
+     {
+      "tag": "p",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "message"
+        ]
+       ],
+       [
+        "role",
+        [
+         "alert"
+        ]
+       ],
+       [
+        "hidden",
+        true
+       ]
+      ],
+      "children": [
+       "This video can’t be played."
+      ],
+      "slot": "message"
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "controls"
+        ]
+       ],
+       [
+        "hidden",
+        true
+       ]
+      ],
+      "children": [
+       {
+        "tag": "div",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "scrubber"
+          ]
+         ],
+         [
+          "role",
+          [
+           "slider"
+          ]
+         ],
+         [
+          "tabindex",
+          [
+           "0"
+          ]
+         ],
+         [
+          "aria-label",
+          [
+           "Seek"
+          ]
+         ],
+         [
+          "aria-valuemin",
+          [
+           "0"
+          ]
+         ],
+         [
+          "aria-valuemax",
+          [
+           "0"
+          ]
+         ],
+         [
+          "aria-valuenow",
+          [
+           "0"
+          ]
+         ],
+         [
+          "aria-valuetext",
+          [
+           "0 seconds of 0 seconds"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "buffered"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "buffered"
+         },
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "progress"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "progress"
+         },
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "thumb"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "thumb"
+         },
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "tooltip"
+            ]
+           ],
+           [
+            "hidden",
+            true
+           ]
+          ],
+          "children": [
+           "0:00"
+          ],
+          "slot": "tooltip"
+         }
+        ],
+        "slot": "scrubber"
+       },
+       {
+        "tag": "div",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "bar"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "play"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Play"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "fill",
+                [
+                 "currentColor"
+                ]
+               ],
+               [
+                "d",
+                [
+                 "M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           },
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "rect",
+              "attrs": [
+               [
+                "fill",
+                [
+                 "currentColor"
+                ]
+               ],
+               [
+                "x",
+                [
+                 "6"
+                ]
+               ],
+               [
+                "y",
+                [
+                 "5"
+                ]
+               ],
+               [
+                "width",
+                [
+                 "4"
+                ]
+               ],
+               [
+                "height",
+                [
+                 "14"
+                ]
+               ],
+               [
+                "rx",
+                [
+                 "1.2"
+                ]
+               ]
+              ],
+              "children": []
+             },
+             {
+              "tag": "rect",
+              "attrs": [
+               [
+                "fill",
+                [
+                 "currentColor"
+                ]
+               ],
+               [
+                "x",
+                [
+                 "14"
+                ]
+               ],
+               [
+                "y",
+                [
+                 "5"
+                ]
+               ],
+               [
+                "width",
+                [
+                 "4"
+                ]
+               ],
+               [
+                "height",
+                [
+                 "14"
+                ]
+               ],
+               [
+                "rx",
+                [
+                 "1.2"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           },
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4.5H8"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "play"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "mute"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Mute"
+            ]
+           ],
+           [
+            "aria-pressed",
+            [
+             "false"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "fill",
+                [
+                 "currentColor"
+                ]
+               ],
+               [
+                "d",
+                [
+                 "M11 5 6.5 8.8H3.5v6.4h3L11 19Z"
+                ]
+               ]
+              ],
+              "children": []
+             },
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "M15.5 9a4.2 4.2 0 0 1 0 6M18.4 6.2a8.2 8.2 0 0 1 0 11.6"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           },
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "fill",
+                [
+                 "currentColor"
+                ]
+               ],
+               [
+                "d",
+                [
+                 "M11 5 6.5 8.8H3.5v6.4h3L11 19Z"
+                ]
+               ]
+              ],
+              "children": []
+             },
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "m15.5 9.5 5 5M20.5 9.5l-5 5"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "mute"
+         },
+         {
+          "tag": "div",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "volume"
+            ]
+           ],
+           [
+            "role",
+            [
+             "slider"
+            ]
+           ],
+           [
+            "tabindex",
+            [
+             "0"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Volume"
+            ]
+           ],
+           [
+            "aria-valuemin",
+            [
+             "0"
+            ]
+           ],
+           [
+            "aria-valuemax",
+            [
+             "100"
+            ]
+           ],
+           [
+            "aria-valuenow",
+            [
+             "100"
+            ]
+           ],
+           [
+            "aria-valuetext",
+            [
+             "100%"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "level"
+              ]
+             ]
+            ],
+            "children": [],
+            "slot": "level"
+           }
+          ],
+          "slot": "volume"
+         },
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "time"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "elapsed"
+              ]
+             ]
+            ],
+            "children": [
+             "0:00"
+            ],
+            "slot": "elapsed"
+           },
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ]
+            ],
+            "children": [
+             " / "
+            ]
+           },
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "duration"
+              ]
+             ]
+            ],
+            "children": [
+             "0:00"
+            ],
+            "slot": "duration"
+           }
+          ],
+          "slot": "time"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "captions"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Captions"
+            ]
+           ],
+           [
+            "aria-pressed",
+            [
+             "true"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "rect",
+              "attrs": [
+               [
+                "x",
+                [
+                 "2.5"
+                ]
+               ],
+               [
+                "y",
+                [
+                 "5"
+                ]
+               ],
+               [
+                "width",
+                [
+                 "19"
+                ]
+               ],
+               [
+                "height",
+                [
+                 "14"
+                ]
+               ],
+               [
+                "rx",
+                [
+                 "3"
+                ]
+               ]
+              ],
+              "children": []
+             },
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "M10.4 10.3a2.3 2.3 0 1 0 0 3.4M17 10.3a2.3 2.3 0 1 0 0 3.4"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "captions"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "rate"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Playback speed 1×"
+            ]
+           ]
+          ],
+          "children": [
+           "1×"
+          ],
+          "slot": "rate"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "pip"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Picture in picture"
+            ]
+           ],
+           [
+            "aria-pressed",
+            [
+             "false"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "rect",
+              "attrs": [
+               [
+                "x",
+                [
+                 "2.5"
+                ]
+               ],
+               [
+                "y",
+                [
+                 "4.5"
+                ]
+               ],
+               [
+                "width",
+                [
+                 "19"
+                ]
+               ],
+               [
+                "height",
+                [
+                 "15"
+                ]
+               ],
+               [
+                "rx",
+                [
+                 "2.5"
+                ]
+               ]
+              ],
+              "children": []
+             },
+             {
+              "tag": "rect",
+              "attrs": [
+               [
+                "fill",
+                [
+                 "currentColor"
+                ]
+               ],
+               [
+                "x",
+                [
+                 "12"
+                ]
+               ],
+               [
+                "y",
+                [
+                 "11.5"
+                ]
+               ],
+               [
+                "width",
+                [
+                 "7"
+                ]
+               ],
+               [
+                "height",
+                [
+                 "5.5"
+                ]
+               ],
+               [
+                "rx",
+                [
+                 "1"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "pip"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "fullscreen"
+            ]
+           ],
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Full screen"
+            ]
+           ],
+           [
+            "aria-pressed",
+            [
+             "false"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "M8.5 3.5h-3a2 2 0 0 0-2 2v3M20.5 8.5v-3a2 2 0 0 0-2-2h-3M3.5 15.5v3a2 2 0 0 0 2 2h3M15.5 20.5h3a2 2 0 0 0 2-2v-3"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           },
+           {
+            "tag": "svg",
+            "attrs": [
+             [
+              "viewBox",
+              [
+               "0 0 24 24"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ],
+             [
+              "focusable",
+              [
+               "false"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "path",
+              "attrs": [
+               [
+                "d",
+                [
+                 "M8.5 3.5v3a2 2 0 0 1-2 2h-3M20.5 8.5h-3a2 2 0 0 1-2-2v-3M3.5 15.5h3a2 2 0 0 1 2 2v3M15.5 20.5v-3a2 2 0 0 1 2-2h3"
+                ]
+               ]
+              ],
+              "children": []
+             }
+            ]
+           }
+          ],
+          "slot": "fullscreen"
+         }
+        ],
+        "slot": "bar"
+       }
+      ],
+      "slot": "controls"
+     },
+     {
+      "tag": "span",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "status"
+        ]
+       ],
+       [
+        "role",
+        [
+         "status"
+        ]
+       ]
+      ],
+      "children": [],
+      "slot": "status"
+     }
     ]
    }
   },

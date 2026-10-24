@@ -6,7 +6,7 @@
 //   engine:      src/core-src/engine.js
 //   core helper: registry/core/menu-navigation.js
 //   evaluator:   src/core-src/csp-evaluator.js (forecraft #50)
-//   controllers: 29 recipe factories → accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
+//   controllers: 33 recipe factories → accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, image-compare, input-otp, knob, lightbox, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view, video-player
 //
 // PRODUCTION BUILD — dev-only diagnostics stripped at assembly time.
 // Load faqir-core.dev.js instead while developing for full warnings.
@@ -6483,6 +6483,134 @@ function createFileUpload(root) {
     return createFileUpload;
   })();
 
+  // ── image-compare ── (registry/recipes/image-compare/image-compare.js)
+  var createImageCompare = controllerRegistry["image-compare"] = (function() {
+// @ui:controller image-compare
+// @ui:provides setPosition getPosition destroy
+
+/**
+ * image-compare — a before/after comparison with a draggable divider.
+ *
+ * The two pictures are stacked; "before" is clipped at --image-compare-pos (a
+ * percentage the controller writes on the root, authored inline so the static
+ * page splits too). The divider's handle is the keyboard- and screen-reader-
+ * facing control: role="slider", 0–100, with aria-valuetext naming both sides.
+ *
+ * A press anywhere on the picture moves the divider there and drags it;
+ * data-mode="hover" makes it follow the pointer without a press.
+ * data-orientation="vertical" stacks the halves top and bottom. RTL mirrors a
+ * horizontal compare: "before" is on the inline-start side.
+ */
+function createImageCompare(root) {
+  if (root._faqirImageCompare) return root._faqirImageCompare;
+
+  const [handle] = ownParts(root, "handle");
+  if (!handle) return null;
+
+  const num = (v, d) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  const vertical = root.dataset.orientation === "vertical";
+  const follow = root.dataset.mode === "hover";
+  const step = num(root.dataset.step, 1);
+  const rtl = () => !vertical && getComputedStyle(root).direction === "rtl";
+  let pos = clamp(num(root.dataset.position, num(handle.getAttribute("aria-valuenow"), 50)), 0, 100);
+  let dragging = false;
+
+  handle.setAttribute("aria-orientation", vertical ? "vertical" : "horizontal");
+
+  function render() {
+    const p = Math.round(pos);
+    root.style.setProperty("--image-compare-pos", pos + "%");
+    handle.setAttribute("aria-valuenow", String(p));
+    handle.setAttribute("aria-valuetext", p + "% before, " + (100 - p) + "% after");
+  }
+
+  function set(next) {
+    next = clamp(Math.round(next * 100) / 100, 0, 100);
+    if (next === pos) return;
+    pos = next;
+    render();
+    root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { position: pos } }));
+  }
+
+  function at(e) {
+    const r = root.getBoundingClientRect();
+    const f = vertical ? (e.clientY - r.top) / (r.height || 1) : (e.clientX - r.left) / (r.width || 1);
+    return (rtl() ? 1 - f : f) * 100;
+  }
+
+  function onPointerDown(e) {
+    if (e.button > 0) return;
+    dragging = true;
+    root.setPointerCapture?.(e.pointerId);
+    root.dataset.state = "dragging";
+    handle.focus({ preventScroll: true });
+    e.preventDefault();
+    set(at(e));
+  }
+  function onPointerMove(e) {
+    if (dragging || (follow && e.pointerType !== "touch")) set(at(e));
+  }
+  function onPointerUp() {
+    dragging = false;
+    delete root.dataset.state;
+  }
+
+  function onKeyDown(e) {
+    const back = rtl() ? "ArrowRight" : "ArrowLeft";
+    const fwd = rtl() ? "ArrowLeft" : "ArrowRight";
+    // The divider moves the way the arrow points; a horizontal slider also
+    // takes Up as "more", as every slider does.
+    const up = vertical ? -step : step;
+    const next = {
+      [fwd]: pos + step,
+      [back]: pos - step,
+      ArrowUp: pos + up,
+      ArrowDown: pos - up,
+      PageUp: pos + step * 10,
+      PageDown: pos - step * 10,
+      Home: 0,
+      End: 100,
+    }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    set(next);
+  }
+
+  root.addEventListener("pointerdown", onPointerDown);
+  root.addEventListener("pointermove", onPointerMove);
+  root.addEventListener("pointerup", onPointerUp);
+  root.addEventListener("pointercancel", onPointerUp);
+  handle.addEventListener("keydown", onKeyDown);
+  render();
+
+  /** Move the divider to `percent` (0–100) of the way across. */
+  function setPosition(percent) {
+    set(Number(percent));
+  }
+  /** Where the divider is, 0–100. */
+  function getPosition() {
+    return pos;
+  }
+  function destroy() {
+    root.removeEventListener("pointerdown", onPointerDown);
+    root.removeEventListener("pointermove", onPointerMove);
+    root.removeEventListener("pointerup", onPointerUp);
+    root.removeEventListener("pointercancel", onPointerUp);
+    handle.removeEventListener("keydown", onKeyDown);
+    onPointerUp();
+    delete root._faqirImageCompare;
+  }
+
+  const api = { setPosition, getPosition, destroy };
+  root._faqirImageCompare = api;
+  return api;
+}
+    return createImageCompare;
+  })();
+
   // ── input-otp ── (registry/recipes/input-otp/input-otp.js)
   var createInputOTP = controllerRegistry["input-otp"] = (function() {
 // @ui:controller input-otp
@@ -6902,6 +7030,576 @@ function clampInt(raw, fallback, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
     return createInputOTP;
+  })();
+
+  // ── knob ── (registry/recipes/knob/knob.js)
+  var createKnob = controllerRegistry["knob"] = (function() {
+// @ui:controller knob
+// @ui:provides setValue getValue stepBy reset setFormatter destroy
+
+/**
+ * knob — a rotary control over a real `<input type="range">`.
+ *
+ * The native range IS the control: it carries `name`/`min`/`max`/`step`/`value`
+ * (so it submits with its form and resets with it), it is the element keyboard
+ * focus and assistive technology land on (implicit `role="slider"`, native
+ * `aria-valuenow`), and it is what `l-model` binds. The controller only draws
+ * the dial — `--knob-pos` (and `--knob-origin` for a bipolar knob) on the root,
+ * read by the stylesheet's SVG arc and indicator — and turns pointer drags,
+ * wheel notches and keys into writes on the input, each followed by the
+ * `input`/`change` events a user's own edit would fire.
+ *
+ * Programmatic writes (`input.value = …`, which is how `l-model` pushes a model
+ * change into an input) are picked up by an instance-level `value` accessor
+ * that defers to the prototype's and then repaints, so model → dial needs no
+ * engine support. A form reset repaints too (and fires `input` so a bound model
+ * follows the restored value).
+ */
+function createKnob(root) {
+  if (root._faqirKnob) return root._faqirKnob;
+
+  const [input] = ownParts(root, "input");
+  const [control] = ownParts(root, "control");
+  const [output] = ownParts(root, "output");
+  if (!input || !control) return null;
+
+  const num = (v, d) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : d;
+  };
+  const min = num(input.min, 0);
+  const max = Math.max(num(input.max, 100), min);
+  const span = max - min || 1;
+  // `step="any"` is continuous: keys move 1% and nothing snaps.
+  const step = input.step === "any" ? 0 : num(input.step, 1) > 0 ? num(input.step, 1) : 1;
+  const keyStep = step || span / 100;
+  const pageStep = num(root.dataset.pageStep, keyStep * 10);
+  const origin = root.dataset.origin != null ? clamp(num(root.dataset.origin, min), min, max) : null;
+  const angular = root.dataset.drag === "angular";
+  const suffix = root.dataset.valueSuffix || "";
+  const decimals = step ? (String(step).split(".")[1] || "").length : 2;
+  let formatter = null;
+
+  const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  const read = () => num(native.get.call(input), min);
+  const frac = (v) => (v - min) / span;
+
+  /** Snap onto the step grid (based at `min`, like the native range) and clamp. */
+  function snap(v) {
+    const s = step ? min + Math.round((v - min) / step) * step : v;
+    return Number(clamp(s, min, max).toFixed(decimals));
+  }
+
+  function text(v) {
+    if (formatter) return String(formatter(v));
+    // A typographic minus, and an explicit plus either side of a bipolar origin.
+    return (origin != null && v > origin ? "+" : "") + String(v).replace("-", "−") + suffix;
+  }
+
+  function render() {
+    const v = read();
+    root.style.setProperty("--knob-pos", String(frac(v)));
+    if (origin != null) root.style.setProperty("--knob-origin", String(frac(origin)));
+    const t = text(v);
+    input.setAttribute("aria-valuetext", t);
+    if (output) output.textContent = t;
+  }
+
+  function fire(type) {
+    input.dispatchEvent(new Event(type, { bubbles: true }));
+    if (type === "change") {
+      root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { value: read() } }));
+    }
+  }
+
+  /** The one write path: snap, store, repaint, and tell listeners. */
+  function commit(next, done) {
+    const v = snap(next);
+    const changed = v !== read();
+    if (changed) native.set.call(input, String(v));
+    render();
+    if (changed) fire("input");
+    if (changed && done) fire("change");
+    return changed;
+  }
+
+  // model → dial: an own `value` accessor in front of the prototype's.
+  Object.defineProperty(input, "value", {
+    configurable: true,
+    get: () => native.get.call(input),
+    set: (v) => {
+      native.set.call(input, v);
+      render();
+    },
+  });
+
+  // ── Keyboard ───────────────────────────────────────────────────────────────
+  // Handled here rather than natively so PageUp/PageDown honour data-page-step
+  // and every key commits through the same snap → events path.
+  function onKeyDown(e) {
+    const v = read();
+    const next = {
+      ArrowUp: v + keyStep,
+      ArrowRight: v + keyStep,
+      ArrowDown: v - keyStep,
+      ArrowLeft: v - keyStep,
+      PageUp: v + pageStep,
+      PageDown: v - pageStep,
+      Home: min,
+      End: max,
+    }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    commit(next, true);
+  }
+
+  // ── Pointer ────────────────────────────────────────────────────────────────
+  // Linear: drag up or right to turn clockwise, 200px for the full sweep,
+  // ten times finer with Shift. The raw (unsnapped) value is carried between
+  // moves so a fine drag still accumulates across steps.
+  let drag = null;
+
+  function fromAngle(e) {
+    const r = control.getBoundingClientRect();
+    const deg =
+      (Math.atan2(e.clientX - r.left - r.width / 2, r.top + r.height / 2 - e.clientY) * 180) / Math.PI;
+    // The gap at the bottom of the dial pins to whichever end the drag was near.
+    const f = Math.abs(deg) > 135 ? (frac(read()) > 0.5 ? 1 : 0) : (deg + 135) / 270;
+    commit(min + f * span);
+  }
+
+  function onPointerDown(e) {
+    if (input.disabled || e.button > 0) return;
+    e.preventDefault();
+    input.focus({ preventScroll: true });
+    control.setPointerCapture?.(e.pointerId);
+    drag = { x: e.clientX, y: e.clientY, raw: read(), from: read() };
+    root.dataset.state = "dragging";
+    if (angular) fromAngle(e);
+  }
+
+  function onPointerMove(e) {
+    if (!drag) return;
+    if (angular) return fromAngle(e);
+    const travel = drag.y - e.clientY + e.clientX - drag.x;
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+    drag.raw = clamp(drag.raw + (travel * span) / (e.shiftKey ? 2000 : 200), min, max);
+    commit(drag.raw);
+  }
+
+  function onPointerUp() {
+    if (!drag) return;
+    const moved = read() !== drag.from;
+    drag = null;
+    delete root.dataset.state;
+    if (moved) fire("change");
+  }
+
+  // ── Wheel ──────────────────────────────────────────────────────────────────
+  // Only once the knob has focus (a click gives it focus), so a page scrolled
+  // past a knob under the pointer keeps scrolling.
+  let wheelRaw = null;
+  function onWheel(e) {
+    if (input.disabled || document.activeElement !== input) return;
+    e.preventDefault();
+    if (wheelRaw === null || snap(wheelRaw) !== read()) wheelRaw = read();
+    const delta = -(e.deltaY || e.deltaX) * (e.deltaMode === 1 ? 33 : 1);
+    wheelRaw = clamp(wheelRaw + (delta * span) / (e.shiftKey ? 20000 : 2000), min, max);
+    commit(wheelRaw, true);
+  }
+
+  function onDblClick() {
+    if (!input.disabled) commit(num(input.defaultValue, min), true);
+  }
+
+  // A form reset restores the default AFTER the reset event, and without a
+  // value write we could see — so repaint on the next task, and fire `input`
+  // so an l-model bound to the knob follows.
+  let resetTimer = 0;
+  function onReset() {
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      render();
+      fire("input");
+    });
+  }
+
+  const form = input.form;
+  input.addEventListener("keydown", onKeyDown);
+  input.addEventListener("input", render);
+  control.addEventListener("pointerdown", onPointerDown);
+  control.addEventListener("pointermove", onPointerMove);
+  control.addEventListener("pointerup", onPointerUp);
+  control.addEventListener("pointercancel", onPointerUp);
+  control.addEventListener("wheel", onWheel, { passive: false });
+  control.addEventListener("dblclick", onDblClick);
+  form?.addEventListener("reset", onReset);
+
+  // Normalise an off-grid authored value onto the grid, silently.
+  native.set.call(input, String(snap(read())));
+  render();
+
+  // ── Public API ─────────────────────────────────────────────────────────────
+  /** Set the value (snapped and clamped); fires `input` and `change`. */
+  function setValue(value) {
+    commit(Number(value), true);
+  }
+  /** The current value as a number. */
+  function getValue() {
+    return read();
+  }
+  /** Move by `n` steps (negative turns anticlockwise). */
+  function stepBy(n) {
+    commit(read() + keyStep * (Number(n) || 0), true);
+  }
+  /** Return to the authored default (the input's `value` attribute). */
+  function reset() {
+    commit(num(input.defaultValue, min), true);
+  }
+  /** Format the readout and aria-valuetext: `fn(value) → string`, or null. */
+  function setFormatter(fn) {
+    formatter = typeof fn === "function" ? fn : null;
+    render();
+  }
+
+  function destroy() {
+    input.removeEventListener("keydown", onKeyDown);
+    input.removeEventListener("input", render);
+    control.removeEventListener("pointerdown", onPointerDown);
+    control.removeEventListener("pointermove", onPointerMove);
+    control.removeEventListener("pointerup", onPointerUp);
+    control.removeEventListener("pointercancel", onPointerUp);
+    control.removeEventListener("wheel", onWheel);
+    control.removeEventListener("dblclick", onDblClick);
+    form?.removeEventListener("reset", onReset);
+    clearTimeout(resetTimer);
+    delete input.value;
+    delete root.dataset.state;
+    delete root._faqirKnob;
+  }
+
+  const api = { setValue, getValue, stepBy, reset, setFormatter, destroy };
+  root._faqirKnob = api;
+  return api;
+}
+    return createKnob;
+  })();
+
+  // ── lightbox ── (registry/recipes/lightbox/lightbox.js)
+  var createLightbox = controllerRegistry["lightbox"] = (function() {
+// @ui:controller lightbox
+// @ui:provides open close show next prev zoomIn zoomOut resetZoom destroy
+
+/**
+ * lightbox — a gallery whose items open a modal viewer with zoom and pan.
+ *
+ * Each item is a link to the full-size picture (`href`), wrapping its
+ * thumbnail, so without script a click simply opens the picture. With the
+ * controller a click (or Enter) opens the viewer on that picture instead: a
+ * role="dialog" panel over a dark overlay, focus trapped inside it and handed
+ * back to the item on close. Arrows, Home/End and the prev/next buttons move
+ * through the gallery (wrapping); +/−/0, the wheel, a double-click and the
+ * zoom buttons zoom up to 4×; a drag pans a zoomed picture, and the arrows pan
+ * it too. A swipe navigates at 1×. Escape, the close button, the overlay or a
+ * click on the empty stage closes.
+ *
+ * The same dialog contract as `dialog`: data-state closed | open | closing on
+ * the root, the panel's exit motion awaited before it is hidden.
+ */
+function createLightbox(root) {
+  if (root._faqirLightbox) return root._faqirLightbox;
+
+  const part = (name) => ownParts(root, name)[0] || null;
+  const items = ownParts(root, "item");
+  const overlay = part("overlay");
+  const panel = part("panel");
+  const stage = part("stage");
+  const image = part("image");
+  const caption = part("caption");
+  const counter = part("counter");
+  const status = part("status");
+  const prevBtn = part("prev");
+  const nextBtn = part("next");
+  const zoomInBtn = part("zoom-in");
+  const zoomOutBtn = part("zoom-out");
+  const closeButtons = ownParts(root, "close");
+  if (!panel || !stage || !image) return null;
+  if (!panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
+
+  const MAX = 4;
+  let index = 0;
+  let zoom = 1;
+  let x = 0;
+  let y = 0;
+  let release = null;
+  let opener = null;
+  let cancelExit = null;
+  let drag = null;
+  let tap = false;
+  const rtl = () => getComputedStyle(root).direction === "rtl";
+
+  function paint() {
+    panel.style.setProperty("--lightbox-zoom", String(zoom));
+    panel.style.setProperty("--lightbox-x", x + "px");
+    panel.style.setProperty("--lightbox-y", y + "px");
+    if (zoom > 1) image.dataset.state = "zoomed";
+    else delete image.dataset.state;
+    zoomInBtn?.setAttribute("aria-disabled", String(zoom >= MAX));
+    zoomOutBtn?.setAttribute("aria-disabled", String(zoom <= 1));
+  }
+
+  /** Keep a zoomed picture covering the stage: no panning past its edges. */
+  function bound() {
+    const mx = Math.max(0, (image.offsetWidth * zoom - stage.clientWidth) / 2);
+    const my = Math.max(0, (image.offsetHeight * zoom - stage.clientHeight) / 2);
+    x = clamp(x, -mx, mx);
+    y = clamp(y, -my, my);
+  }
+
+  /** Zoom to `z`, keeping the stage point (px from its centre) under the pointer. */
+  function zoomTo(z, cx = 0, cy = 0) {
+    const target = clamp(z, 1, MAX);
+    const k = target / zoom;
+    x = cx - (cx - x) * k;
+    y = cy - (cy - y) * k;
+    zoom = target;
+    if (zoom === 1) x = y = 0;
+    bound();
+    paint();
+  }
+
+  function pan(dx, dy) {
+    x += dx;
+    y += dy;
+    bound();
+    paint();
+  }
+
+  function onLoad() {
+    stage.dataset.state = "loaded";
+  }
+
+  function show(i) {
+    if (!items.length) return;
+    index = ((Number(i) || 0) % items.length + items.length) % items.length;
+    const item = items[index];
+    const thumb = item.querySelector("img");
+    const alt = thumb ? thumb.alt : "";
+    stage.dataset.state = "loading";
+    image.alt = alt;
+    image.src = item.getAttribute("href") || (thumb ? thumb.currentSrc || thumb.src : "");
+    if (image.complete && image.naturalWidth) onLoad();
+    const text = item.title || alt;
+    if (caption) {
+      caption.textContent = text;
+      caption.hidden = !text;
+    }
+    const n = items.length;
+    if (counter) counter.textContent = index + 1 + " / " + n;
+    if (status) status.textContent = "Image " + (index + 1) + " of " + n + (alt ? ": " + alt : "");
+    for (const b of [prevBtn, nextBtn]) if (b) b.hidden = n < 2;
+    zoom = 1;
+    x = y = 0;
+    paint();
+    root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { index } }));
+  }
+
+  function open(i, from) {
+    if (root.dataset.state === "open" && release) return show(i ?? index);
+    cancelExit?.();
+    cancelExit = null;
+    if (!release) opener = from || document.activeElement;
+    root.dataset.state = "open";
+    if (overlay) overlay.hidden = false;
+    panel.hidden = false;
+    if (!release) release = trapFocus(panel);
+    show(i ?? 0);
+    panel.focus();
+  }
+
+  function finish() {
+    cancelExit?.();
+    cancelExit = null;
+    root.dataset.state = "closed";
+    if (overlay) overlay.hidden = true;
+    panel.hidden = true;
+    release?.();
+    release = null;
+  }
+
+  function close() {
+    const s = root.dataset.state;
+    if (s === "closed" || s === "closing") return;
+    root.dataset.state = "closing";
+    cancelExit = whenExitDone(panel, null, () => {
+      cancelExit = null;
+      const active = document.activeElement;
+      finish();
+      returnFocus(root, opener, active);
+    });
+  }
+
+  // ── Events ─────────────────────────────────────────────────────────────────
+  function onItemClick(e) {
+    if (e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey) return; // let new-tab gestures through
+    e.preventDefault();
+    open(items.indexOf(e.currentTarget), e.currentTarget);
+  }
+
+  function onKeyDown(e) {
+    if (root.dataset.state !== "open") return;
+    const step = stage.clientWidth / 10;
+    const back = rtl() ? "ArrowRight" : "ArrowLeft";
+    switch (e.key) {
+      case "Escape":
+        e.stopPropagation();
+        close();
+        break;
+      case "ArrowLeft":
+      case "ArrowRight":
+        if (zoom > 1) pan(e.key === "ArrowLeft" ? step : -step, 0);
+        else show(index + (e.key === back ? -1 : 1));
+        break;
+      case "ArrowUp":
+      case "ArrowDown":
+        if (zoom === 1) return;
+        pan(0, e.key === "ArrowUp" ? step : -step);
+        break;
+      case "Home":
+        show(0);
+        break;
+      case "End":
+        show(items.length - 1);
+        break;
+      case "+":
+      case "=":
+        zoomTo(zoom + 0.5);
+        break;
+      case "-":
+        zoomTo(zoom - 0.5);
+        break;
+      case "0":
+        zoomTo(1);
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+  }
+
+  const fromCentre = (e) => {
+    const r = stage.getBoundingClientRect();
+    return [e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2];
+  };
+
+  function onWheel(e) {
+    e.preventDefault();
+    zoomTo(zoom * Math.exp(-e.deltaY * 0.002), ...fromCentre(e));
+  }
+
+  // Capture only while panning: a captured press would retarget the click to
+  // the stage, and a click on the bare stage closes.
+  function onPointerDown(e) {
+    if (e.button > 0) return;
+    drag = { sx: e.clientX, sy: e.clientY, x, y, moved: false, bare: e.target === stage };
+    if (zoom > 1) stage.setPointerCapture?.(e.pointerId);
+  }
+  function onPointerMove(e) {
+    if (!drag) return;
+    const dx = e.clientX - drag.sx;
+    const dy = e.clientY - drag.sy;
+    if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+    if (zoom > 1) {
+      x = drag.x + dx;
+      y = drag.y + dy;
+      bound();
+      paint();
+    }
+  }
+  function onPointerUp(e) {
+    if (!drag) return;
+    const dx = e.clientX - drag.sx;
+    // A horizontal swipe at 1× moves through the gallery.
+    if (zoom === 1 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(e.clientY - drag.sy)) {
+      show(index + ((dx < 0) !== rtl() ? 1 : -1));
+    }
+    tap = drag.bare && !drag.moved;
+    drag = null;
+  }
+
+  function onStageClick() {
+    // A click on the empty stage — not on the picture, not the end of a pan.
+    if (tap) close();
+    tap = false;
+  }
+
+  function onDblClick(e) {
+    zoom > 1 ? zoomTo(1) : zoomTo(2.5, ...fromCentre(e));
+  }
+
+  /** The previous picture (wrapping). */
+  function prev() {
+    show(index - 1);
+  }
+  /** The next picture (wrapping). */
+  function next() {
+    show(index + 1);
+  }
+  /** Zoom in half a step, up to 4×. */
+  function zoomIn() {
+    zoomTo(zoom + 0.5);
+  }
+  /** Zoom out half a step, down to 1×. */
+  function zoomOut() {
+    zoomTo(zoom - 0.5);
+  }
+  /** Back to 1×, centred. */
+  function resetZoom() {
+    zoomTo(1);
+  }
+
+  const bindings = [
+    ...items.map((el) => [el, "click", onItemClick]),
+    [overlay, "click", close],
+    ...closeButtons.map((el) => [el, "click", close]),
+    [prevBtn, "click", prev],
+    [nextBtn, "click", next],
+    [zoomInBtn, "click", zoomIn],
+    [zoomOutBtn, "click", zoomOut],
+    [root, "keydown", onKeyDown],
+    [stage, "wheel", onWheel],
+    [stage, "pointerdown", onPointerDown],
+    [stage, "pointermove", onPointerMove],
+    [stage, "pointerup", onPointerUp],
+    [stage, "pointercancel", onPointerUp],
+    [stage, "click", onStageClick],
+    [image, "dblclick", onDblClick],
+    [image, "load", onLoad],
+  ].filter(([el]) => el);
+  for (const [el, type, fn] of bindings) el.addEventListener(type, fn, type === "wheel" ? { passive: false } : undefined);
+
+  function destroy() {
+    for (const [el, type, fn] of bindings) el.removeEventListener(type, fn);
+    finish();
+    delete root._faqirLightbox;
+  }
+
+  const api = {
+    open,
+    close,
+    show,
+    next,
+    prev,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    destroy,
+  };
+  root._faqirLightbox = api;
+  return api;
+}
+    return createLightbox;
   })();
 
   // ── menubar ── (registry/recipes/menubar/menubar.js)
@@ -13549,6 +14247,476 @@ function createTreeView(root) {
   return api;
 }
     return createTreeView;
+  })();
+
+  // ── video-player ── (registry/recipes/video-player/video-player.js)
+  var createVideoPlayer = controllerRegistry["video-player"] = (function() {
+// @ui:controller video-player
+// @ui:provides play pause toggle seek setVolume toggleMute setRate toggleCaptions toggleFullscreen destroy
+
+const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+/**
+ * video-player — custom controls over a native `<video>`.
+ *
+ * The reference markup ships `<video controls>` and the custom chrome `hidden`,
+ * so with no script the browser's own controls run the video. On init the
+ * controller takes `controls` away and un-hides its own: a big centre play
+ * button, a scrubber (role="slider", buffered range, hover time), elapsed and
+ * duration, mute and a volume slider, a playback-rate cycle, a captions toggle
+ * (hidden without a captions/subtitles track; cues are drawn in the `cue` part
+ * so they sit above the bar), picture-in-picture (hidden where unsupported) and
+ * fullscreen on the root. destroy() hands the video back to its native controls.
+ *
+ * State lives on the root's data-state — paused | playing | buffering | ended |
+ * error — and the controls part is `data-state="hidden"` while playback runs
+ * untouched; any pointer movement, focus or key press brings it back, and it
+ * never hides while keyboard focus is inside the player. Positions are CSS:
+ * --video-player-progress, --video-player-buffered, --video-player-volume and
+ * --video-player-hover on the root.
+ *
+ * Shortcuts run while focus is anywhere in the player: Space/K play-pause, ←/→
+ * ±5 s, J/L ±10 s, ↑/↓ volume, M mute, F fullscreen, C captions, Home/End,
+ * 0–9 seek to that tenth, < / > speed. A slider owns the arrows, Page and
+ * Home/End keys while it has focus; Space and Enter on a button press it.
+ */
+function createVideoPlayer(root) {
+  if (root._faqirVideoPlayer) return root._faqirVideoPlayer;
+
+  const part = (name) => ownParts(root, name)[0] || null;
+  const video = part("video");
+  if (!video) return null;
+  const controls = part("controls");
+  const scrubber = part("scrubber");
+  const tooltip = part("tooltip");
+  const volume = part("volume");
+  const elapsed = part("elapsed");
+  const total = part("duration");
+  const bigPlay = part("big-play");
+  const playBtn = part("play");
+  const muteBtn = part("mute");
+  const rateBtn = part("rate");
+  const ccBtn = part("captions");
+  const pipBtn = part("pip");
+  const fsBtn = part("fullscreen");
+  const cue = part("cue");
+  const message = part("message");
+  const status = part("status");
+
+  const offs = [];
+  const on = (el, map, opts) => {
+    if (!el) return;
+    for (const k in map) el.addEventListener(k, map[k], opts);
+    offs.push(() => {
+      for (const k in map) el.removeEventListener(k, map[k], opts);
+    });
+  };
+  const css = (name, pct) => root.style.setProperty("--video-player-" + name, pct + "%");
+  const label = (el, text) => el && el.setAttribute("aria-label", text);
+  const pressed = (el, on) => el && el.setAttribute("aria-pressed", String(!!on));
+  const dur = () => (Number.isFinite(video.duration) ? video.duration : 0);
+  const rtl = () => getComputedStyle(root).direction === "rtl";
+
+  // Hand the native controls over to ours.
+  const hadControls = video.hasAttribute("controls");
+  video.controls = false;
+  for (const el of [controls, bigPlay]) if (el) el.hidden = false;
+
+  // Captions: the first captions/subtitles track. Its cues are rendered in the
+  // `cue` part (mode "hidden" keeps them loading and firing cuechange without
+  // the browser painting them under our bar).
+  const trackEl = video.querySelector("track[kind='captions'], track[kind='subtitles']");
+  const track = trackEl && trackEl.track;
+  let captions = !!track && (trackEl.hasAttribute("default") || track.mode === "showing");
+  if (ccBtn) ccBtn.hidden = !track;
+  const pipOk = !!(document.pictureInPictureEnabled && video.requestPictureInPicture && !video.disablePictureInPicture);
+  if (pipBtn) pipBtn.hidden = !pipOk;
+  if (fsBtn) fsBtn.hidden = !(document.fullscreenEnabled && root.requestFullscreen);
+
+  let waiting = false;
+
+  function sync() {
+    const state = video.error
+      ? "error"
+      : video.ended
+        ? "ended"
+        : video.paused
+          ? "paused"
+          : waiting
+            ? "buffering"
+            : "playing";
+    if (root.dataset.state !== state) {
+      root.dataset.state = state;
+      root.dispatchEvent(new CustomEvent("faqir:change", { bubbles: true, detail: { state } }));
+      if (state !== "playing") wake();
+    }
+    const word = state === "playing" || state === "buffering" ? "Pause" : state === "ended" ? "Replay" : "Play";
+    label(playBtn, word);
+    label(bigPlay, word);
+    if (message) message.hidden = state !== "error";
+
+    const d = dur();
+    const t = video.currentTime || 0;
+    css("progress", d ? (t / d) * 100 : 0);
+    if (elapsed) elapsed.textContent = clock(t);
+    if (total) total.textContent = clock(d);
+    if (scrubber) {
+      scrubber.setAttribute("aria-valuemax", String(Math.floor(d)));
+      scrubber.setAttribute("aria-valuenow", String(Math.floor(t)));
+      scrubber.setAttribute("aria-valuetext", spoken(t) + " of " + spoken(d));
+    }
+    let end = 0;
+    const b = video.buffered;
+    if (b && d) for (let i = 0; i < b.length; i++) if (b.start(i) <= t + 0.5) end = Math.max(end, b.end(i));
+    css("buffered", d ? (end / d) * 100 : 0);
+
+    const vol = Math.round(video.volume * 100);
+    css("volume", video.muted ? 0 : vol);
+    pressed(muteBtn, video.muted);
+    if (volume) {
+      volume.setAttribute("aria-valuenow", String(vol));
+      volume.setAttribute("aria-valuetext", video.muted ? "Muted" : vol + "%");
+    }
+    const rate = video.playbackRate;
+    if (rateBtn) {
+      rateBtn.textContent = rate + "×";
+      label(rateBtn, "Playback speed " + rate + "×");
+    }
+    pressed(ccBtn, captions);
+    pressed(pipBtn, document.pictureInPictureElement === video);
+    pressed(fsBtn, document.fullscreenElement === root);
+  }
+
+  function renderCue() {
+    if (!cue) return;
+    const text = captions && track && track.activeCues
+      ? [...track.activeCues].map((c) => c.text.replace(/<[^>]*>/g, "")).join("\n")
+      : "";
+    cue.textContent = text;
+    cue.hidden = !text;
+  }
+
+  function applyCaptions() {
+    if (track) track.mode = captions ? "hidden" : "disabled";
+    renderCue();
+    sync();
+  }
+
+  // ── Auto-hiding controls ───────────────────────────────────────────────────
+  let idle = 0;
+  let keyboard = false;
+  let drag = null; // the slider a pointer is dragging: scrubber | volume
+
+  function wake() {
+    if (!controls) return;
+    delete controls.dataset.state;
+    clearTimeout(idle);
+    idle = setTimeout(sleep, 2500);
+  }
+  function sleep() {
+    if (!controls || video.paused || drag) return;
+    if (keyboard && root.contains(document.activeElement)) return;
+    controls.dataset.state = "hidden";
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  function play() {
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+  function pause() {
+    video.pause();
+  }
+  function toggle() {
+    video.paused || video.ended ? play() : pause();
+  }
+  function seek(t) {
+    const d = dur();
+    if (!d) return;
+    video.currentTime = clamp(t, 0, d);
+    sync();
+  }
+  function setVolume(v) {
+    video.volume = clamp(v, 0, 1);
+    video.muted = video.volume === 0;
+  }
+  function toggleMute() {
+    if (video.muted && video.volume === 0) video.volume = 0.5;
+    video.muted = !video.muted;
+  }
+  function setRate(r) {
+    video.playbackRate = clamp(Number(r) || 1, RATES[0], RATES[RATES.length - 1]);
+    sync();
+  }
+  function stepRate(dir) {
+    const i = RATES.indexOf(video.playbackRate);
+    setRate(RATES[clamp((i < 0 ? 2 : i) + dir, 0, RATES.length - 1)]);
+  }
+  function toggleCaptions(force) {
+    if (!track) return;
+    captions = force === undefined ? !captions : !!force;
+    applyCaptions();
+  }
+  function toggleFullscreen() {
+    if (document.fullscreenElement === root) document.exitFullscreen();
+    else if (root.requestFullscreen) root.requestFullscreen().catch(() => {});
+  }
+  function togglePip() {
+    if (document.pictureInPictureElement === video) document.exitPictureInPicture();
+    else if (pipOk) video.requestPictureInPicture().catch(() => {});
+  }
+
+  const say = (text) => {
+    if (status) status.textContent = text;
+  };
+
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────────
+  function onKeyDown(e) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    keyboard = true;
+    wake();
+    const target = e.target;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    const onVol = !!volume && volume.contains(target);
+    const onScrub = !!scrubber && scrubber.contains(target);
+    const now = video.currentTime || 0;
+    const fwd = (k === "ArrowRight") !== rtl();
+    const by = (s) => {
+      seek(now + s);
+      if (!onScrub) say(clock(video.currentTime));
+    };
+    const vol = (v) => {
+      setVolume(v);
+      if (!onVol) say(video.muted ? "Muted" : "Volume " + Math.round(video.volume * 100) + "%");
+    };
+    switch (k) {
+      case " ":
+        if (target.closest("button")) return;
+      // falls through
+      case "k":
+        toggle();
+        say(video.paused ? "Paused" : "Playing");
+        break;
+      case "ArrowLeft":
+      case "ArrowRight":
+        onVol ? vol(video.volume + (fwd ? 0.05 : -0.05)) : by(fwd ? 5 : -5);
+        break;
+      case "ArrowUp":
+      case "ArrowDown":
+        onScrub ? by(k === "ArrowUp" ? 5 : -5) : vol(video.volume + (k === "ArrowUp" ? 0.05 : -0.05));
+        break;
+      case "PageUp":
+      case "PageDown":
+        onVol ? vol(video.volume + (k === "PageUp" ? 0.1 : -0.1)) : by(k === "PageUp" ? 10 : -10);
+        break;
+      case "Home":
+        onVol ? vol(0) : by(-now);
+        break;
+      case "End":
+        onVol ? vol(1) : by(dur() - now);
+        break;
+      case "j":
+        by(-10);
+        break;
+      case "l":
+        by(10);
+        break;
+      case "m":
+        toggleMute();
+        say(video.muted ? "Muted" : "Unmuted");
+        break;
+      case "f":
+        toggleFullscreen();
+        break;
+      case "c":
+        if (!track) return;
+        toggleCaptions();
+        say(captions ? "Captions on" : "Captions off");
+        break;
+      case "<":
+      case ">":
+        stepRate(k === ">" ? 1 : -1);
+        say("Speed " + video.playbackRate + "×");
+        break;
+      default:
+        if (k.length !== 1 || k < "0" || k > "9") return;
+        seek((dur() * Number(k)) / 10);
+        say(clock(video.currentTime));
+    }
+    e.preventDefault();
+  }
+
+  // ── Pointer: the two sliders ───────────────────────────────────────────────
+  function fraction(el, e) {
+    const r = el.getBoundingClientRect();
+    const f = r.width ? (e.clientX - r.left) / r.width : 0;
+    return clamp(rtl() ? 1 - f : f, 0, 1);
+  }
+  function hover(e) {
+    if (!tooltip) return;
+    const f = fraction(scrubber, e);
+    css("hover", f * 100);
+    tooltip.textContent = clock(f * dur());
+    tooltip.hidden = !dur();
+  }
+  function apply(e) {
+    if (drag === scrubber) {
+      seek(fraction(scrubber, e) * dur());
+      hover(e);
+    } else setVolume(fraction(volume, e));
+  }
+  function onSliderDown(e) {
+    if (e.button > 0) return;
+    drag = e.currentTarget;
+    drag.setPointerCapture?.(e.pointerId);
+    drag.dataset.state = "dragging";
+    drag.focus({ preventScroll: true });
+    e.preventDefault();
+    apply(e);
+  }
+  function onSliderMove(e) {
+    if (drag === e.currentTarget) apply(e);
+    else if (e.currentTarget === scrubber) hover(e);
+  }
+  function onSliderUp(e) {
+    if (drag !== e.currentTarget) return;
+    delete drag.dataset.state;
+    drag = null;
+  }
+  const slider = { pointerdown: onSliderDown, pointermove: onSliderMove, pointerup: onSliderUp, pointercancel: onSliderUp };
+  on(scrubber, slider);
+  on(scrubber, {
+    pointerleave: () => {
+      if (tooltip && drag !== scrubber) tooltip.hidden = true;
+    },
+  });
+  on(volume, slider);
+
+  // ── Wiring ─────────────────────────────────────────────────────────────────
+  on(video, {
+    waiting: () => {
+      waiting = true;
+      sync();
+    },
+    playing: () => {
+      waiting = false;
+      sync();
+      wake();
+    },
+    play: sync,
+    pause: sync,
+    ended: sync,
+    canplay: () => {
+      waiting = false;
+      sync();
+    },
+    timeupdate: sync,
+    durationchange: sync,
+    loadedmetadata: sync,
+    progress: sync,
+    seeked: sync,
+    volumechange: sync,
+    ratechange: sync,
+    error: sync,
+    enterpictureinpicture: sync,
+    leavepictureinpicture: sync,
+    click: toggle,
+    dblclick: toggleFullscreen,
+  });
+  on(track, { cuechange: renderCue });
+  // The browser may switch a default track to "showing" on its own; keep the
+  // cues ours.
+  on(video.textTracks, {
+    change: () => {
+      if (track && track.mode === "showing") {
+        captions = true;
+        applyCaptions();
+      }
+    },
+  });
+  on(document, { fullscreenchange: sync });
+  on(root, {
+    keydown: onKeyDown,
+    pointermove: () => {
+      keyboard = false;
+      wake();
+    },
+    pointerdown: () => {
+      keyboard = false;
+    },
+    focusin: wake,
+    pointerleave: () => {
+      if (!drag) sleep();
+    },
+  });
+  // The big button hides once playback starts; focus on it would fall to
+  // <body>, out of the player and its shortcuts, so hand it to the bar.
+  on(bigPlay, {
+    click: () => {
+      toggle();
+      if (document.activeElement === bigPlay) playBtn?.focus();
+    },
+  });
+  on(playBtn, { click: toggle });
+  on(muteBtn, { click: toggleMute });
+  on(rateBtn, { click: () => stepRate(video.playbackRate >= RATES[RATES.length - 1] ? -RATES.length : 1) });
+  on(ccBtn, { click: () => toggleCaptions() });
+  on(pipBtn, { click: togglePip });
+  on(fsBtn, { click: toggleFullscreen });
+
+  applyCaptions();
+
+  function destroy() {
+    for (const off of offs) off();
+    clearTimeout(idle);
+    if (track && captions) track.mode = "showing";
+    video.controls = hadControls;
+    for (const el of [controls, bigPlay, cue, message]) if (el) el.hidden = true;
+    if (controls) delete controls.dataset.state;
+    delete root._faqirVideoPlayer;
+  }
+
+  const api = {
+    play,
+    pause,
+    toggle,
+    seek,
+    setVolume,
+    toggleMute,
+    setRate,
+    toggleCaptions,
+    toggleFullscreen,
+    destroy,
+  };
+  root._faqirVideoPlayer = api;
+  return api;
+}
+
+// ── Pure time formatting (no DOM) — unit-tested in isolation ────────────────
+
+function pad(n) {
+  return (n < 10 ? "0" : "") + n;
+}
+
+/** 65 → "1:05", 3725 → "1:02:05". */
+function clock(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor(s / 60) % 60;
+  return (h ? h + ":" + pad(m) : m) + ":" + pad(s % 60);
+}
+
+/** 65 → "1 minute 5 seconds", the form a screen reader speaks. */
+function spoken(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  const out = [];
+  const add = (n, unit) => out.push(n + " " + unit + (n === 1 ? "" : "s"));
+  if (s >= 3600) add(Math.floor(s / 3600), "hour");
+  if (s % 3600 >= 60) add(Math.floor(s / 60) % 60, "minute");
+  if (s % 60 || !out.length) add(s % 60, "second");
+  return out.join(" ");
+}
+    return createVideoPlayer;
   })();
 
   // ═══════════════════════════════════════════════════════

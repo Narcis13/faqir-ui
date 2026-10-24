@@ -126,6 +126,7 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "recipes/date-picker/date-picker.html": "range, typed and inline demos; icon primitive glyphs: calendar 3 → 6, date-picker 3 → 6, icon 0 → 9",
   "primitives/stepper/stepper.html": "2 → 6 steppers (all states, error, vertical, clickable, sizes); stack/cluster/button for the clickable demo",
   "recipes/tree-view/tree-view.html": "1 → 5 trees (explorer, checkbox, lazy, filter, multi-select + DnD) in surface panels; input, stack, text, kbd, icon",
+  "primitives/image/image.html": "9 added images (focal point ×4, fit, overlay caption, placeholders ×3) in 2 clusters",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

@@ -6,7 +6,7 @@
         "height": 900
       },
       "totals": {
-        "pages": 286,
+        "pages": 294,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -596,7 +596,25 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/recipes/image-compare.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/recipes/input-otp.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/recipes/knob.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/recipes/lightbox.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -687,6 +705,12 @@
           "overlaps": 0
         },
         "components/recipes/tree-view.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/recipes/video-player.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1256,7 +1280,25 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/recipes/image-compare.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/recipes/input-otp.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/recipes/knob.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/recipes/lightbox.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1347,6 +1389,12 @@
           "overlaps": 0
         },
         "examples/recipes/tree-view.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/recipes/video-player.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1738,7 +1786,7 @@
         "height": 812
       },
       "totals": {
-        "pages": 286,
+        "pages": 294,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -2328,7 +2376,25 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/recipes/image-compare.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/recipes/input-otp.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/recipes/knob.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/recipes/lightbox.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2419,6 +2485,12 @@
           "overlaps": 0
         },
         "components/recipes/tree-view.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/recipes/video-player.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2988,7 +3060,25 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/recipes/image-compare.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/recipes/input-otp.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/recipes/knob.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/recipes/lightbox.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -3079,6 +3169,12 @@
           "overlaps": 0
         },
         "examples/recipes/tree-view.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/recipes/video-player.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,

@@ -1,0 +1,363 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "video-player",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "data-display",
+  "description": "Custom controls over a native video: play/pause, a scrubber with buffered range and hover time, volume and mute, playback rate, captions, picture-in-picture, fullscreen and keyboard shortcuts, with the browser's own controls as the no-script fallback",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='video-player']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "video": {
+      "selector": "[data-part='video']",
+      "required": true,
+      "tag_hint": "video",
+      "description": "The native <video>, authored WITH the controls attribute (the no-script fallback). The controller removes it on init and restores it on destroy. Put <track kind=\"captions\"> children inside for the captions toggle"
+    },
+    "cue": {
+      "selector": "[data-part='cue']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Where the active caption cue is drawn, above the control bar (aria-hidden, hidden until a cue is showing)"
+    },
+    "spinner": {
+      "selector": "[data-part='spinner']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Loading ring, shown in the buffering state (aria-hidden)"
+    },
+    "big-play": {
+      "selector": "[data-part='big-play']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Large centre play button, in the theme's primary colours; shown paused and ended (with a replay glyph), hidden while playing. Authored hidden; the controller reveals it. Holds a play <svg> then a replay <svg>"
+    },
+    "message": {
+      "selector": "[data-part='message']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "role=\"alert\" text shown in the error state; authored hidden"
+    },
+    "controls": {
+      "selector": "[data-part='controls']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The control overlay: the scrubber row and the button bar. Authored hidden (the native controls run without script); data-state=\"hidden\" while it auto-hides during playback"
+    },
+    "scrubber": {
+      "selector": "[data-part='scrubber']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "role=\"slider\" seek bar (tabindex=\"0\", aria-label). aria-valuenow/max are whole seconds and aria-valuetext reads \"1 minute 5 seconds of 3 minutes\""
+    },
+    "buffered": {
+      "selector": "[data-part='buffered']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "How much of the media has loaded, from --video-player-buffered"
+    },
+    "progress": {
+      "selector": "[data-part='progress']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Played portion, from --video-player-progress"
+    },
+    "thumb": {
+      "selector": "[data-part='thumb']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Handle at the playhead, grown on hover, focus and drag"
+    },
+    "tooltip": {
+      "selector": "[data-part='tooltip']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The time under the pointer while hovering or dragging the scrubber; authored hidden"
+    },
+    "bar": {
+      "selector": "[data-part='bar']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Row of buttons, the volume slider and the time readout"
+    },
+    "play": {
+      "selector": "[data-part='play']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Play/pause button whose aria-label the controller keeps as Play, Pause or Replay. Holds play, pause and replay <svg> glyphs, in that order"
+    },
+    "mute": {
+      "selector": "[data-part='mute']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Toggle button (aria-label=\"Mute\", aria-pressed = muted). Holds a speaker <svg> then a muted <svg>"
+    },
+    "volume": {
+      "selector": "[data-part='volume']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "role=\"slider\" volume, 0–100 (aria-valuetext \"60%\" or \"Muted\"). Shown from a 40rem-wide player up; ↑/↓ set the volume at any width"
+    },
+    "level": {
+      "selector": "[data-part='level']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The volume fill, from --video-player-volume"
+    },
+    "time": {
+      "selector": "[data-part='time']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Elapsed / duration readout; pushes the buttons after it to the end of the bar"
+    },
+    "elapsed": {
+      "selector": "[data-part='elapsed']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Current time as m:ss (h:mm:ss past an hour)"
+    },
+    "duration": {
+      "selector": "[data-part='duration']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Total duration as m:ss"
+    },
+    "captions": {
+      "selector": "[data-part='captions']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Toggle button (aria-label=\"Captions\", aria-pressed) for the first captions/subtitles track; hidden when the video has none. Starts on for a track marked default"
+    },
+    "rate": {
+      "selector": "[data-part='rate']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Cycles the playback rate 0.5× → 0.75× → 1× → 1.25× → 1.5× → 2×; shows the rate and is named \"Playback speed 1×\""
+    },
+    "pip": {
+      "selector": "[data-part='pip']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Picture-in-picture toggle (aria-pressed); hidden where the browser has no PiP or the video sets disablepictureinpicture"
+    },
+    "fullscreen": {
+      "selector": "[data-part='fullscreen']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Full screen toggle for the player root (aria-pressed). Holds an enter <svg> then an exit <svg>; hidden where full screen is unavailable"
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Visually hidden role=\"status\" region announcing what a keyboard shortcut did (\"Muted\", \"Speed 1.5×\", \"Captions off\", \"0:15\")"
+    }
+  },
+  "variants": {},
+  "states": {
+    "paused": {
+      "attr": "data-state=\"paused\"",
+      "default": true,
+      "description": "Not playing (the initial state). Controls and the big play button are shown"
+    },
+    "playing": {
+      "attr": "data-state=\"playing\"",
+      "description": "Playing; the controls auto-hide after 2.5 s without pointer movement, focus change or a key"
+    },
+    "buffering": {
+      "attr": "data-state=\"buffering\"",
+      "transient": true,
+      "description": "Playback is waiting for data; the spinner shows"
+    },
+    "ended": {
+      "attr": "data-state=\"ended\"",
+      "description": "Reached the end; the play buttons offer Replay"
+    },
+    "error": {
+      "attr": "data-state=\"error\"",
+      "description": "The media failed to load or decode; the controls stand down and the message part shows"
+    },
+    "controls-hidden": {
+      "attr": "data-state=\"hidden\"",
+      "applied_to": "controls",
+      "transient": true,
+      "description": "The control overlay has auto-hidden during playback (never while keyboard focus is inside the player)"
+    },
+    "dragging": {
+      "attr": "data-state=\"dragging\"",
+      "applied_to": "scrubber",
+      "transient": true,
+      "description": "A pointer is dragging the scrubber or the volume slider"
+    }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "play",
+        "params": ""
+      },
+      {
+        "name": "pause",
+        "params": ""
+      },
+      {
+        "name": "toggle",
+        "params": ""
+      },
+      {
+        "name": "seek",
+        "params": "t"
+      },
+      {
+        "name": "setVolume",
+        "params": "v"
+      },
+      {
+        "name": "toggleMute",
+        "params": ""
+      },
+      {
+        "name": "setRate",
+        "params": "r"
+      },
+      {
+        "name": "toggleCaptions",
+        "params": "force"
+      },
+      {
+        "name": "toggleFullscreen",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
+  "a11y": {
+    "role": "group",
+    "required_attrs": [
+      "aria-label on root",
+      "role=\"slider\" on scrubber",
+      "aria-label on scrubber",
+      "aria-valuetext on scrubber",
+      "aria-label on play",
+      "aria-pressed on mute",
+      "aria-pressed on captions"
+    ],
+    "keyboard": {
+      "Space / K": "play or pause (Space on a focused button presses that button)",
+      "ArrowLeft / ArrowRight": "seek 5 s back / forward (volume ±5% on the volume slider)",
+      "J / L": "seek 10 s back / forward",
+      "ArrowUp / ArrowDown": "volume ±5% (seek ±5 s on the scrubber)",
+      "PageUp / PageDown": "seek ±10 s (volume ±10% on the volume slider)",
+      "Home / End": "seek to the start / end (volume 0 / 100% on the volume slider)",
+      "0–9": "seek to that tenth of the duration",
+      "M": "mute or unmute",
+      "C": "captions on or off",
+      "F": "full screen",
+      "< / >": "slower / faster"
+    },
+    "notes": [
+      "Shortcuts only run while focus is inside the player; clicking the picture focuses the root (tabindex=\"-1\"), so they work after a click too.",
+      "The scrubber and the volume are role=\"slider\" with whole-second / percent values; the scrubber's aria-valuetext is spoken time (\"1 minute 5 seconds of 3 minutes\").",
+      "A shortcut that changes something away from its own control is announced through the status region.",
+      "The controls never auto-hide while keyboard focus is inside them.",
+      "With scripting off the video keeps its native controls, captions included.",
+      "The picture keeps a 16 / 9 box before its metadata arrives; set --video-player-ratio inline (style=\"--video-player-ratio: 4 / 3\") for another shape."
+    ]
+  },
+  "tokens_used": [
+    "palette-gray-50",
+    "palette-gray-950",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "radius-lg",
+    "radius-md",
+    "radius-full",
+    "radius-sm",
+    "shadow-lg",
+    "font-ui",
+    "leading-normal",
+    "leading-snug",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset",
+    "duration-normal",
+    "duration-fast",
+    "ease-out",
+    "ease-default",
+    "ease-linear",
+    "space-6",
+    "space-1",
+    "space-3",
+    "space-4",
+    "space-0h",
+    "space-10",
+    "space-2",
+    "space-12",
+    "text-sm",
+    "text-xl",
+    "text-xs",
+    "weight-medium",
+    "weight-semibold",
+    "border-width-lg",
+    "border-width"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"video-player\" data-state=\"paused\" role=\"group\" aria-label=\"{title}\" tabindex=\"-1\">\n  <video data-part=\"video\" controls playsinline preload=\"metadata\" poster=\"{poster}\" src=\"{src}\">\n    <track kind=\"captions\" srclang=\"en\" label=\"English\" default src=\"{captions}\">\n  </video>\n  <div data-part=\"cue\" aria-hidden=\"true\" hidden></div>\n  <span data-part=\"spinner\" aria-hidden=\"true\"></span>\n  <button data-part=\"big-play\" type=\"button\" aria-label=\"Play\" hidden>\n    <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" d=\"M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z\"/></svg>\n    <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4.5H8\"/></svg>\n  </button>\n  <p data-part=\"message\" role=\"alert\" hidden>This video can’t be played.</p>\n  <div data-part=\"controls\" hidden>\n    <div data-part=\"scrubber\" role=\"slider\" tabindex=\"0\" aria-label=\"Seek\" aria-valuemin=\"0\" aria-valuemax=\"0\" aria-valuenow=\"0\" aria-valuetext=\"0 seconds of 0 seconds\">\n      <span data-part=\"buffered\"></span>\n      <span data-part=\"progress\"></span>\n      <span data-part=\"thumb\"></span>\n      <span data-part=\"tooltip\" hidden>0:00</span>\n    </div>\n    <div data-part=\"bar\">\n      <button data-part=\"play\" type=\"button\" aria-label=\"Play\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" d=\"M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6Z\"/></svg>\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><rect fill=\"currentColor\" x=\"6\" y=\"5\" width=\"4\" height=\"14\" rx=\"1.2\"/><rect fill=\"currentColor\" x=\"14\" y=\"5\" width=\"4\" height=\"14\" rx=\"1.2\"/></svg>\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4.5H8\"/></svg>\n      </button>\n      <button data-part=\"mute\" type=\"button\" aria-label=\"Mute\" aria-pressed=\"false\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" d=\"M11 5 6.5 8.8H3.5v6.4h3L11 19Z\"/><path d=\"M15.5 9a4.2 4.2 0 0 1 0 6M18.4 6.2a8.2 8.2 0 0 1 0 11.6\"/></svg>\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" d=\"M11 5 6.5 8.8H3.5v6.4h3L11 19Z\"/><path d=\"m15.5 9.5 5 5M20.5 9.5l-5 5\"/></svg>\n      </button>\n      <div data-part=\"volume\" role=\"slider\" tabindex=\"0\" aria-label=\"Volume\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"100\" aria-valuetext=\"100%\"><span data-part=\"level\"></span></div>\n      <span data-part=\"time\"><span data-part=\"elapsed\">0:00</span><span aria-hidden=\"true\"> / </span><span data-part=\"duration\">0:00</span></span>\n      <button data-part=\"captions\" type=\"button\" aria-label=\"Captions\" aria-pressed=\"true\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"2.5\" y=\"5\" width=\"19\" height=\"14\" rx=\"3\"/><path d=\"M10.4 10.3a2.3 2.3 0 1 0 0 3.4M17 10.3a2.3 2.3 0 1 0 0 3.4\"/></svg>\n      </button>\n      <button data-part=\"rate\" type=\"button\" aria-label=\"Playback speed 1×\">1×</button>\n      <button data-part=\"pip\" type=\"button\" aria-label=\"Picture in picture\" aria-pressed=\"false\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"2.5\" y=\"4.5\" width=\"19\" height=\"15\" rx=\"2.5\"/><rect fill=\"currentColor\" x=\"12\" y=\"11.5\" width=\"7\" height=\"5.5\" rx=\"1\"/></svg>\n      </button>\n      <button data-part=\"fullscreen\" type=\"button\" aria-label=\"Full screen\" aria-pressed=\"false\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8.5 3.5h-3a2 2 0 0 0-2 2v3M20.5 8.5v-3a2 2 0 0 0-2-2h-3M3.5 15.5v3a2 2 0 0 0 2 2h3M15.5 20.5h3a2 2 0 0 0 2-2v-3\"/></svg>\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8.5 3.5v3a2 2 0 0 1-2 2h-3M20.5 8.5h-3a2 2 0 0 1-2-2v-3M3.5 15.5h3a2 2 0 0 1 2 2v3M15.5 20.5v-3a2 2 0 0 1 2-2h3\"/></svg>\n      </button>\n    </div>\n  </div>\n  <span data-part=\"status\" role=\"status\"></span>\n</div>"
+  },
+  "safe_transforms": [
+    "swap-video-src",
+    "swap-poster",
+    "add-captions-track",
+    "remove-optional-buttons",
+    "change-aspect-ratio",
+    "change-root-label"
+  ],
+  "unsafe_transforms": [
+    "remove-controls-attribute-from-video",
+    "remove-hidden-from-authored-controls",
+    "remove-role-slider",
+    "remove-scrubber-valuetext",
+    "remove-button-labels",
+    "remove-captions-track"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+  "files": {
+    "html": "video-player.html",
+    "css": "video-player.css",
+    "js": "video-player.js",
+    "manifest": "video-player.manifest.json"
+  },
+  "tests": [
+    "takes-over-from-native-controls",
+    "destroy-restores-native-controls",
+    "play-pause-toggle-and-state",
+    "buffering-ended-and-error-states",
+    "scrubber-aria-and-spoken-valuetext",
+    "pointer-seek-and-hover-time",
+    "buffered-range",
+    "volume-slider-and-mute",
+    "playback-rate-cycle",
+    "captions-toggle-renders-cues",
+    "captions-hidden-without-track",
+    "pip-hidden-when-unsupported",
+    "fullscreen-on-root",
+    "keyboard-shortcuts",
+    "sliders-own-their-arrows",
+    "space-on-a-button-presses-it",
+    "controls-auto-hide-but-not-under-keyboard-focus",
+    "status-announces-shortcuts",
+    "real-playback-of-the-data-clip",
+    "prevents-double-initialization"
+  ]
+}

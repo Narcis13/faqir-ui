@@ -1031,18 +1031,22 @@ export type LImageVariant = "responsive" | "thumbnail" | "cover" | "contain";
 /** Allowed \`size\` values (manifest variant group "size", attr \`data-size\`). */
 export type LImageSize = "xs" | "sm" | "md" | "lg" | "full";
 
-export interface LImageProps extends Omit<ComponentPropsWithoutRef<"figure">, "variant" | "size" | "img" | "caption"> {
+export interface LImageProps extends Omit<ComponentPropsWithoutRef<"figure">, "variant" | "size" | "loading" | "loaded" | "img" | "caption"> {
   /** \`data-variant\`; omitted when unset (manifest default: "responsive"). */
   variant?: LImageVariant;
   /** \`data-size\`; omitted when unset (manifest default: "md"). */
   size?: LImageSize;
+  /** Sets \`data-state="loading"\`. */
+  loading?: boolean;
+  /** Sets \`data-state="loaded"\`. */
+  loaded?: boolean;
   /** Projected into \`<img data-part="img">\` (required part — always rendered). */
   img?: ReactNode;
   /** Projected into \`<figcaption data-part="caption">\`. */
   caption?: ReactNode;
 }
 
-/** \`image\` — Responsive image with variants for different display modes and print optimization */
+/** \`image\` — Responsive image with display variants, fixed ratios with a focal point, fit control, below and overlay captions, blur and skeleton placeholders, and print optimization */
 export const LImage = createFaqirPrimitive<LImageProps>({
   name: "image",
   tag: "figure",
@@ -1050,7 +1054,10 @@ export const LImage = createFaqirPrimitive<LImageProps>({
     { prop: "variant", attr: "data-variant", values: ["responsive", "thumbnail", "cover", "contain"] },
     { prop: "size", attr: "data-size", values: ["xs", "sm", "md", "lg", "full"] },
   ],
-  states: [],
+  states: [
+    { prop: "loading", attr: "data-state", value: "loading", kind: "value" },
+    { prop: "loaded", attr: "data-state", value: "loaded", kind: "value" },
+  ],
   slots: [
     { name: "img", tag: "img", required: true, isVoid: true },
     { name: "caption", tag: "figcaption", required: false, isVoid: false },
@@ -2660,8 +2667,14 @@ export { LDropdown } from "./recipes/dropdown.js";
 export type { LDropdownProps, LDropdownAlign, LDropdownSize } from "./recipes/dropdown.js";
 export { LFileUpload } from "./recipes/file-upload.js";
 export type { LFileUploadProps } from "./recipes/file-upload.js";
+export { LImageCompare } from "./recipes/image-compare.js";
+export type { LImageCompareProps } from "./recipes/image-compare.js";
 export { LInputOtp } from "./recipes/input-otp.js";
 export type { LInputOtpProps, LInputOtpMode, LInputOtpSize } from "./recipes/input-otp.js";
+export { LKnob } from "./recipes/knob.js";
+export type { LKnobProps, LKnobSize } from "./recipes/knob.js";
+export { LLightbox } from "./recipes/lightbox.js";
+export type { LLightboxProps } from "./recipes/lightbox.js";
 export { LMenubar } from "./recipes/menubar.js";
 export type { LMenubarProps, LMenubarSize } from "./recipes/menubar.js";
 export { LPagination } from "./recipes/pagination.js";
@@ -2692,6 +2705,8 @@ export { LTooltip } from "./recipes/tooltip.js";
 export type { LTooltipProps, LTooltipPosition } from "./recipes/tooltip.js";
 export { LTreeView } from "./recipes/tree-view.js";
 export type { LTreeViewProps, LTreeViewVariant } from "./recipes/tree-view.js";
+export { LVideoPlayer } from "./recipes/video-player.js";
+export type { LVideoPlayerProps } from "./recipes/video-player.js";
 
 export { createAccordion } from "./controllers/accordion.js";
 export { createAlertDialog } from "./controllers/alert-dialog.js";
@@ -2706,7 +2721,10 @@ export { createDialog } from "./controllers/dialog.js";
 export { createDrawer } from "./controllers/drawer.js";
 export { createDropdown } from "./controllers/dropdown.js";
 export { createFileUpload } from "./controllers/file-upload.js";
+export { createImageCompare } from "./controllers/image-compare.js";
 export { createInputOTP } from "./controllers/input-otp.js";
+export { createKnob } from "./controllers/knob.js";
+export { createLightbox } from "./controllers/lightbox.js";
 export { createMenubar } from "./controllers/menubar.js";
 export { createPagination } from "./controllers/pagination.js";
 export { createPopover } from "./controllers/popover.js";
@@ -2722,5 +2740,6 @@ export { createToastContainer } from "./controllers/toast.js";
 export { createToggleGroup } from "./controllers/toggle-group.js";
 export { createTooltip } from "./controllers/tooltip.js";
 export { createTreeView } from "./controllers/tree-view.js";
+export { createVideoPlayer } from "./controllers/video-player.js";
 "
 `;
