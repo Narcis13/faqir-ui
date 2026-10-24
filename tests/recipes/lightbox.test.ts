@@ -253,3 +253,26 @@ describe("lightbox · lifecycle", () => {
     expect((root as any)._faqirLightbox).toBeUndefined();
   });
 });
+
+describe("lightbox · items outside the root", () => {
+  it("opens from a [data-open] link elsewhere on the page and counts it in the gallery", () => {
+    const outside = document.createElement("div");
+    outside.innerHTML = `<a data-open="lb-external" href="data:image/gif;base64,R0lGODlhAQABAAAAACw=" title="Harbour at dusk"><img alt="A harbour" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></a>`;
+    document.body.appendChild(outside);
+    try {
+      box = document.createElement("div");
+      box.innerHTML = REF.replace('data-ui="lightbox"', 'data-ui="lightbox" id="lb-external"');
+      document.body.appendChild(box);
+      const root = box.querySelector<HTMLElement>('[data-ui="lightbox"]')!;
+      const own = root.querySelectorAll('[data-part="item"]').length;
+      createLightbox(root);
+      click(outside.querySelector("a")!);
+      const panel = root.querySelector<HTMLElement>('[data-part="panel"]')!;
+      expect(panel.hidden).toBe(false);
+      expect(root.querySelector('[data-part="counter"]')!.textContent).toBe(`${own + 1} / ${own + 1}`);
+      expect(root.querySelector('[data-part="caption"]')!.textContent).toBe("Harbour at dusk");
+    } finally {
+      outside.remove();
+    }
+  });
+});

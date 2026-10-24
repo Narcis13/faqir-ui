@@ -1022,7 +1022,7 @@ Image gallery whose pictures open in a modal viewer with zoom and pan, keyboard 
 ```text
 [data-ui='lightbox']  ·  <div> · content: slots
 ├─ [data-part='gallery']  <ul>  optional  — The thumbnail grid (auto-fill columns, 11rem minimum). A <ul> of <li>, or items as direct children
-├─ [data-part='item']  <a>  required  — A link to the full-size picture (href) wrapping its thumbnail — usually an image primitive. Without script it simply opens the picture; with it, the viewer. The thumbnail's alt is the viewer's alt; the link's title is the caption (and, as a title, its accessible description and hover hint)
+├─ [data-part='item']  <a>  optional  — A link to the full-size picture (href) wrapping its thumbnail — usually an image primitive. Without script it simply opens the picture; with it, the viewer. The thumbnail's alt is the viewer's alt; the link's title is the caption (and, as a title, its accessible description and hover hint). Items may also sit outside the root: any link carrying data-open="{lightbox id}" (the external-trigger hook dialog uses) joins the gallery after the root's own items, so a page can keep its thumbnails in the content flow and mount the viewer beside <main>
 ├─ [data-part='overlay']  <div>  required  — The darkroom backdrop; a click closes. Authored hidden
 ├─ [data-part='panel']  <div>  required  — The viewer: role="dialog", aria-modal="true", aria-label, tabindex="-1", authored hidden. Focus is trapped inside while open
 ├─ [data-part='toolbar']  <div>  optional  — Top row: the counter, then the zoom and close buttons

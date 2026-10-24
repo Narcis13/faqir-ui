@@ -19,9 +19,9 @@
     },
     "item": {
       "selector": "[data-part='item']",
-      "required": true,
+      "required": false,
       "tag_hint": "a",
-      "description": "A link to the full-size picture (href) wrapping its thumbnail — usually an image primitive. Without script it simply opens the picture; with it, the viewer. The thumbnail's alt is the viewer's alt; the link's title is the caption (and, as a title, its accessible description and hover hint)"
+      "description": "A link to the full-size picture (href) wrapping its thumbnail — usually an image primitive. Without script it simply opens the picture; with it, the viewer. The thumbnail's alt is the viewer's alt; the link's title is the caption (and, as a title, its accessible description and hover hint). Items may also sit outside the root: any link carrying data-open=\"{lightbox id}\" (the external-trigger hook dialog uses) joins the gallery after the root's own items, so a page can keep its thumbnails in the content flow and mount the viewer beside <main>"
     },
     "overlay": {
       "selector": "[data-part='overlay']",

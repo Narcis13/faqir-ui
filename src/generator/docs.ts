@@ -22,7 +22,8 @@
 //   spacing/index.html                spacing ladder + default rhythm guide
 //   density/index.html                density axis + nesting/reset guide
 //   motion/index.html                 choreography tokens, entrances, ambient loops, effects
-//   studio/index.html                 the faqir-tweak theme studio, live over a specimen board
+//   showcase/index.html               the component expansion, every new and upgraded component live
+//   studio/index.html                the faqir-tweak theme studio, live over a specimen board
 //   icons/index.html                  searchable manifest-derived icon catalogue
 //   typography/index.html             type tokens, scale and prose specimens
 //   playground/index.html             live in-browser audit playground (task 0.7-14)
@@ -357,6 +358,16 @@ export const DENSITY_PAGE = "density/index.html";
  * manifests' `tokens_used`, so it cannot list a token nothing declares.
  */
 export const MOTION_PAGE = "motion/index.html";
+
+/**
+ * The component showcase: every component the expansion added or upgraded —
+ * charts, the video player, lists, chat, the knob, image, tree-view, stepper,
+ * calendar and date-picker — live and interactive on one page. Authored in
+ * `site/content/showcase.html`; loads the engine and `faqir-chart.js`.
+ */
+export const SHOWCASE_PAGE = "showcase/index.html";
+/** In `site/content/showcase.html`: what follows is mounted outside `<main>`. */
+const SHOWCASE_OVERLAYS_MARKER = "<!-- @showcase:overlays -->";
 
 /**
  * The theme studio: the `faqir-tweak` plugin mounted over a board of registry
@@ -1566,6 +1577,7 @@ const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
     heading: "Foundations",
     items: [
       ["components/index.html", "Components"],
+      [SHOWCASE_PAGE, "Component showcase"],
       [ICONS_PAGE, "Icons"],
       [TYPOGRAPHY_PAGE, "Typography"],
       [LAYOUT_PAGE, "Layout guide"],
@@ -1715,7 +1727,7 @@ export function renderShell(input: ShellInput): string {
     const active =
       section === "components"
         ? current.startsWith("components/") ||
-          [ICONS_PAGE, TYPOGRAPHY_PAGE, LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE, MOTION_PAGE, PRINT_PAGE, "tokens/index.html"].includes(current)
+          [SHOWCASE_PAGE, ICONS_PAGE, TYPOGRAPHY_PAGE, LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE, MOTION_PAGE, PRINT_PAGE, "tokens/index.html"].includes(current)
         : section === "themes"
           ? current.startsWith("themes/") || current === STUDIO_PAGE || current === ACCENT_PAGE
           : section === "engine"
@@ -3963,6 +3975,41 @@ function renderMotionPage(ctx: {
   };
 }
 
+/**
+ * The authored component showcase. Each `<template data-docs-example>` becomes a
+ * live demo plus its copyable markup, exactly as on the motion page; the chart
+ * demos need `faqir-chart.js`, so the page loads it after the engine.
+ */
+function renderShowcasePage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+}): SiteFile {
+  const pagePath = SHOWCASE_PAGE;
+  // Dialog-class markup after the marker (the lightbox viewer) is mounted beside
+  // the shell, outside <main>, where the `landmark` rule wants overlays; its
+  // thumbnails stay in the flow and reach it through `data-open`.
+  const [body, overlays = ""] = ctx.authored.split(SHOWCASE_OVERLAYS_MARKER);
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Component showcase · ${ctx.config.title}`,
+      description:
+        "Every new and upgraded Faqir component live: charts, the video player, lists, chat, the knob, image, tree-view, stepper, calendar and date-picker ranges.",
+      body: renderGuideExamples(body),
+      overlays: overlays.trim() ? `${overlays.trim()}\n` : undefined,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+      scripts: ["scripts/faqir-core.js", pluginScriptPath("faqir-chart.js")],
+    }),
+  };
+}
+
 /** The authored theme studio: `faqir-tweak` over a board of registry components. */
 function renderStudioPage(ctx: {
   config: SiteConfig;
@@ -5749,6 +5796,16 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       themes,
       authored: existsSync(authoredMotion) ? readText(authoredMotion).trim() : "",
       tokenList,
+    }),
+  );
+
+  const authoredShowcase = join(siteRoot, "content", "showcase.html");
+  files.push(
+    renderShowcasePage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredShowcase) ? readText(authoredShowcase).trim() : "",
     }),
   );
 

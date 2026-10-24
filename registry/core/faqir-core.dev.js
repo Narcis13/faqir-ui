@@ -6893,7 +6893,12 @@ function createLightbox(root) {
   if (root._faqirLightbox) return root._faqirLightbox;
 
   const part = (name) => ownParts(root, name)[0] || null;
-  const items = ownParts(root, "item");
+  // Items may also live outside the root — `[data-open="{lightbox-id}"]`, the
+  // external-trigger hook dialog uses — so a page can keep the gallery in its
+  // content flow and the viewer beside <main>, where overlays belong.
+  const items = ownParts(root, "item").concat(
+    root.id ? [...document.querySelectorAll(`[data-open="${root.id}"]`)] : []
+  );
   const overlay = part("overlay");
   const panel = part("panel");
   const stage = part("stage");

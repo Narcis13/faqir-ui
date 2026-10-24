@@ -1762,14 +1762,14 @@
         },
         {
           "path": "lightbox.js",
-          "sha256": "acc7def084178b53e2114dde4407fabf1c2232efac79c3a0b4ac5aa566f07e4a"
+          "sha256": "de9e3af172ec6f995b1bca41b4382aea7dce191cc2f11d12fdfe5c759e3aa41c"
         },
         {
           "path": "lightbox.manifest.json",
-          "sha256": "7499ac59bee2741f2da55e1ba9761b67770ec6a40bd948960ef26b105c2dd872"
+          "sha256": "9746bed61384ca5f690bf3810e6d488ce22b8975db2507ee9684f7979663f52b"
         }
       ],
-      "hash": "9c2eaa2e384153a37c3123db7e0f1fc363bdece1bc5639188356712589fd39da",
+      "hash": "fe0bb3b522e280cf53f2553598cd40421fb07d7b46703161d43315563e068c98",
       "deps": [
         "image"
       ]

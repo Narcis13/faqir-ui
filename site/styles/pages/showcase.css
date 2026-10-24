@@ -1,0 +1,259 @@
+/* ── The component showcase, and the home page's expansion story ──
+   Same rules as docs.css: attribute selectors and tokens only. */
+
+/* ── Page frame ──
+   `minmax(0, 1fr)`: a calendar's two months or a chat's two panes are wide
+   rows, and an `auto` track would grow to their min-content and push the page
+   sideways on a phone. */
+[data-docs-showcase] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+/* The shared guide-example figure is an `auto`-track grid too. */
+[data-docs-showcase] [data-docs-guide-example] {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+
+/* The page sits in the wide layout's prose article, whose `a` rule would
+   underline every link-shaped button. */
+[data-docs-showcase] a[data-ui="button"] {
+  text-decoration-line: none;
+}
+
+/* ── Prose inside a component ──
+   The docs article is a [data-ui="prose"] whose element rules (lists, list
+   items, paragraphs, tables, pictures, quotes) weigh (0,1,1), so they outrank a
+   component's own root rule (0,1,0) and every rule it leaves to the base reset.
+   Inside a component the component decides: each rule here restates the base
+   reset at exactly that weight, later in the cascade, and only inside a
+   [data-ui] — on this page and in the home page story — so every part rule a component writes (0,2,0 and up) still wins. */
+:is([data-docs-showcase], [data-docs-release-expansion]) :is(ul, ol):where(:is([data-docs-showcase], [data-docs-release-expansion]) :is([data-ui], [data-ui] *)) {
+  margin-block: 0;
+  padding-inline-start: 0;
+  list-style: none;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) li:where(:is([data-docs-showcase], [data-docs-release-expansion]) :is([data-ui], [data-ui] *)),
+:is([data-docs-showcase], [data-docs-release-expansion]) p:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *),
+:is([data-docs-showcase], [data-docs-release-expansion]) blockquote:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *) {
+  margin-block: 0;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) blockquote:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *) {
+  padding-inline-start: 0;
+  border-inline-start: 0;
+}
+
+/* A bare link inside a component: the base reset's `inherit`, not prose's
+   primary underline (a list title's link rule weighs only (0,0,1)). */
+:is([data-docs-showcase], [data-docs-release-expansion]) a:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *):where(:not([data-ui])),
+:is([data-docs-showcase], [data-docs-release-expansion]) a:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *):where(:not([data-ui])):hover {
+  color: inherit;
+  text-decoration-line: inherit;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) :is(figure, figcaption, details, dl, dd):where(:is([data-docs-showcase], [data-docs-release-expansion]) :is([data-ui], [data-ui] *)) {
+  margin-block: 0;
+  margin-inline: 0;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) figcaption:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *) {
+  font-size: inherit;
+  color: inherit;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) strong:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *) {
+  font-weight: bolder;
+}
+
+/* prose turns any div or figure holding a table into a scroller with margins —
+   a calendar's month, a chart's figure. Inside a component it is neither. */
+:is([data-docs-showcase], [data-docs-release-expansion]) :where(div, figure):where(:is([data-docs-showcase], [data-docs-release-expansion]) :is([data-ui], [data-ui] *)):has(> table) {
+  max-inline-size: none;
+  overflow-x: visible;
+  margin-block: 0;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) img:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *) {
+  margin-block: 0;
+  border-radius: 0;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) table:where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *) {
+  inline-size: auto;
+  margin-block: 0;
+  font-size: inherit;
+}
+
+:is([data-docs-showcase], [data-docs-release-expansion]) :is(th, td):where(:is([data-docs-showcase], [data-docs-release-expansion]) [data-ui] *) {
+  padding: 0;
+  border-block-end: 0;
+  font-weight: inherit;
+}
+
+/* The tree's root list pads itself; the reset above took that back. */
+:is([data-docs-showcase], [data-docs-release-expansion]) ul[data-ui="tree-view"] {
+  padding: var(--space-1);
+}
+
+/* ── Hero ── */
+[data-docs-showcase-hero] {
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+[data-docs-showcase-hero] > [data-ui="hero"] {
+  --hero-bg: transparent;
+  padding-block: var(--space-12);
+  padding-inline: var(--space-6);
+}
+
+[data-docs-showcase-hero] [data-part="headline"] {
+  margin: 0;
+  max-inline-size: 18ch;
+  text-wrap: balance;
+}
+
+[data-docs-showcase-hero] [data-part="content"] {
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: var(--space-5);
+}
+
+[data-docs-showcase-hero] [data-part="description"] {
+  margin: 0;
+  max-inline-size: 56ch;
+}
+
+/* The board: a knob, a bubble run and a chart, stacked into a little
+   dashboard beside the copy; one column on a phone. */
+[data-docs-showcase-board] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-content: center;
+}
+
+@media (min-width: 40rem) {
+  [data-docs-showcase-board] {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  [data-docs-showcase-board-chart] {
+    grid-column: 1 / -1;
+  }
+}
+
+[data-docs-showcase-board-knob] {
+  display: grid;
+  place-items: center;
+}
+
+[data-docs-showcase-board-chat] {
+  --chat-thread-height: auto;
+  border-radius: var(--radius-xl);
+}
+
+/* ── On this page ── */
+[data-docs-showcase-toc] > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-docs-showcase-toc] > ul > li {
+  margin: 0;
+}
+
+[data-docs-showcase-toc] a[data-ui="link"] {
+  display: inline-flex;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  font-size: var(--text-sm);
+  text-decoration-line: none;
+}
+
+[data-docs-showcase-toc] a[data-ui="link"]:hover {
+  border-color: var(--color-primary);
+}
+
+/* ── Sections ── */
+[data-docs-showcase-section] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  padding-block: var(--space-10);
+  scroll-margin-block-start: var(--space-6);
+}
+
+/* The grids space their demos; the flow rhythm's margins would add to it. */
+[data-docs-showcase] > *,
+[data-docs-showcase-section] > *,
+[data-docs-showcase-grid] > * {
+  margin-block: 0;
+}
+
+[data-docs-showcase-section] > [data-docs-section-heading] {
+  margin-block-end: var(--space-2);
+}
+
+/* Two demos side by side once each has room for a sidebar-width column. */
+[data-docs-showcase-grid] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+[data-docs-showcase-contracts] {
+  padding-block-start: var(--space-2);
+}
+
+/* ── Hooks for what the reference pages set inline ── */
+[data-docs-showcase-clip] {
+  overflow: clip;
+}
+
+[data-docs-showcase-list-scroll] {
+  --list-max-height: 20rem;
+}
+
+[data-docs-showcase-chat] {
+  --chat-height: 44rem;
+}
+
+[data-docs-showcase-progress] {
+  --chat-progress: 38%;
+}
+
+[data-docs-showcase-composer-long] {
+  --composer-max-lines: 10;
+}
+
+[data-docs-showcase-focus] {
+  --image-focus: 78% 34%;
+}
+
+[data-docs-showcase-placeholder] {
+  --image-placeholder: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 4' preserveAspectRatio='none'%3E%3Crect width='6' height='2.2' fill='%23ffb59c'/%3E%3Crect y='1.6' width='6' height='1' fill='%23a9789f'/%3E%3Crect x='0' y='1.4' width='2.6' height='1.3' fill='%235a4277'/%3E%3Crect x='4.4' y='1.2' width='1.6' height='1.5' fill='%234a3668'/%3E%3Crect y='2.6' width='6' height='1.4' fill='%23a7809c'/%3E%3Ccircle cx='4.1' cy='1.7' r='.5' fill='%23ffe9cf'/%3E%3C/svg%3E");
+}
+
+/* ── Home: the expansion story ── */
+[data-docs-release-expansion] [data-docs-release-cta] {
+  justify-self: start;
+}
+
+[data-docs-home-expansion-thread] {
+  --chat-thread-height: auto;
+  border-radius: var(--radius-lg);
+}
