@@ -309,3 +309,19 @@ describe("knob · lifecycle", () => {
     expect((root as any)._faqirKnob).toBeUndefined();
   });
 });
+
+describe("knob · review fixes", () => {
+  it("snaps onto a grid based at a fractional min", () => {
+    const { api } = mount({ input: 'min="0.05" max="1" step="0.1" value="0.05"' });
+    api.setValue(0.15);
+    expect(api.getValue()).toBeCloseTo(0.15, 10);
+    api.setValue(0.36);
+    expect(api.getValue()).toBeCloseTo(0.35, 10);
+  });
+
+  it("keeps the places of a step written in exponent notation", () => {
+    const { api } = mount({ input: 'min="0" max="0.000001" step="1e-7" value="0"' });
+    api.setValue(0.0000003);
+    expect(api.getValue()).toBeCloseTo(0.0000003, 12);
+  });
+});

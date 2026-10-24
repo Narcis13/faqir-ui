@@ -7967,6 +7967,11 @@ export const components = {
        "attr": "data-state",
        "value": "loaded",
        "kind": "value"
+      },
+      "error": {
+       "attr": "data-state",
+       "value": "error",
+       "kind": "value"
       }
      }
     },

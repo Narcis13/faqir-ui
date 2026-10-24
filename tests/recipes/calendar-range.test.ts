@@ -466,3 +466,27 @@ describe("calendar · locale", () => {
     expect(root.querySelector("[data-part='month-label']")!.textContent).toBe("March 2026");
   });
 });
+
+describe("calendar · review fixes", () => {
+  it("never lets a range span a disabled date", () => {
+    const { root, events } = setup('data-mode="range" data-disabled-dates="2026-03-11"', MARCH);
+    click(day(root, "2026-03-09"));
+    click(day(root, "2026-03-13"));
+    expect(events.at(-1)?.end ?? null).toBeNull();
+    click(day(root, "2026-03-10"));
+    expect(events.at(-1).end).toBe("2026-03-10");
+  });
+
+  it("disables a preset that would start, end or run over a disabled date", () => {
+    const t = iso(today);
+    const { root } = setup(`data-mode="range" data-disabled-dates="${t}"`, {
+      before: PRESETS('<button data-part="preset" type="button" data-value="today" aria-pressed="false">Today</button>'),
+    });
+    expect((root.querySelector("[data-part='preset']") as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("drops the end of an authored range that runs backwards", () => {
+    const { api } = setup('data-mode="range" data-value="2026-05-10,2026-05-01"');
+    expect(api.getValue()).toEqual({ start: "2026-05-10", end: null });
+  });
+});

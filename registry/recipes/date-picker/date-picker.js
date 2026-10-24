@@ -99,10 +99,18 @@ export function createDatePicker(root) {
   const shape = fmt({}).formatToParts(new Date(2026, 11, 31));
   const order = shape.map((p) => p.type).filter((t) => t in FIELD);
   const monthNames = [];
+  // Stand-alone names ("март") and the form a full date uses ("17 марта"):
+  // they differ in Slavic and Finnic languages, and the field must read back
+  // the text it displays.
   for (const month of ["long", "short"]) {
-    const f = fmt({ month });
+    const alone = fmt({ month });
+    const inDate = fmt({ day: "numeric", month });
     for (let m = 0; m < 12; m++) {
-      monthNames.push([f.format(new Date(2026, m, 1)).toLowerCase().replace(/\.$/, ""), m + 1]);
+      const date = new Date(2026, m, 1);
+      const part = inDate.formatToParts(date).find((p) => p.type === "month");
+      for (const name of [alone.format(date), part && part.value]) {
+        if (name) monthNames.push([name.toLowerCase().replace(/\.$/, ""), m + 1]);
+      }
     }
   }
   // A typed field with no placeholder shows the page's own numeric pattern.

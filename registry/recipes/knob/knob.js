@@ -44,7 +44,13 @@ export function createKnob(root) {
   const origin = root.dataset.origin != null ? clamp(num(root.dataset.origin, min), min, max) : null;
   const angular = root.dataset.drag === "angular";
   const suffix = root.dataset.valueSuffix || "";
-  const decimals = step ? (String(step).split(".")[1] || "").length : 2;
+  // Decimal places of a number, exponent notation included (1e-7 → 7).
+  const places = (n) => {
+    const [mantissa, exp] = String(n).split("e");
+    return Math.max(0, (mantissa.split(".")[1] || "").length - Number(exp || 0));
+  };
+  // The grid is min + k·step, so a value needs the places of both.
+  const decimals = step ? Math.max(places(step), places(min)) : 2;
   let formatter = null;
 
   const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");

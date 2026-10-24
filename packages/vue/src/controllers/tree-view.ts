@@ -756,6 +756,8 @@ export function createTreeView(root) {
       const walk = (container, keep) => {
         let found = false;
         for (const item of directItems(container)) {
+          // Hidden by the page, not by this filter: neither match nor reveal it.
+          if (item.hidden) continue;
           const { text, nodes } = labelText(item);
           const at = text.toLocaleLowerCase().indexOf(needle);
           const group = directGroup(item);

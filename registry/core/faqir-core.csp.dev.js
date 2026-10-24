@@ -3728,6 +3728,8 @@ function createCalendar(root) {
       const parts = root.dataset.value.split(",");
       rangeStart = parseISO(parts[0] && parts[0].trim());
       rangeEnd = parseISO(parts[1] && parts[1].trim());
+      // As setValue(): an end before the start is no end.
+      if (!rangeStart || (rangeEnd && rangeEnd < rangeStart)) rangeEnd = null;
     } else {
       selectedDate = parseISO(root.dataset.value);
     }
@@ -3767,10 +3769,18 @@ function createCalendar(root) {
     return !!((minDate && date < minDate) || (maxDate && date > maxDate) || disabledDates.has(toISO(date)));
   }
 
-  /** The inclusive day count of [a, b] respects data-min-range / data-max-range. */
+  /**
+   * [a, b] is a range that can be chosen: its inclusive day count respects
+   * data-min-range / data-max-range, and no disabled date lies inside it —
+   * a stay cannot cross a booked night.
+   */
   function spanOk(a, b) {
     const n = Math.round((b - a) / DAY_MS) + 1;
-    return n >= Math.max(minRange, 1) && (!maxRange || n <= maxRange);
+    if (n < Math.max(minRange, 1) || (maxRange && n > maxRange)) return false;
+    const lo = toISO(a);
+    const hi = toISO(b);
+    for (const iso of disabledDates) if (iso >= lo && iso <= hi) return false;
+    return true;
   }
 
   /** While a range waits for its end: a later day that cannot end it. */
@@ -3947,7 +3957,8 @@ function createCalendar(root) {
     if (!start || !end) return null;
     if (minDate && start < minDate) start = minDate;
     if (maxDate && end > maxDate) end = maxDate;
-    if (end < start || (mode === "range" ? !spanOk(start, end) : +start !== +end)) return null;
+    if (end < start || blocked(start) || blocked(end)) return null;
+    if (mode === "range" ? !spanOk(start, end) : +start !== +end) return null;
     return [start, end];
   }
 
@@ -5520,10 +5531,18 @@ function createDatePicker(root) {
   const shape = fmt({}).formatToParts(new Date(2026, 11, 31));
   const order = shape.map((p) => p.type).filter((t) => t in FIELD);
   const monthNames = [];
+  // Stand-alone names ("март") and the form a full date uses ("17 марта"):
+  // they differ in Slavic and Finnic languages, and the field must read back
+  // the text it displays.
   for (const month of ["long", "short"]) {
-    const f = fmt({ month });
+    const alone = fmt({ month });
+    const inDate = fmt({ day: "numeric", month });
     for (let m = 0; m < 12; m++) {
-      monthNames.push([f.format(new Date(2026, m, 1)).toLowerCase().replace(/\.$/, ""), m + 1]);
+      const date = new Date(2026, m, 1);
+      const part = inDate.formatToParts(date).find((p) => p.type === "month");
+      for (const name of [alone.format(date), part && part.value]) {
+        if (name) monthNames.push([name.toLowerCase().replace(/\.$/, ""), m + 1]);
+      }
     }
   }
   // A typed field with no placeholder shows the page's own numeric pattern.
@@ -7311,7 +7330,13 @@ function createKnob(root) {
   const origin = root.dataset.origin != null ? clamp(num(root.dataset.origin, min), min, max) : null;
   const angular = root.dataset.drag === "angular";
   const suffix = root.dataset.valueSuffix || "";
-  const decimals = step ? (String(step).split(".")[1] || "").length : 2;
+  // Decimal places of a number, exponent notation included (1e-7 → 7).
+  const places = (n) => {
+    const [mantissa, exp] = String(n).split("e");
+    return Math.max(0, (mantissa.split(".")[1] || "").length - Number(exp || 0));
+  };
+  // The grid is min + k·step, so a value needs the places of both.
+  const decimals = step ? Math.max(places(step), places(min)) : 2;
   let formatter = null;
 
   const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
@@ -7619,6 +7644,11 @@ function createLightbox(root) {
     stage.dataset.state = "loaded";
   }
 
+  function onError() {
+    stage.dataset.state = "error";
+    if (status) status.textContent = "This picture could not be loaded";
+  }
+
   function show(i) {
     if (!items.length) return;
     index = ((Number(i) || 0) % items.length + items.length) % items.length;
@@ -7815,6 +7845,7 @@ function createLightbox(root) {
     [stage, "click", onStageClick],
     [image, "dblclick", onDblClick],
     [image, "load", onLoad],
+    [image, "error", onError],
   ].filter(([el]) => el);
   for (const [el, type, fn] of bindings) el.addEventListener(type, fn, type === "wheel" ? { passive: false } : undefined);
 
@@ -14288,6 +14319,8 @@ function createTreeView(root) {
       const walk = (container, keep) => {
         let found = false;
         for (const item of directItems(container)) {
+          // Hidden by the page, not by this filter: neither match nor reveal it.
+          if (item.hidden) continue;
           const { text, nodes } = labelText(item);
           const at = text.toLocaleLowerCase().indexOf(needle);
           const group = directGroup(item);

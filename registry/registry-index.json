@@ -1385,14 +1385,14 @@
         },
         {
           "path": "calendar.js",
-          "sha256": "336a98462b2f3a9eabe054e05fde26237bfffd5defcbf49f27ce56fbc2d3a37e"
+          "sha256": "eea0bcf995d2cefc160c34813392fabf803f0bbcf23d3bfd4d70d8aa9c5b8593"
         },
         {
           "path": "calendar.manifest.json",
-          "sha256": "47cceaf8828da708d79c311678521c85a34b81be13ce3ec22223ef018bb8b887"
+          "sha256": "b1b03358124da1e0e43ae0434def9eeffae440a926a900d7aaff336b6c533654"
         }
       ],
-      "hash": "835efca2bcc0fc6784688e3b44ff73ab09b41f4d518848ba8cd6ee6dad4b88a3",
+      "hash": "3a859a4bba57c140c75901f747c363c6cb73d636a39dc1506534ad7135a936bb",
       "deps": []
     },
     {
@@ -1546,14 +1546,14 @@
         },
         {
           "path": "date-picker.js",
-          "sha256": "eedcf7b94bacd27555e9a0b921d76e3784c14743f95421618d73c3ff9b836e30"
+          "sha256": "ce9592ed1a845e20028e332ea34504cd77653a8192f4c7edec080f694482a3db"
         },
         {
           "path": "date-picker.manifest.json",
           "sha256": "26894ac51a18d5346ae29d30376aaad6e37da00a1600bcacdf26cfa7a5c2f886"
         }
       ],
-      "hash": "bde4070a3d82bdc042d00249cc8ab36d4b027b8f0b2dfeeec2fb846b7fee82d5",
+      "hash": "2f063ac15863796502adc7f535417d00bd0fdf4cfb725e0459cba6bc2bad5cce",
       "deps": [
         "calendar",
         "button",
@@ -1736,14 +1736,14 @@
         },
         {
           "path": "knob.js",
-          "sha256": "00e3b6944a44826ac5c75baa19ea901e37ad1f5507c67667ffa8fc50d92afcbe"
+          "sha256": "012d482fb3fc0113e6ec6afa90e1fd4dce2629279d7e1e64f81e184cad9ebcea"
         },
         {
           "path": "knob.manifest.json",
           "sha256": "8137248a4a7d2f8fb5c59915a81cadbba38feaea72e7ca9e43ccb701caec2d36"
         }
       ],
-      "hash": "200ec268be974169ece1e6e33401c343e0575161f250a571f559108ef713f40c",
+      "hash": "0f99a59577207b5273787081d298649f807ccc7c2b676cd64150a553da5f408a",
       "deps": []
     },
     {
@@ -1762,14 +1762,14 @@
         },
         {
           "path": "lightbox.js",
-          "sha256": "de9e3af172ec6f995b1bca41b4382aea7dce191cc2f11d12fdfe5c759e3aa41c"
+          "sha256": "5a3f2c0c9b8d74cdd9d83dfa37e9ee2a81e05c3b729553576db5a4f893c1054e"
         },
         {
           "path": "lightbox.manifest.json",
-          "sha256": "9746bed61384ca5f690bf3810e6d488ce22b8975db2507ee9684f7979663f52b"
+          "sha256": "aa11c0c7e2a9c885055e4b9286994d5b5e1b32310f3693145cb57bf2fa723ce4"
         }
       ],
-      "hash": "fe0bb3b522e280cf53f2553598cd40421fb07d7b46703161d43315563e068c98",
+      "hash": "506580e4f474c93335cd6f1907c97bede2fdda693c1c1e656c2b6cb6bde4ab4e",
       "deps": [
         "image"
       ]
@@ -2207,14 +2207,14 @@
         },
         {
           "path": "tree-view.js",
-          "sha256": "fc96114f6f518b9641f8d6e63635e13e572c712f60e33011b198185f1e6c613e"
+          "sha256": "8cd4738587731b7977a73ec050f3561e19e65db56bd549bf54cc059daa3db0ca"
         },
         {
           "path": "tree-view.manifest.json",
           "sha256": "eb2c0a9523d71fe86cde026eb7d9d8991e97302e064c85eca4fe73f4c82c16d7"
         }
       ],
-      "hash": "4eb719c94108fe930bd8ee799dffd22bbf66b3a8484c55252a95227698cf843b",
+      "hash": "8cf008c62667db7b332a1091a87616a72d1b0cefbd36d6dcfe78f00f9524f753",
       "deps": [
         "input",
         "spinner",

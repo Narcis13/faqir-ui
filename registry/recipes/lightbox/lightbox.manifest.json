@@ -69,7 +69,7 @@
       "selector": "[data-part='stage']",
       "required": true,
       "tag_hint": "div",
-      "description": "Holds the picture and takes the wheel, the pan drag and the swipe; a click on its empty area closes. data-state loading | loaded while the full-size picture arrives"
+      "description": "Holds the picture and takes the wheel, the pan drag and the swipe; a click on its empty area closes. data-state loading | loaded | error while the full-size picture arrives"
     },
     "image": {
       "selector": "[data-part='image']",
@@ -125,6 +125,11 @@
     "loaded": {
       "attr": "data-state=\"loaded\"",
       "applied_to": "stage"
+    },
+    "error": {
+      "attr": "data-state=\"error\"",
+      "applied_to": "stage",
+      "description": "The full-size picture failed to load; the ring stops and the status region says so"
     },
     "zoomed": {
       "attr": "data-state=\"zoomed\"",

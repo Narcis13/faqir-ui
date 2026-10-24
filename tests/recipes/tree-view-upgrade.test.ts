@@ -635,3 +635,15 @@ describe("tree-view · keyboard move", () => {
     expect(region.isConnected).toBe(false);
   });
 });
+
+describe("tree-view · filter and page-hidden items", () => {
+  it("neither matches nor reveals an item the page had hidden", () => {
+    const { api } = filterTree();
+    $("toast").hidden = true;
+    api.filter("t");
+    expect($("toast").hidden).toBe(true);
+    api.filter("");
+    expect($("toast").hidden).toBe(true);
+    expect($("tabs").hidden).toBe(false);
+  });
+});

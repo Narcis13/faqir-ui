@@ -1030,7 +1030,7 @@ Image gallery whose pictures open in a modal viewer with zoom and pan, keyboard 
 ├─ [data-part='zoom-out']  <button>  optional  — Zoom out by 0.5×; aria-disabled at 1×
 ├─ [data-part='zoom-in']  <button>  optional  — Zoom in by 0.5×; aria-disabled at 4×
 ├─ [data-part='close']  <button>  required  — Closes the viewer; needs an accessible name
-├─ [data-part='stage']  <div>  required  — Holds the picture and takes the wheel, the pan drag and the swipe; a click on its empty area closes. data-state loading | loaded while the full-size picture arrives
+├─ [data-part='stage']  <div>  required  — Holds the picture and takes the wheel, the pan drag and the swipe; a click on its empty area closes. data-state loading | loaded | error while the full-size picture arrives
 ├─ [data-part='image']  <img>  required  — The full-size picture (src and alt written by the controller; draggable="false"). data-state="zoomed" above 1×
 ├─ [data-part='prev']  <button>  optional  — Previous picture (wraps); hidden for a single picture
 ├─ [data-part='next']  <button>  optional  — Next picture (wraps); hidden for a single picture

@@ -276,3 +276,13 @@ describe("lightbox · items outside the root", () => {
     }
   });
 });
+
+describe("lightbox · a picture that fails", () => {
+  it("stops the loading ring and says so", () => {
+    const { items, stage, image, part } = mount();
+    click(items[0]);
+    image.dispatchEvent(new Event("error"));
+    expect(stage.dataset.state).toBe("error");
+    expect(part("status").textContent).toContain("could not be loaded");
+  });
+});

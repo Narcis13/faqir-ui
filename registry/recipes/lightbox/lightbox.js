@@ -100,6 +100,11 @@ export function createLightbox(root) {
     stage.dataset.state = "loaded";
   }
 
+  function onError() {
+    stage.dataset.state = "error";
+    if (status) status.textContent = "This picture could not be loaded";
+  }
+
   function show(i) {
     if (!items.length) return;
     index = ((Number(i) || 0) % items.length + items.length) % items.length;
@@ -296,6 +301,7 @@ export function createLightbox(root) {
     [stage, "click", onStageClick],
     [image, "dblclick", onDblClick],
     [image, "load", onLoad],
+    [image, "error", onError],
   ].filter(([el]) => el);
   for (const [el, type, fn] of bindings) el.addEventListener(type, fn, type === "wheel" ? { passive: false } : undefined);
 

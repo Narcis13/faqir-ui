@@ -108,6 +108,8 @@ export function createCalendar(root) {
       const parts = root.dataset.value.split(",");
       rangeStart = parseISO(parts[0] && parts[0].trim());
       rangeEnd = parseISO(parts[1] && parts[1].trim());
+      // As setValue(): an end before the start is no end.
+      if (!rangeStart || (rangeEnd && rangeEnd < rangeStart)) rangeEnd = null;
     } else {
       selectedDate = parseISO(root.dataset.value);
     }
@@ -147,10 +149,18 @@ export function createCalendar(root) {
     return !!((minDate && date < minDate) || (maxDate && date > maxDate) || disabledDates.has(toISO(date)));
   }
 
-  /** The inclusive day count of [a, b] respects data-min-range / data-max-range. */
+  /**
+   * [a, b] is a range that can be chosen: its inclusive day count respects
+   * data-min-range / data-max-range, and no disabled date lies inside it —
+   * a stay cannot cross a booked night.
+   */
   function spanOk(a, b) {
     const n = Math.round((b - a) / DAY_MS) + 1;
-    return n >= Math.max(minRange, 1) && (!maxRange || n <= maxRange);
+    if (n < Math.max(minRange, 1) || (maxRange && n > maxRange)) return false;
+    const lo = toISO(a);
+    const hi = toISO(b);
+    for (const iso of disabledDates) if (iso >= lo && iso <= hi) return false;
+    return true;
   }
 
   /** While a range waits for its end: a later day that cannot end it. */
@@ -327,7 +337,8 @@ export function createCalendar(root) {
     if (!start || !end) return null;
     if (minDate && start < minDate) start = minDate;
     if (maxDate && end > maxDate) end = maxDate;
-    if (end < start || (mode === "range" ? !spanOk(start, end) : +start !== +end)) return null;
+    if (end < start || blocked(start) || blocked(end)) return null;
+    if (mode === "range" ? !spanOk(start, end) : +start !== +end) return null;
     return [start, end];
   }
 

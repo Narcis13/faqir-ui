@@ -553,3 +553,15 @@ describe("date-picker · lifecycle (2.2 listeners)", () => {
     expect(iso(new Date(2026, 5, 4))).toBe(hidden(root, "value-end"));
   });
 });
+
+describe("date-picker · review fixes", () => {
+  it.each(["ru", "pl", "cs", "uk", "fi"])("reads back the full date it displays in %s", (lang) => {
+    const { api, input } = single({ lang });
+    api.setValue("2026-03-17");
+    const shown = input.value;
+    type(input, shown.replace("17", "18"));
+    input.dispatchEvent(new FocusEvent("blur"));
+    expect(input.getAttribute("aria-invalid")).not.toBe("true");
+    expect(api.getValue()).toBe("2026-03-18");
+  });
+});

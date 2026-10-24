@@ -235,7 +235,7 @@
     "disabled-dates": {
       "type": "string",
       "default": "",
-      "description": "data-disabled-dates: comma/space separated YYYY-MM-DD dates that cannot be selected"
+      "description": "data-disabled-dates: comma/space separated YYYY-MM-DD dates that cannot be selected; in range mode no range (or preset) may span one"
     },
     "months": {
       "type": "number",
