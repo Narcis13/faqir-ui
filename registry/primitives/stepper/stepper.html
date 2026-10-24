@@ -1,44 +1,166 @@
 <!-- @ui:component stepper -->
 <!-- @ui:kind primitive -->
-<!-- @ui:slots step indicator label connector -->
+<!-- @ui:slots step indicator label description optional status connector -->
+<!-- @ui:variants variant=horizontal|vertical size=sm|md|lg -->
+<!-- @ui:states active|completed|error -->
 
-<!-- Horizontal stepper -->
-<div data-ui="stepper">
-  <div data-part="step" data-state="completed">
-    <span data-part="indicator">&#x2713;</span>
-    <span data-part="label">Account</span>
-  </div>
-  <div data-part="connector" data-state="completed"></div>
-  <div data-part="step" data-state="active">
+<!-- Horizontal — completed, current, optional and pending steps
+     An ol is the progress list; aria-current="step" names the current step,
+     and a status part says "Completed" to a screen reader where the tick only
+     shows it. On a phone only the current step keeps its label. -->
+<ol data-ui="stepper" aria-label="Checkout progress">
+  <li data-part="step" data-state="completed">
+    <span data-part="indicator">1</span>
+    <span data-part="label">Cart</span>
+    <span data-part="status">Completed</span>
+  </li>
+  <li data-part="connector" data-state="completed" aria-hidden="true"></li>
+  <li data-part="step" data-state="completed">
     <span data-part="indicator">2</span>
-    <span data-part="label">Project</span>
-  </div>
-  <div data-part="connector"></div>
-  <div data-part="step">
+    <span data-part="label">Shipping</span>
+    <span data-part="status">Completed</span>
+  </li>
+  <li data-part="connector" data-state="completed" aria-hidden="true"></li>
+  <li data-part="step" data-state="active" aria-current="step">
     <span data-part="indicator">3</span>
-    <span data-part="label">Components</span>
-  </div>
-  <div data-part="connector"></div>
-  <div data-part="step">
+    <span data-part="label">Payment</span>
+  </li>
+  <li data-part="connector" aria-hidden="true"></li>
+  <li data-part="step">
     <span data-part="indicator">4</span>
+    <span data-part="label">Gift note</span>
+    <span data-part="optional">Optional</span>
+  </li>
+  <li data-part="connector" aria-hidden="true"></li>
+  <li data-part="step">
+    <span data-part="indicator">5</span>
     <span data-part="label">Review</span>
+  </li>
+</ol>
+
+<!-- Error on the current step
+     data-state="error" draws the destructive pair and an exclamation mark;
+     with aria-current it keeps the "you are here" halo, in the error tint. -->
+<ol data-ui="stepper" aria-label="Identity check progress">
+  <li data-part="step" data-state="completed">
+    <span data-part="indicator">1</span>
+    <span data-part="label">Your details</span>
+    <span data-part="status">Completed</span>
+  </li>
+  <li data-part="connector" data-state="completed" aria-hidden="true"></li>
+  <li data-part="step" data-state="error" aria-current="step">
+    <span data-part="indicator">2</span>
+    <span data-part="label">Verify identity</span>
+    <span data-part="description">The photo was too blurry</span>
+    <span data-part="status">Error</span>
+  </li>
+  <li data-part="connector" aria-hidden="true"></li>
+  <li data-part="step">
+    <span data-part="indicator">3</span>
+    <span data-part="label">All set</span>
+  </li>
+</ol>
+
+<!-- Vertical — descriptions, an error, the optional marker
+     The column fits a phone, so every label and second line shows at every
+     width. -->
+<ol data-ui="stepper" data-variant="vertical" aria-label="Project setup progress">
+  <li data-part="step" data-state="completed">
+    <span data-part="indicator">1</span>
+    <span data-part="label">Create your account</span>
+    <span data-part="description">Signed in as ada@example.com</span>
+    <span data-part="status">Completed</span>
+  </li>
+  <li data-part="connector" data-state="completed" aria-hidden="true"></li>
+  <li data-part="step" data-state="error">
+    <span data-part="indicator">2</span>
+    <span data-part="label">Connect a repository</span>
+    <span data-part="description">Access was denied — reconnect to retry</span>
+    <span data-part="status">Error</span>
+  </li>
+  <li data-part="connector" aria-hidden="true"></li>
+  <li data-part="step" data-state="active" aria-current="step">
+    <span data-part="indicator">3</span>
+    <span data-part="label">Invite your team</span>
+    <span data-part="optional">Optional</span>
+  </li>
+  <li data-part="connector" aria-hidden="true"></li>
+  <li data-part="step">
+    <span data-part="indicator">4</span>
+    <span data-part="label">Deploy</span>
+    <span data-part="description">About two minutes</span>
+  </li>
+</ol>
+
+<!-- Clickable steps — buttons that go back, and only back
+     Steps are buttons: a completed one returns to its step, the current one
+     carries aria-current, and the ones not reached yet are disabled until Next
+     reaches them. One l-data value drives it, as in the wizard pattern. -->
+<div data-ui="stack" data-gap="4" l-data="{ step: 2 }">
+  <div data-ui="stepper" role="navigation" aria-label="Order steps">
+    <button type="button" data-part="step" data-state="completed" :data-state="step &gt; 0 ? 'completed' : (step === 0 ? 'active' : null)" :aria-current="step === 0 ? 'step' : null" @click="step = 0">
+      <span data-part="indicator">1</span>
+      <span data-part="label">Basket</span>
+      <span data-part="status" l-text="step &gt; 0 ? 'Completed' : ''">Completed</span>
+    </button>
+    <div data-part="connector" data-state="completed" :data-state="step &gt; 0 ? 'completed' : null"></div>
+    <button type="button" data-part="step" data-state="completed" :data-state="step &gt; 1 ? 'completed' : (step === 1 ? 'active' : null)" :aria-current="step === 1 ? 'step' : null" :disabled="step &lt; 1" @click="step = 1">
+      <span data-part="indicator">2</span>
+      <span data-part="label">Delivery</span>
+      <span data-part="status" l-text="step &gt; 1 ? 'Completed' : ''">Completed</span>
+    </button>
+    <div data-part="connector" data-state="completed" :data-state="step &gt; 1 ? 'completed' : null"></div>
+    <button type="button" data-part="step" data-state="active" aria-current="step" :data-state="step &gt; 2 ? 'completed' : (step === 2 ? 'active' : null)" :aria-current="step === 2 ? 'step' : null" :disabled="step &lt; 2" @click="step = 2">
+      <span data-part="indicator">3</span>
+      <span data-part="label">Payment</span>
+      <span data-part="status" l-text="step &gt; 2 ? 'Completed' : ''"></span>
+    </button>
+    <div data-part="connector" :data-state="step &gt; 2 ? 'completed' : null"></div>
+    <button type="button" data-part="step" disabled :aria-current="step === 3 ? 'step' : null" :data-state="step === 3 ? 'active' : null" :disabled="step &lt; 3" @click="step = 3">
+      <span data-part="indicator">4</span>
+      <span data-part="label">Confirm</span>
+    </button>
+  </div>
+  <div data-ui="cluster" data-gap="2">
+    <button type="button" data-ui="button" data-variant="outline" data-size="sm" :disabled="step === 0" @click="step = step - 1">Back</button>
+    <button type="button" data-ui="button" data-variant="primary" data-size="sm" :disabled="step === 3" @click="step = step + 1">Next</button>
   </div>
 </div>
 
-<!-- Vertical stepper -->
-<div data-ui="stepper" data-variant="vertical">
-  <div data-part="step" data-state="completed">
-    <span data-part="indicator">&#x2713;</span>
-    <span data-part="label">Account</span>
-  </div>
-  <div data-part="connector" data-state="completed"></div>
-  <div data-part="step" data-state="active">
-    <span data-part="indicator">2</span>
-    <span data-part="label">Project</span>
-  </div>
-  <div data-part="connector"></div>
-  <div data-part="step">
-    <span data-part="indicator">3</span>
-    <span data-part="label">Review</span>
-  </div>
+<!-- Sizes — sm and lg, the same states -->
+<div data-ui="stack" data-gap="6">
+  <ol data-ui="stepper" data-size="sm" aria-label="Small stepper">
+    <li data-part="step" data-state="completed">
+      <span data-part="indicator">1</span>
+      <span data-part="label">Plan</span>
+      <span data-part="status">Completed</span>
+    </li>
+    <li data-part="connector" data-state="completed" aria-hidden="true"></li>
+    <li data-part="step" data-state="active" aria-current="step">
+      <span data-part="indicator">2</span>
+      <span data-part="label">Build</span>
+    </li>
+    <li data-part="connector" aria-hidden="true"></li>
+    <li data-part="step">
+      <span data-part="indicator">3</span>
+      <span data-part="label">Ship</span>
+    </li>
+  </ol>
+  <ol data-ui="stepper" data-size="lg" aria-label="Large stepper">
+    <li data-part="step" data-state="completed">
+      <span data-part="indicator">1</span>
+      <span data-part="label">Plan</span>
+      <span data-part="status">Completed</span>
+    </li>
+    <li data-part="connector" data-state="completed" aria-hidden="true"></li>
+    <li data-part="step" data-state="active" aria-current="step">
+      <span data-part="indicator">2</span>
+      <span data-part="label">Build</span>
+    </li>
+    <li data-part="connector" aria-hidden="true"></li>
+    <li data-part="step">
+      <span data-part="indicator">3</span>
+      <span data-part="label">Ship</span>
+    </li>
+  </ol>
 </div>

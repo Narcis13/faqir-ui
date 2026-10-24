@@ -10396,6 +10396,11 @@ export const components = {
        "attr": "data-state",
        "value": "completed",
        "kind": "value"
+      },
+      "error": {
+       "attr": "data-state",
+       "value": "error",
+       "kind": "value"
       }
      }
     },
@@ -12309,7 +12314,16 @@ export const components = {
      "within": "item"
     }
    },
-   "variants": {},
+   "variants": {
+    "variant": {
+     "attr": "data-variant",
+     "values": [
+      "default",
+      "lines"
+     ],
+     "default": "default"
+    }
+   },
    "states": {
     "selected": {
      "attr": "data-state",
@@ -12318,6 +12332,11 @@ export const components = {
     },
     "lazy": {
      "attr": "data-lazy",
+     "value": null,
+     "kind": "presence"
+    },
+    "draggable": {
+     "attr": "data-draggable",
      "value": null,
      "kind": "presence"
     }
@@ -12569,6 +12588,12 @@ export const components = {
        }
       ]
      }
+    ],
+    "dyn": [
+     [
+      "variant",
+      "data-variant"
+     ]
     ]
    }
   },

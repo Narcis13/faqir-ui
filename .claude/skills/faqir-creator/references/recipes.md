@@ -1575,7 +1575,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 
 _kind: recipe · category: navigation · controller: createTreeView()_
 
-Single-select hierarchical tree with complete WAI keyboard navigation, explicit positional ARIA, keyed-rendering support, and lazy expansion events
+Hierarchical WAI-ARIA tree: single, multiple or tri-state checkbox selection, lazy children with loading and retry, type-ahead, filtering, guide lines and folder/file icons, and drag-and-drop that also works from the keyboard
 
 ```html
 <ul data-ui="tree-view" data-state="idle" role="tree" aria-label="Items" aria-multiselectable="false">
@@ -1594,15 +1594,26 @@ Single-select hierarchical tree with complete WAI keyboard navigation, explicit 
 
 ```text
 [data-ui='tree-view']  ·  <ul> · content: slots
-├─ [data-part='item']  <li>  required  — Tree node with role=treeitem, roving tabindex, selection state, and explicit aria-level/setsize/posinset
-├─ [data-part='label']  <span>  required  — Visible accessible label and pointer-selection target for an item
+├─ [data-part='item']  <li>  required  — Tree node with role=treeitem, roving tabindex, selection or check state, and explicit aria-level/setsize/posinset
+├─ [data-part='label']  <span>  required  — Visible accessible label and pointer-selection target for an item; holds the toggle, checkbox and icon
 ├─ [data-part='toggle']  <span>  optional  — Decorative disclosure indicator; clicking it toggles a parent item
-└─ [data-part='group']  <ul>  optional  — Nested role=group owned by a parent treeitem; hidden while the parent is collapsed
+├─ [data-part='group']  <ul>  optional  — Nested role=group owned by a parent treeitem; hidden while the parent is collapsed
+├─ [data-part='icon']  <span>  optional  — Decorative (aria-hidden) glyph in a label after the toggle: a folder for a parent, open while expanded, a file for a leaf, an alert when a lazy load failed. Add data-ui="icon" data-icon="…" to use any icon instead
+├─ [data-part='checkbox']  <span>  optional  — Decorative (aria-hidden) box drawing the item's aria-checked in checkbox mode: a tick when true, a dash when mixed. The controller inserts one after the toggle when it is missing
+├─ [data-part='spinner']  <span>  optional  — data-ui="spinner" the controller appends to a lazy item's label while its children load (aria-hidden; the item carries aria-busy)
+├─ [data-part='retry']  <button>  optional  — Pointer button the controller appends to a lazy item whose load failed; expanding the item again (Right Arrow) retries too, which is what the announcement tells keyboard users
+├─ [data-part='tree']  <ul>  optional  — Wrapper form only: the role=tree list, when the root is a wrapper that also holds a filter, an empty message and a status region
+├─ [data-part='filter']  <input>  optional  — Wrapper form: a search input (compose data-ui="input", give it an accessible name) that filters the tree as it is typed in; Down Arrow moves into the tree, Escape clears it
+├─ [data-part='status']  <p>  optional  — Wrapper form: a role=status region, visually hidden, that announces filter counts, loads and moves. Created when missing; a list root gets a visually-hidden sibling instead
+├─ [data-part='empty']  <p>  optional  — Wrapper form: the message shown (un-hidden) while a filter matches nothing
+└─ [data-part='drop-indicator']  <li>  optional  — aria-hidden element the controller places while dragging: a line before or after the target row, a ring around it for inside
 ```
 
 **Variants**
 
-_No variants._
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| variant | `default`, `lines` | `default` | `data-variant` | root |
 
 **Controller API**
 
@@ -1610,15 +1621,22 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 
 | Method | What it does |
 | --- | --- |
-| `select(target)` | — |
-| `expand(target)` | — |
-| `collapse(target)` | — |
-| `toggle(target)` | — |
+| `select(target)` | Select one item, replacing the selection; in checkbox mode, check it. |
+| `expand(target)` | Expand a parent item; an unloaded lazy item starts loading its children. |
+| `collapse(target)` | Collapse a parent item. |
+| `toggle(target)` | Expand a collapsed parent or collapse an expanded one. |
+| `check(target, state)` | Check or uncheck an item and every enabled item under it, then derive its ancestors (checkbox mode). |
+| `selectAll()` | Select every visible enabled item (multiple mode), or check them all (checkbox mode). |
+| `filter(query)` | Show only items whose label contains `query` (case-insensitive), with their ancestors expanded, and announce the count. |
+| `load(target)` | Load a lazy item's children now — what expanding it does. |
+| `setLoader(fn)` | Register the function that loads a lazy item's children: it receives `{ item, value, label, attempt }` and returns (a Promise of) an array of `{ label, value, lazy, disabled, checked, children }`, item elements or markup. |
+| `move(source, target, position)` | Move an item before or after another, or inside a parent (as its last child), then renumber levels and positions. |
 | `refresh()` | — |
-| `getSelected()` | — |
-| `destroy()` | — |
+| `getSelected()` | The selected item (single and multiple mode), or null. |
+| `getSelection()` | Every selected item, or every checked item in checkbox mode, in tree order. |
+| `destroy()` | Remove every listener, the observer and the timers, and end any drag. |
 
-- **Safe transforms:** `add-item`, `remove-item`, `reorder-keyed-items`, `add-nested-group`, `mark-item-disabled`, `mark-parent-lazy`, `change-tree-label`, `restyle-label-and-toggle`
-- **Unsafe (never do):** `remove-tree-role`, `remove-tree-accessible-name`, `remove-treeitem-role`, `place-children-outside-group`, `put-aria-expanded-on-leaf`, `remove-roving-tabindex`, `remove-positional-aria`, `remove-keyboard-navigation`, `allow-multiple-selected-items`
-- **A11y:** keys: ArrowDown, ArrowUp, ArrowRight, ArrowLeft, Home, End, Enter, Space, Printable characters, *
-- **Required ARIA:** `role="tree" on root`; `aria-label on root`; `aria-multiselectable="false" on root`; `role="treeitem" on item`; `tabindex on item`; `aria-selected on selectable item`; `aria-level on item`; `aria-setsize on item`; `aria-posinset on item`; `role="group" on group`
+- **Safe transforms:** `add-item`, `remove-item`, `reorder-keyed-items`, `add-nested-group`, `mark-item-disabled`, `mark-parent-lazy`, `change-tree-label`, `restyle-label-and-toggle`, `add-icon-part`, `switch-variant-to-lines`, `switch-mode-to-multiple-or-checkbox`, `enable-dragging`, `wrap-tree-with-filter`
+- **Unsafe (never do):** `remove-tree-role`, `remove-tree-accessible-name`, `remove-treeitem-role`, `place-children-outside-group`, `put-aria-expanded-on-leaf`, `remove-roving-tabindex`, `remove-positional-aria`, `remove-keyboard-navigation`, `allow-multiple-selected-items`, `use-aria-selected-and-aria-checked-together`, `make-checkbox-or-icon-focusable`, `put-filter-or-status-inside-the-tree-list`
+- **A11y:** keys: ArrowDown, ArrowUp, ArrowRight, ArrowLeft, Home, End, Enter, Space, Ctrl+A, Printable characters, *, Alt+Enter, ArrowUp / ArrowDown (while moving), Home / End (while moving), Enter / Space (while moving), Escape / Tab (while moving), ArrowDown (in the filter), Escape (in the filter)
+- **Required ARIA:** `role="tree" on root, or on the tree part when the root is a wrapper`; `role="tree" on tree`; `aria-label on root`; `aria-multiselectable on the tree: "false" in single mode, "true" in multiple and checkbox mode`; `role="treeitem" on item`; `tabindex on item`; `aria-selected on selectable item`; `aria-checked on every item in checkbox mode`; `aria-level on item`; `aria-setsize on item`; `aria-posinset on item`; `role="group" on group`; `aria-label on filter`

@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "stepper",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "kind": "primitive",
   "category": "navigation",
-  "description": "Step indicator with numbered circles, connectors, and labels for multi-step flows",
+  "description": "Step indicator for multi-step flows: numbered circles, connectors and labels, horizontal or vertical, with completed, current, error and optional steps, screen-reader state text, and clickable link or button steps",
 
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "Additive. A step can be data-state=\"error\" (the destructive pair and an exclamation mark); a completed step now draws a tick whatever its indicator holds, so a reactive wizard's numbers turn into ticks with no markup change. New parts: description (a second line), optional (the \"Optional\" marker) and status (the state in words, visually hidden — \"Completed\", \"Error\"). aria-current=\"step\" marks the current step, gives it a halo, and keeps its label on a phone, where the other labels still hide. Steps may be <a> or <button> — hit area, hover, focus ring, a disabled step keeps the pending look — so a stepper can drive a wizard. The vertical variant shows labels and second lines at every width. An <ol> root with <li> steps is the progress-list shape. Existing markup renders as before apart from the tick in completed steps.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "Nested components keep their own parts. The stylesheet reached the steps, connectors, indicators and labels with descendant selectors, so a component in a step with a label part took the step label's size and colour. Parts are root > step > indicator and label, and root > connector. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
@@ -30,25 +35,43 @@
       "selector": "[data-part='step']",
       "required": true,
       "tag_hint": "div",
-      "description": "Individual step container"
+      "description": "Individual step container: a div or li to display progress, an a or button to navigate to the step (disable the ones that cannot be reached yet)"
     },
     "indicator": {
       "selector": "[data-part='indicator']",
       "required": true,
       "tag_hint": "span",
-      "description": "Numbered circle or checkmark"
+      "description": "Numbered circle; a completed step draws a tick and an error step an exclamation mark over its number"
     },
     "label": {
       "selector": "[data-part='label']",
       "required": false,
       "tag_hint": "span",
-      "description": "Step label text"
+      "description": "Step label text. Hidden below sm in the horizontal layout except on the aria-current step; always shown in the vertical layout"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Second line under the label: a summary, a hint, an error message (destructive on an error step)"
+    },
+    "optional": {
+      "selector": "[data-part='optional']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The optional marker: visible text (\"Optional\") on its own line under the label, read with the step"
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The step's state in words for screen readers only (\"Completed\", \"Error\"), visually hidden; the current step needs none, aria-current says it"
     },
     "connector": {
       "selector": "[data-part='connector']",
       "required": false,
       "tag_hint": "div",
-      "description": "Line connecting steps"
+      "description": "Line connecting steps (an aria-hidden li in an ol)"
     }
   },
 
@@ -71,43 +94,71 @@
       "attr": "data-state",
       "default": false,
       "transient": false,
-      "applied_to": "step"
+      "applied_to": "step",
+      "description": "The current step: solid primary fill and a halo. Pair it with aria-current=\"step\""
     },
     "completed": {
       "attr": "data-state",
       "default": false,
       "transient": false,
-      "applied_to": "step"
+      "applied_to": "step",
+      "description": "A finished step (and, on a connector, a finished stretch): the success tint and a tick"
+    },
+    "error": {
+      "attr": "data-state",
+      "default": false,
+      "transient": false,
+      "applied_to": "step",
+      "description": "A step that needs attention: the destructive fill and an exclamation mark; with aria-current it keeps a halo in the destructive tint"
     }
   },
 
   "a11y": {
     "role": "navigation",
     "required_attrs": ["aria-label"],
-    "keyboard": {}
+    "keyboard": {
+      "Tab": "clickable steps: move between the steps that can be reached (disabled steps are skipped)",
+      "Enter": "clickable steps: go to the focused step",
+      "Space": "button steps: go to the focused step"
+    },
+    "notes": [
+      "A stepper that navigates is role=\"navigation\" (or a nav) with an aria-label, and its steps are links or buttons; one that only shows progress can be an ol with an aria-label, its steps li and its connectors aria-hidden li.",
+      "aria-current=\"step\" goes on the current step, whichever its data-state.",
+      "The tick and exclamation mark are drawn, not read: put \"Completed\" or \"Error\" in a status part so a screen reader hears the state. The optional part is visible text and is read as it is.",
+      "Steps that cannot be reached yet are disabled (a button) or aria-disabled (a link without href), never only greyed out."
+    ]
   },
 
   "tokens_used": [
-    "color-primary", "color-primary-fg", "color-bg-muted",
-    "color-fg-muted", "color-success", "color-success-subtle", "color-border",
-    "text-sm", "text-xs", "weight-medium",
-    "radius-full", "space-1", "space-2", "space-4", "space-6",
-    "border-width-strong"
+    "color-primary", "color-primary-fg", "color-bg-muted", "color-fg-muted", "color-success",
+    "color-success-subtle", "color-border", "color-primary-subtle", "color-destructive",
+    "color-destructive-fg", "color-destructive-subtle", "text-sm", "text-xs", "weight-medium",
+    "radius-full", "radius-md", "space-1", "space-2", "space-4", "space-6", "space-px",
+    "border-width-strong", "duration-fast", "ease-default", "leading-snug", "focus-ring-width",
+    "focus-ring-style", "focus-ring-color", "focus-ring-offset", "link-underline-offset",
+    "link-decoration", "link-thickness"
   ],
 
   "templates": {
-    "html": "<div data-ui=\"stepper\"><div data-part=\"step\" data-state=\"{state}\"><span data-part=\"indicator\">{number}</span><span data-part=\"label\">{label}</span></div></div>"
+    "html": "<div data-ui=\"stepper\"><div data-part=\"step\" data-state=\"{state}\"><span data-part=\"indicator\">{number}</span><span data-part=\"label\">{label}</span></div></div>",
+    "html_progress": "<ol data-ui=\"stepper\" aria-label=\"{label}\">\n  <li data-part=\"step\" data-state=\"completed\"><span data-part=\"indicator\">1</span><span data-part=\"label\">{done_label}</span><span data-part=\"status\">Completed</span></li>\n  <li data-part=\"connector\" data-state=\"completed\" aria-hidden=\"true\"></li>\n  <li data-part=\"step\" data-state=\"active\" aria-current=\"step\"><span data-part=\"indicator\">2</span><span data-part=\"label\">{current_label}</span></li>\n  <li data-part=\"connector\" aria-hidden=\"true\"></li>\n  <li data-part=\"step\"><span data-part=\"indicator\">3</span><span data-part=\"label\">{next_label}</span><span data-part=\"optional\">Optional</span></li>\n</ol>",
+    "html_clickable": "<div data-ui=\"stepper\" role=\"navigation\" aria-label=\"{label}\">\n  <button type=\"button\" data-part=\"step\" data-state=\"completed\"><span data-part=\"indicator\">1</span><span data-part=\"label\">{done_label}</span><span data-part=\"status\">Completed</span></button>\n  <div data-part=\"connector\" data-state=\"completed\"></div>\n  <button type=\"button\" data-part=\"step\" data-state=\"active\" aria-current=\"step\"><span data-part=\"indicator\">2</span><span data-part=\"label\">{current_label}</span></button>\n  <div data-part=\"connector\"></div>\n  <button type=\"button\" data-part=\"step\" disabled><span data-part=\"indicator\">3</span><span data-part=\"label\">{next_label}</span></button>\n</div>"
   },
 
   "safe_transforms": [
-    "Change step data-state to active or completed",
+    "Change step data-state to active, completed or error",
     "Add or remove label slot",
     "Change indicator content",
-    "Add or remove connector slots"
+    "Add or remove connector slots",
+    "Add a description, optional or status part to a step",
+    "Make steps buttons or links, disabling the ones not reachable yet",
+    "Move aria-current=\"step\" with the current step"
   ],
   "unsafe_transforms": [
     "Remove data-ui attribute",
-    "Remove step or indicator slots"
+    "Remove step or indicator slots",
+    "Show a state by colour alone, without a status part",
+    "Leave an unreachable button or link step enabled"
   ],
 
   "composition": {
@@ -126,6 +177,11 @@
     "Active state highlights current step",
     "Completed state shows checkmark style",
     "Connectors change color when completed",
-    "Vertical variant stacks steps"
+    "Vertical variant stacks steps",
+    "Error state draws the destructive pair and an exclamation mark",
+    "aria-current step keeps its label on a phone",
+    "Status part is visually hidden and read",
+    "Button steps have a focus ring and disabled steps stay pending",
+    "Clicking a completed stepper step drives the wizard back to its panel"
   ]
 }

@@ -1258,12 +1258,12 @@ A wall of customer quotes — heading, description and a real list of card quote
 
 _kind: pattern · category: composite_
 
-Multi-step form wizard composing stepper + card panels + field-group + buttons. Fully declarative: a single l-data `{ step }` drives step visibility and indicator state, and faqir-validate's on-valid hook advances the step, blocks advancing while the active step is invalid, and dispatches a completion event on the final step. Zero custom JS.
+Multi-step form wizard composing stepper + card panels + field-group + buttons. Fully declarative: a single l-data `{ step }` drives step visibility and indicator state, and faqir-validate's on-valid hook advances the step, blocks advancing while the active step is invalid, and dispatches a completion event on the final step. The stepper's steps are buttons bound to the same `step`, so clicking a completed step goes back to its panel. Zero custom JS.
 
 ```html
 <form data-ui="wizard" data-state="active" aria-label="{label}" l-data="{ step: 0 }" l-validate="step &lt; {last} ? (step = step + 1) : ($el.dataset.state = 'submitted', $el.dispatchEvent(new CustomEvent('faqir:wizard-complete', { bubbles: true })))">
   <div data-ui="stepper" data-part="steps" role="navigation" aria-label="Progress">
-    <div data-part="step" :data-state="step > {i} ? 'completed' : (step === {i} ? 'active' : null)"><span data-part="indicator">1</span><span data-part="label">{step_label}</span></div>
+    <button type="button" data-part="step" :data-state="step > {i} ? 'completed' : (step === {i} ? 'active' : null)" :aria-current="step === {i} ? 'step' : null" :disabled="step < {i}" @click="step = {i}"><span data-part="indicator">1</span><span data-part="label">{step_label}</span><span data-part="status" l-text="step > {i} ? 'Completed' : ''"></span></button>
   </div>
   <section data-ui="card" data-variant="outlined" data-part="panel" :hidden="step !== {i}"><div data-part="body">{fields}</div></section>
   <div data-part="actions">
@@ -1279,7 +1279,7 @@ Multi-step form wizard composing stepper + card panels + field-group + buttons. 
 ```text
 [data-ui='wizard']  ·  <form> · content: slots
 ├─ [data-part='heading']  <h1>  optional  — Page-level heading above the stepper
-├─ [data-part='steps']  <div>  required  — The stepper progress indicator (a nested data-ui='stepper')
+├─ [data-part='steps']  <div>  required  — The stepper progress indicator (a nested data-ui='stepper'). Its steps are type=button elements bound to the same step: completed steps go back to their panel, steps ahead are disabled
 ├─ [data-part='panel']  <section>  required  — One step's content, a nested data-ui='card'; shown only when its step is active via :hidden binding
 ├─ [data-part='actions']  <div>  required  — Navigation button row (back / next / submit)
 ├─ [data-part='back']  <button>  required  — Go to the previous step; disabled on the first step
@@ -1296,5 +1296,5 @@ Multi-step form wizard composing stepper + card panels + field-group + buttons. 
 
 - **Safe transforms:** `add-step`, `remove-step`, `change-step-fields`, `change-step-labels`, `change-size-variant`, `customize-button-text`, `add-completion-message`
 - **Unsafe (never do):** `remove-l-data`, `remove-l-validate`, `remove-disabled-binding-from-inactive-steps`, `remove-form-element`, `remove-labels-from-inputs`, `add-custom-script`
-- **A11y:** role=form · keys: Tab, Enter, Shift+Tab
-- **Required ARIA:** `aria-label or aria-labelledby on the form element`; `role="navigation" + aria-label on the stepper`; `label[for] matching each input id inside every step`; `aria-required="true" on required controls`; `aria-describedby pointing to the field-group error message`; `role="status" on the completion message so its reveal is announced`
+- **A11y:** role=form · keys: Tab, Enter, Enter / Space on a stepper step, Shift+Tab
+- **Required ARIA:** `aria-label or aria-labelledby on the form element`; `role="navigation" + aria-label on the stepper`; `the current stepper step carries aria-current="step" (bound to step), the others none`; `every stepper step is a type=button element, so clicking one never submits the form`; `label[for] matching each input id inside every step`; `aria-required="true" on required controls`; `aria-describedby pointing to the field-group error message`; `role="status" on the completion message so its reveal is announced`

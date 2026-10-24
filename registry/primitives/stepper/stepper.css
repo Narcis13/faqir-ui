@@ -1,11 +1,15 @@
 /* @ui:component stepper */
-/* @ui:tokens color-primary color-primary-fg color-bg-muted color-fg-muted color-success color-success-subtle color-border text-sm text-xs weight-medium radius-full space-1 space-2 space-4 space-6 border-width-strong */
+/* @ui:tokens color-primary color-primary-fg color-bg-muted color-fg-muted color-success color-success-subtle color-border color-primary-subtle color-destructive color-destructive-fg color-destructive-subtle text-sm text-xs weight-medium radius-full radius-md space-1 space-2 space-4 space-6 space-px border-width-strong duration-fast ease-default leading-snug focus-ring-width focus-ring-style focus-ring-color focus-ring-offset link-underline-offset link-decoration link-thickness */
 
-/* ── Base ── */
+/* ── Base ──
+   A `div role="navigation"` (or a `nav`) whose steps are links or buttons, or
+   an `ol` whose steps are list items: the list reset is for the second. */
 [data-ui="stepper"] {
   display: flex;
   align-items: center;
   gap: 0;
+  padding: 0;
+  list-style: none;
 }
 
 /* ── Step ── */
@@ -13,13 +17,17 @@
   display: flex;
   align-items: center;
   gap: 0;
+  min-inline-size: 0;
 }
+
 
 /* ── Indicator (circle) ── */
 [data-ui="stepper"] > :where([data-part="step"]) > [data-part="indicator"] {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  grid-row: 1 / span 2;
   width: 2rem;
   height: 2rem;
   border-radius: var(--radius-full);
@@ -28,12 +36,20 @@
   background: var(--color-bg-muted);
   color: var(--color-fg-muted);
   flex-shrink: 0;
+  transition: background-color var(--duration-fast) var(--ease-default),
+              box-shadow var(--duration-fast) var(--ease-default);
 }
 
 /* ── Active step ── */
 [data-ui="stepper"] > [data-part="step"][data-state="active"] > [data-part="indicator"] {
   background: var(--color-primary);
   color: var(--color-primary-fg);
+}
+
+/* "You are here": a halo in the subtle tint, which every theme pairs with its
+   primary. Separate from the fill above so the colour contract stays put. */
+[data-ui="stepper"] > [data-part="step"][data-state="active"] > [data-part="indicator"] {
+  box-shadow: 0 0 0 var(--space-1) var(--color-primary-subtle);
 }
 
 /* ── Completed step ── */
@@ -51,6 +67,43 @@
   color: var(--color-success);
 }
 
+/* ── Error step ── the solid destructive pair, so it cannot be missed. */
+[data-ui="stepper"] > [data-part="step"][data-state="error"] > [data-part="indicator"] {
+  background: var(--color-destructive);
+  color: var(--color-destructive-fg);
+}
+
+[data-ui="stepper"] > [data-part="step"][data-state="error"][aria-current="step"] > [data-part="indicator"] {
+  box-shadow: 0 0 0 var(--space-1) var(--color-destructive-subtle);
+}
+
+/* The state glyph. A completed or failed step draws a tick or an exclamation
+   mark in the indicator's own colour, whatever the markup put there (a number,
+   a ✓): the text stays for screen readers and gives way visually. Masks, as
+   the checkbox primitive's tick, so the colour is the token. */
+[data-ui="stepper"] > [data-part="step"][data-state="completed"] > [data-part="indicator"],
+[data-ui="stepper"] > [data-part="step"][data-state="error"] > [data-part="indicator"] {
+  -webkit-text-fill-color: transparent;
+}
+
+[data-ui="stepper"] > [data-part="step"][data-state="completed"] > [data-part="indicator"]::before,
+[data-ui="stepper"] > [data-part="step"][data-state="error"] > [data-part="indicator"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 55%;
+  height: 55%;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+[data-ui="stepper"] > [data-part="step"][data-state="error"] > [data-part="indicator"]::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M12 5v9'/%3E%3Cpath d='M12 19h.01'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M12 5v9'/%3E%3Cpath d='M12 19h.01'/%3E%3C/svg%3E");
+}
+
 /* ── Step label ──
    Mobile-first (task 0.8-08): the label is hidden on a phone, where a row of
    indicators is all that fits, and revealed from the canon `sm` tier up by the
@@ -59,6 +112,7 @@
    that the slot ships as a `<span>`. */
 [data-ui="stepper"] > :where([data-part="step"]) > [data-part="label"] {
   display: none;
+  grid-column: 2;
   font-size: var(--text-xs);
   color: var(--color-fg-muted);
   margin-inline-start: var(--space-1);
@@ -72,6 +126,106 @@
 
 [data-ui="stepper"] > [data-part="step"][data-state="completed"] > [data-part="label"] {
   color: var(--color-success);
+}
+
+[data-ui="stepper"] > [data-part="step"][data-state="error"] > [data-part="label"] {
+  color: var(--color-destructive);
+  font-weight: var(--weight-medium);
+}
+
+/* On a phone the current step still names itself: the one label that shows,
+   shortened with an ellipsis rather than pushing the row wider. */
+[data-ui="stepper"] > [data-part="step"][aria-current="step"] > [data-part="label"] {
+  display: revert;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Second line: a description, or the optional marker ── */
+[data-ui="stepper"] > :where([data-part="step"]) > [data-part="description"],
+[data-ui="stepper"] > :where([data-part="step"]) > [data-part="optional"] {
+  display: none;
+  grid-column: 2;
+  margin-inline-start: var(--space-1);
+  color: var(--color-fg-muted);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+}
+
+[data-ui="stepper"] > :where([data-part="step"]) > [data-part="optional"] {
+  font-style: italic;
+}
+
+[data-ui="stepper"] > [data-part="step"][data-state="error"] > [data-part="description"] {
+  color: var(--color-destructive);
+}
+
+/* Vertical: the second line always shows. */
+/* A step whose second line (description, optional) shows lays its text out
+   in a column beside the indicator, which spans both lines; the label sits on
+   the first line and gives up its centring. */
+[data-ui="stepper"][data-variant="vertical"] > [data-part="step"]:has(> [data-part="description"], > [data-part="optional"]) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--space-1);
+}
+
+[data-ui="stepper"][data-variant="vertical"] > [data-part="step"]:has(> [data-part="description"], > [data-part="optional"]) > [data-part="label"] {
+  align-self: end;
+}
+
+[data-ui="stepper"][data-variant="vertical"] > [data-part="step"]:has(> [data-part="description"], > [data-part="optional"]) > :is([data-part="description"], [data-part="optional"]) {
+  align-self: start;
+}
+
+/* ── Status: the state in words, for screen readers only ("Completed",
+   "Error"). The current step says it through aria-current="step". ── */
+[data-ui="stepper"] > :where([data-part="step"]) > [data-part="status"] {
+  position: absolute;
+  width: var(--space-px);
+  height: var(--space-px);
+  margin: calc(-1 * var(--space-px));
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Clickable steps: a link or a button per step ──
+   The look stays the stepper's; the control adds a hit area, a hover and a
+   focus ring. A disabled step (not reachable yet) keeps the pending look. */
+[data-ui="stepper"] > :where(a, button)[data-part="step"] {
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+[data-ui="stepper"] > :where(a, button)[data-part="step"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+[data-ui="stepper"] > :where(a, button)[data-part="step"]:disabled,
+[data-ui="stepper"] > :where(a, button)[data-part="step"][aria-disabled="true"] {
+  cursor: default;
+}
+
+[data-ui="stepper"] > :where(a, button)[data-part="step"]:not(:disabled, [aria-disabled="true"], [aria-current="step"]):hover > [data-part="indicator"] {
+  box-shadow: 0 0 0 var(--space-1) var(--color-bg-muted);
+}
+
+[data-ui="stepper"] > :where(a, button)[data-part="step"]:not(:disabled, [aria-disabled="true"], [aria-current="step"]):hover > [data-part="label"] {
+  text-decoration: var(--link-decoration);
+  text-decoration-thickness: var(--link-thickness);
+  text-underline-offset: var(--link-underline-offset);
 }
 
 /* ── Connector ──
@@ -88,7 +242,9 @@
   background: var(--color-success);
 }
 
-/* ── Vertical variant ── */
+/* ── Vertical variant ──
+   A column: it fits a phone, so every label and second line shows at every
+   width, and the connector runs down from the centre of the indicator. */
 [data-ui="stepper"][data-variant="vertical"] {
   flex-direction: column;
   align-items: flex-start;
@@ -99,11 +255,26 @@
   align-items: center;
 }
 
+[data-ui="stepper"][data-variant="vertical"] > :where([data-part="step"]) > :is([data-part="label"], [data-part="description"], [data-part="optional"]) {
+  display: revert;
+  margin-inline-start: var(--space-2);
+  font-size: var(--text-sm);
+  white-space: normal;
+}
+
+[data-ui="stepper"][data-variant="vertical"] > :where([data-part="step"]) > :is([data-part="description"], [data-part="optional"]) {
+  font-size: var(--text-xs);
+}
+
+/* flex: none — the base connector is flex: 1, whose 0% basis in a column of
+   indefinite height left the line 0px tall, so the height below never showed. */
 [data-ui="stepper"][data-variant="vertical"] > [data-part="connector"] {
-  width: 2px;
+  flex: none;
+  width: var(--border-width-strong);
   height: var(--space-6);
   min-width: 0;
-  margin: var(--space-1) 0 var(--space-1) calc(1rem - 1px);
+  margin-block: var(--space-1);
+  margin-inline: calc(1rem - var(--border-width-strong) / 2) 0;
 }
 
 /* ── Size: small ── */
@@ -114,7 +285,7 @@
 }
 
 [data-ui="stepper"][data-size="sm"][data-variant="vertical"] > [data-part="connector"] {
-  margin-inline-start: calc(0.75rem - 1px);
+  margin-inline-start: calc(0.75rem - var(--border-width-strong) / 2);
 }
 
 /* ── Size: large ── */
@@ -125,7 +296,7 @@
 }
 
 [data-ui="stepper"][data-size="lg"][data-variant="vertical"] > [data-part="connector"] {
-  margin-inline-start: calc(1.25rem - 1px);
+  margin-inline-start: calc(1.25rem - var(--border-width-strong) / 2);
 }
 
 /* ── Responsive: labels and connector breathing room, from `sm` up ──
@@ -134,12 +305,41 @@
    observable difference is the boundary itself, which now belongs to the wide
    side (at exactly 640px labels show rather than hide). */
 @media (min-width: 40rem) {
+  /* A step whose second line (description, optional) shows lays its text out
+     in a column beside the indicator, which spans both lines; the label sits on
+     the first line and gives up its centring. */
+  [data-ui="stepper"] > [data-part="step"]:has(> [data-part="description"], > [data-part="optional"]) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--space-1);
+  }
+
+  [data-ui="stepper"] > [data-part="step"]:has(> [data-part="description"], > [data-part="optional"]) > [data-part="label"] {
+    align-self: end;
+  }
+
+  [data-ui="stepper"] > [data-part="step"]:has(> [data-part="description"], > [data-part="optional"]) > :is([data-part="description"], [data-part="optional"]) {
+    align-self: start;
+  }
+
   [data-ui="stepper"] > :where([data-part="step"]) > [data-part="label"] {
+    display: revert;
+  }
+
+  [data-ui="stepper"] > :where([data-part="step"]) > [data-part="description"],
+  [data-ui="stepper"] > :where([data-part="step"]) > [data-part="optional"] {
     display: revert;
   }
 
   [data-ui="stepper"] > [data-part="connector"] {
     min-width: var(--space-4);
     margin: 0 var(--space-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="stepper"] > :where([data-part="step"]) > [data-part="indicator"] {
+    transition: none;
   }
 }

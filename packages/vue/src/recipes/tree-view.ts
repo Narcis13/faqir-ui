@@ -5,22 +5,28 @@ import { defineFaqirRecipe } from "../recipe-runtime.js";
 import type { RecipeNode } from "../recipe-runtime.js";
 import { createTreeView } from "../controllers/tree-view.js";
 
+/** Allowed `variant` values (manifest variant group "variant", attr `data-variant` on root). */
+export type LTreeViewVariant = "default" | "lines";
+
 export interface LTreeViewProps {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
+  /** `data-variant` on root; omitted when unset (manifest default: "default"). */
+  variant?: LTreeViewVariant;
 }
 
-/** `tree-view` — Single-select hierarchical tree with complete WAI keyboard navigation, explicit positional ARIA, keyed-rendering support, and lazy expansion events Emits: `@expand`, `@select` (payload: `(detail, event)`). Exposes: `select()`, `expand()`, `collapse()`, `toggle()`, `refresh()`, `getSelected()`. */
+/** `tree-view` — Hierarchical WAI-ARIA tree: single, multiple or tri-state checkbox selection, lazy children with loading and retry, type-ahead, filtering, guide lines and folder/file icons, and drag-and-drop that also works from the keyboard Emits: `@check`, `@expand`, `@filter`, `@load`, `@loaded`, `@move`, `@select` (payload: `(detail, event)`). Exposes: `select()`, `expand()`, `collapse()`, `toggle()`, `check()`, `selectAll()`, `filter()`, `load()`, `setLoader()`, `move()`, `refresh()`, `getSelected()`, `getSelection()`. */
 export const LTreeView = defineFaqirRecipe<LTreeViewProps>({
   name: "tree-view",
   create: createTreeView,
-  methods: ["select", "expand", "collapse", "toggle", "refresh", "getSelected"],
-  events: ["expand", "select"],
+  methods: ["select", "expand", "collapse", "toggle", "check", "selectAll", "filter", "load", "setLoader", "move", "refresh", "getSelected", "getSelection"],
+  events: ["check", "expand", "filter", "load", "loaded", "move", "select"],
   stringProps: [],
   boolProps: [],
   variantProps: [
+    { prop: "variant", values: ["default", "lines"] },
   ],
-  tree: {"tag":"ul","attrs":[["data-ui",["tree-view"]],["data-state",["idle"]],["role",["tree"]],["aria-label",["Items"]],["aria-multiselectable",["false"]]],"children":[{"tag":"li","attrs":[["data-part",["item"]],["data-state",["expanded"]],["data-value",["parent"]],["role",["treeitem"]],["tabindex",["0"]],["aria-selected",["false"]],["aria-expanded",["true"]],["aria-level",["1"]],["aria-setsize",["1"]],["aria-posinset",["1"]]],"children":[{"tag":"span","attrs":[["data-part",["label"]]],"children":[{"tag":"span","attrs":[["data-part",["toggle"]],["aria-hidden",["true"]]],"children":["›"]},"Parent"]},{"tag":"ul","attrs":[["data-part",["group"]],["role",["group"]]],"children":[{"tag":"li","attrs":[["data-part",["item"]],["data-value",["child"]],["role",["treeitem"]],["tabindex",["-1"]],["aria-selected",["false"]],["aria-level",["2"]],["aria-setsize",["1"]],["aria-posinset",["1"]]],"children":[{"tag":"span","attrs":[["data-part",["label"]]],"children":[{"tag":"span","attrs":[["data-part",["toggle"]],["aria-hidden",["true"]]],"children":["›"]},"Child"]}]}],"slot":"group"}]}]} as unknown as RecipeNode,
+  tree: {"tag":"ul","attrs":[["data-ui",["tree-view"]],["data-state",["idle"]],["role",["tree"]],["aria-label",["Items"]],["aria-multiselectable",["false"]]],"children":[{"tag":"li","attrs":[["data-part",["item"]],["data-state",["expanded"]],["data-value",["parent"]],["role",["treeitem"]],["tabindex",["0"]],["aria-selected",["false"]],["aria-expanded",["true"]],["aria-level",["1"]],["aria-setsize",["1"]],["aria-posinset",["1"]]],"children":[{"tag":"span","attrs":[["data-part",["label"]]],"children":[{"tag":"span","attrs":[["data-part",["toggle"]],["aria-hidden",["true"]]],"children":["›"]},"Parent"]},{"tag":"ul","attrs":[["data-part",["group"]],["role",["group"]]],"children":[{"tag":"li","attrs":[["data-part",["item"]],["data-value",["child"]],["role",["treeitem"]],["tabindex",["-1"]],["aria-selected",["false"]],["aria-level",["2"]],["aria-setsize",["1"]],["aria-posinset",["1"]]],"children":[{"tag":"span","attrs":[["data-part",["label"]]],"children":[{"tag":"span","attrs":[["data-part",["toggle"]],["aria-hidden",["true"]]],"children":["›"]},"Child"]}]}],"slot":"group"}]}],"dyn":[["variant","data-variant"]]} as unknown as RecipeNode,
 });
 
 export default LTreeView;

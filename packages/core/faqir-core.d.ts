@@ -651,12 +651,21 @@ export interface TooltipApi extends ControllerApi {
 }
 
 export interface TreeViewApi extends ControllerApi {
-  select(target: string | Element): boolean;
-  expand(target: string | Element): boolean;
-  collapse(target: string | Element): boolean;
-  toggle(target: string | Element): boolean;
+  select(target: string | number | Element): boolean;
+  expand(target: string | number | Element): boolean;
+  collapse(target: string | number | Element): boolean;
+  toggle(target: string | number | Element): boolean;
+  /** Checkbox mode: check (true), uncheck (false) or toggle (omitted) an item and its enabled subtree. */
+  check(target: string | number | Element, state?: boolean): boolean;
+  selectAll(): boolean;
+  /** Returns the number of matching items. */
+  filter(query: string): number;
+  load(target: string | number | Element): boolean;
+  setLoader(fn: ((detail: { item: Element; value: string; label: string; attempt: number }) => unknown) | null): void;
+  move(source: string | number | Element, target: string | number | Element, position: "before" | "after" | "inside"): boolean;
   refresh(): void;
   getSelected(): Element | null;
+  getSelection(): Element[];
 }
 
 /**

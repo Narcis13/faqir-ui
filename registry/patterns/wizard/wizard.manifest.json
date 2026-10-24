@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "wizard",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "pattern",
   "category": "composite",
-  "description": "Multi-step form wizard composing stepper + card panels + field-group + buttons. Fully declarative: a single l-data `{ step }` drives step visibility and indicator state, and faqir-validate's on-valid hook advances the step, blocks advancing while the active step is invalid, and dispatches a completion event on the final step. Zero custom JS.",
+  "description": "Multi-step form wizard composing stepper + card panels + field-group + buttons. Fully declarative: a single l-data `{ step }` drives step visibility and indicator state, and faqir-validate's on-valid hook advances the step, blocks advancing while the active step is invalid, and dispatches a completion event on the final step. The stepper's steps are buttons bound to the same `step`, so clicking a completed step goes back to its panel. Zero custom JS.",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Clickable stepper navigation, additive. The stepper's steps are type=button elements that set `step` on click: a completed step goes back to its panel, the current step carries a bound aria-current=\"step\", a step still ahead is :disabled so moving forward stays Next and its validation, a visually hidden status part says \"Completed\", and the connector before a completed step turns completed. Next, Back, validation, submission and faqir:wizard-complete are unchanged, and the stepper still has one step part per panel.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "form",
@@ -23,7 +31,7 @@
       "selector": "[data-part='steps']",
       "required": true,
       "tag_hint": "div",
-      "description": "The stepper progress indicator (a nested data-ui='stepper')"
+      "description": "The stepper progress indicator (a nested data-ui='stepper'). Its steps are type=button elements bound to the same step: completed steps go back to their panel, steps ahead are disabled"
     },
     "panel": {
       "selector": "[data-part='panel']",
@@ -82,16 +90,22 @@
     "required_attrs": [
       "aria-label or aria-labelledby on the form element",
       "role=\"navigation\" + aria-label on the stepper",
+      "the current stepper step carries aria-current=\"step\" (bound to step), the others none",
+      "every stepper step is a type=button element, so clicking one never submits the form",
       "label[for] matching each input id inside every step",
       "aria-required=\"true\" on required controls",
       "aria-describedby pointing to the field-group error message",
       "role=\"status\" on the completion message so its reveal is announced"
     ],
     "keyboard": {
-      "Tab": "move focus between the active step's controls and the nav buttons",
+      "Tab": "move focus between the reachable stepper steps, the active step's controls and the nav buttons",
       "Enter": "activate Next/Submit (submit-typed), triggering validation",
+      "Enter / Space on a stepper step": "go back to that step's panel; a step still ahead is disabled, so forward is always Next",
       "Shift+Tab": "reverse focus order"
-    }
+    },
+    "notes": [
+      "Stepper navigation is linear: a completed step can be revisited, a later one only through Next, which validates the step being left."
+    ]
   },
 
   "tokens_used": [
@@ -101,7 +115,7 @@
   ],
 
   "templates": {
-    "html": "<form data-ui=\"wizard\" data-state=\"active\" aria-label=\"{label}\" l-data=\"{ step: 0 }\" l-validate=\"step &lt; {last} ? (step = step + 1) : ($el.dataset.state = 'submitted', $el.dispatchEvent(new CustomEvent('faqir:wizard-complete', { bubbles: true })))\">\n  <div data-ui=\"stepper\" data-part=\"steps\" role=\"navigation\" aria-label=\"Progress\">\n    <div data-part=\"step\" :data-state=\"step > {i} ? 'completed' : (step === {i} ? 'active' : null)\"><span data-part=\"indicator\">1</span><span data-part=\"label\">{step_label}</span></div>\n  </div>\n  <section data-ui=\"card\" data-variant=\"outlined\" data-part=\"panel\" :hidden=\"step !== {i}\"><div data-part=\"body\">{fields}</div></section>\n  <div data-part=\"actions\">\n    <button type=\"button\" data-ui=\"button\" data-variant=\"outline\" data-part=\"back\" :disabled=\"step === 0\" @click=\"step = step - 1\">Back</button>\n    <button type=\"submit\" data-ui=\"button\" data-variant=\"primary\" data-part=\"next\" :hidden=\"step === {last}\">Next</button>\n    <button type=\"submit\" data-ui=\"button\" data-variant=\"primary\" data-part=\"submit\" :hidden=\"step !== {last}\">Submit</button>\n  </div>\n</form>"
+    "html": "<form data-ui=\"wizard\" data-state=\"active\" aria-label=\"{label}\" l-data=\"{ step: 0 }\" l-validate=\"step &lt; {last} ? (step = step + 1) : ($el.dataset.state = 'submitted', $el.dispatchEvent(new CustomEvent('faqir:wizard-complete', { bubbles: true })))\">\n  <div data-ui=\"stepper\" data-part=\"steps\" role=\"navigation\" aria-label=\"Progress\">\n    <button type=\"button\" data-part=\"step\" :data-state=\"step > {i} ? 'completed' : (step === {i} ? 'active' : null)\" :aria-current=\"step === {i} ? 'step' : null\" :disabled=\"step < {i}\" @click=\"step = {i}\"><span data-part=\"indicator\">1</span><span data-part=\"label\">{step_label}</span><span data-part=\"status\" l-text=\"step > {i} ? 'Completed' : ''\"></span></button>\n  </div>\n  <section data-ui=\"card\" data-variant=\"outlined\" data-part=\"panel\" :hidden=\"step !== {i}\"><div data-part=\"body\">{fields}</div></section>\n  <div data-part=\"actions\">\n    <button type=\"button\" data-ui=\"button\" data-variant=\"outline\" data-part=\"back\" :disabled=\"step === 0\" @click=\"step = step - 1\">Back</button>\n    <button type=\"submit\" data-ui=\"button\" data-variant=\"primary\" data-part=\"next\" :hidden=\"step === {last}\">Next</button>\n    <button type=\"submit\" data-ui=\"button\" data-variant=\"primary\" data-part=\"submit\" :hidden=\"step !== {last}\">Submit</button>\n  </div>\n</form>"
   },
 
   "safe_transforms": [
@@ -144,6 +158,8 @@
     "back-returns-to-previous-step",
     "final-step-submit-marks-submitted",
     "dispatches-faqir-wizard-complete-on-completion",
-    "reference-page-has-zero-custom-js"
+    "reference-page-has-zero-custom-js",
+    "clicking-a-completed-stepper-step-returns-to-its-panel",
+    "stepper-steps-ahead-are-disabled-and-the-current-one-has-aria-current"
   ]
 }

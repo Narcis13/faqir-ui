@@ -10,7 +10,7 @@ export type LStepperVariant = "horizontal" | "vertical";
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
 export type LStepperSize = "sm" | "md" | "lg";
 
-export interface LStepperProps extends Omit<ComponentPropsWithoutRef<"div">, "variant" | "size" | "step" | "indicator" | "label" | "connector"> {
+export interface LStepperProps extends Omit<ComponentPropsWithoutRef<"div">, "variant" | "size" | "step" | "indicator" | "label" | "description" | "optional" | "status" | "connector"> {
   /** `data-variant`; omitted when unset (manifest default: "horizontal"). */
   variant?: LStepperVariant;
   /** `data-size`; omitted when unset (manifest default: "md"). */
@@ -21,11 +21,17 @@ export interface LStepperProps extends Omit<ComponentPropsWithoutRef<"div">, "va
   indicator?: ReactNode;
   /** Projected into `<span data-part="label">`. */
   label?: ReactNode;
+  /** Projected into `<span data-part="description">`. */
+  description?: ReactNode;
+  /** Projected into `<span data-part="optional">`. */
+  optional?: ReactNode;
+  /** Projected into `<span data-part="status">`. */
+  status?: ReactNode;
   /** Projected into `<div data-part="connector">`. */
   connector?: ReactNode;
 }
 
-/** `stepper` — Step indicator with numbered circles, connectors, and labels for multi-step flows */
+/** `stepper` — Step indicator for multi-step flows: numbered circles, connectors and labels, horizontal or vertical, with completed, current, error and optional steps, screen-reader state text, and clickable link or button steps */
 export const LStepper = createFaqirPrimitive<LStepperProps>({
   name: "stepper",
   tag: "div",
@@ -38,6 +44,9 @@ export const LStepper = createFaqirPrimitive<LStepperProps>({
     { name: "step", tag: "div", required: true, isVoid: false },
     { name: "indicator", tag: "span", required: true, isVoid: false },
     { name: "label", tag: "span", required: false, isVoid: false },
+    { name: "description", tag: "span", required: false, isVoid: false },
+    { name: "optional", tag: "span", required: false, isVoid: false },
+    { name: "status", tag: "span", required: false, isVoid: false },
     { name: "connector", tag: "div", required: false, isVoid: false },
   ],
   defaultSlot: false,

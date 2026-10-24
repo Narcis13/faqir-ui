@@ -1394,7 +1394,7 @@ Large metric display with number, label, and optional change indicator
 
 _kind: primitive · category: navigation_
 
-Step indicator with numbered circles, connectors, and labels for multi-step flows
+Step indicator for multi-step flows: numbered circles, connectors and labels, horizontal or vertical, with completed, current, error and optional steps, screen-reader state text, and clickable link or button steps
 
 ```html
 <div data-ui="stepper"><div data-part="step" data-state="{state}"><span data-part="indicator">{number}</span><span data-part="label">{label}</span></div></div>
@@ -1404,10 +1404,13 @@ Step indicator with numbered circles, connectors, and labels for multi-step flow
 
 ```text
 [data-ui='stepper']  ·  <div> · content: slots
-├─ [data-part='step']  <div>  required  — Individual step container
-├─ [data-part='indicator']  <span>  required  — Numbered circle or checkmark
-├─ [data-part='label']  <span>  optional  — Step label text
-└─ [data-part='connector']  <div>  optional  — Line connecting steps
+├─ [data-part='step']  <div>  required  — Individual step container: a div or li to display progress, an a or button to navigate to the step (disable the ones that cannot be reached yet)
+├─ [data-part='indicator']  <span>  required  — Numbered circle; a completed step draws a tick and an error step an exclamation mark over its number
+├─ [data-part='label']  <span>  optional  — Step label text. Hidden below sm in the horizontal layout except on the aria-current step; always shown in the vertical layout
+├─ [data-part='description']  <span>  optional  — Second line under the label: a summary, a hint, an error message (destructive on an error step)
+├─ [data-part='optional']  <span>  optional  — The optional marker: visible text ("Optional") on its own line under the label, read with the step
+├─ [data-part='status']  <span>  optional  — The step's state in words for screen readers only ("Completed", "Error"), visually hidden; the current step needs none, aria-current says it
+└─ [data-part='connector']  <div>  optional  — Line connecting steps (an aria-hidden li in an ol)
 ```
 
 **Variants**
@@ -1417,9 +1420,9 @@ Step indicator with numbered circles, connectors, and labels for multi-step flow
 | variant | `horizontal`, `vertical` | `horizontal` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `Change step data-state to active or completed`, `Add or remove label slot`, `Change indicator content`, `Add or remove connector slots`
-- **Unsafe (never do):** `Remove data-ui attribute`, `Remove step or indicator slots`
-- **A11y:** role=navigation
+- **Safe transforms:** `Change step data-state to active, completed or error`, `Add or remove label slot`, `Change indicator content`, `Add or remove connector slots`, `Add a description, optional or status part to a step`, `Make steps buttons or links, disabling the ones not reachable yet`, `Move aria-current="step" with the current step`
+- **Unsafe (never do):** `Remove data-ui attribute`, `Remove step or indicator slots`, `Show a state by colour alone, without a status part`, `Leave an unreachable button or link step enabled`
+- **A11y:** role=navigation · keys: Tab, Enter, Space
 - **Required ARIA:** `aria-label`
 
 ## surface

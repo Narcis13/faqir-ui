@@ -1,69 +1,357 @@
 <!-- @ui:component tree-view -->
 <!-- @ui:kind recipe -->
-<!-- @ui:slots item label toggle group -->
+<!-- @ui:slots item label toggle group icon checkbox spinner retry tree filter status empty drop-indicator -->
+<!-- @ui:variants variant=default|lines -->
 <!-- @ui:controller tree-view.js -->
 
-<ul data-ui="tree-view" data-state="selected" role="tree" aria-label="Project files" aria-multiselectable="false">
-  <li data-part="item" data-state="expanded" data-value="projects" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="3" aria-posinset="1">
-    <span data-part="label">
-      <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-      Projects
-    </span>
-    <ul data-part="group" role="group">
-      <li data-part="item" data-state="expanded" data-value="faqir" role="treeitem" tabindex="0" aria-selected="true" aria-expanded="true" aria-level="2" aria-setsize="2" aria-posinset="1">
-        <span data-part="label">
-          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-          Faqir UI
-        </span>
+<!-- File explorer — guide lines, folder and file icons, single selection
+     data-variant="lines" draws a rule down each open folder from its toggle; the
+     icon part is a folder for a parent (open while expanded) and a file for a
+     leaf, read from aria-expanded, so nothing has to switch it. Type a letter to
+     jump to the next item starting with it; * opens every folder at a level. -->
+<div data-ui="surface" data-variant="raised" data-size="sm" data-max="narrow">
+  <ul data-ui="tree-view" data-variant="lines" data-state="selected" role="tree" aria-label="Project files" aria-multiselectable="false">
+    <li data-part="item" data-state="expanded" data-value="faqir-ui" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="2" aria-posinset="1">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>faqir-ui</span>
+      <ul data-part="group" role="group">
+        <li data-part="item" data-state="collapsed" data-value="github" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="2" aria-setsize="6" aria-posinset="1">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>.github</span>
+          <ul data-part="group" role="group" hidden>
+            <li data-part="item" data-value="release-yml" role="treeitem" tabindex="-1" aria-selected="false" aria-level="3" aria-setsize="1" aria-posinset="1">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>release.yml</span>
+            </li>
+          </ul>
+        </li>
+        <li data-part="item" data-state="expanded" data-value="registry" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="2" aria-setsize="6" aria-posinset="2">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>registry</span>
+          <ul data-part="group" role="group">
+            <li data-part="item" data-state="collapsed" data-value="primitives" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="3" aria-setsize="3" aria-posinset="1">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>primitives</span>
+              <ul data-part="group" role="group" hidden>
+                <li data-part="item" data-value="button-css" role="treeitem" tabindex="-1" aria-selected="false" aria-level="4" aria-setsize="2" aria-posinset="1">
+                  <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>button.css</span>
+                </li>
+                <li data-part="item" data-value="card-css" role="treeitem" tabindex="-1" aria-selected="false" aria-level="4" aria-setsize="2" aria-posinset="2">
+                  <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>card.css</span>
+                </li>
+              </ul>
+            </li>
+            <li data-part="item" data-state="expanded" data-value="recipes" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="3" aria-setsize="3" aria-posinset="2">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>recipes</span>
+              <ul data-part="group" role="group">
+                <li data-part="item" data-state="collapsed" data-value="calendar" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="4" aria-setsize="2" aria-posinset="1">
+                  <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>calendar</span>
+                  <ul data-part="group" role="group" hidden>
+                    <li data-part="item" data-value="calendar-js" role="treeitem" tabindex="-1" aria-selected="false" aria-level="5" aria-setsize="1" aria-posinset="1">
+                      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>calendar.js</span>
+                    </li>
+                  </ul>
+                </li>
+                <li data-part="item" data-state="expanded" data-value="tree-view" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="4" aria-setsize="2" aria-posinset="2">
+                  <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>tree-view</span>
+                  <ul data-part="group" role="group">
+                    <li data-part="item" data-value="tree-view-css" role="treeitem" tabindex="-1" aria-selected="false" aria-level="5" aria-setsize="3" aria-posinset="1">
+                      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>tree-view.css</span>
+                    </li>
+                    <li data-part="item" data-value="tree-view-js" role="treeitem" tabindex="0" aria-selected="true" aria-level="5" aria-setsize="3" aria-posinset="2">
+                      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>tree-view.js</span>
+                    </li>
+                    <li data-part="item" data-value="tree-view-manifest" role="treeitem" tabindex="-1" aria-selected="false" aria-level="5" aria-setsize="3" aria-posinset="3">
+                      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>tree-view.manifest.json</span>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li data-part="item" data-state="collapsed" data-value="themes" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="3" aria-setsize="3" aria-posinset="3">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>themes</span>
+              <ul data-part="group" role="group" hidden>
+                <li data-part="item" data-value="default-css" role="treeitem" tabindex="-1" aria-selected="false" aria-level="4" aria-setsize="2" aria-posinset="1">
+                  <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>default.css</span>
+                </li>
+                <li data-part="item" data-value="midnight-css" role="treeitem" tabindex="-1" aria-selected="false" aria-level="4" aria-setsize="2" aria-posinset="2">
+                  <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>midnight.css</span>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li data-part="item" data-state="collapsed" data-value="src" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="2" aria-setsize="6" aria-posinset="3">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>src</span>
+          <ul data-part="group" role="group" hidden>
+            <li data-part="item" data-value="index-ts" role="treeitem" tabindex="-1" aria-selected="false" aria-level="3" aria-setsize="2" aria-posinset="1">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>index.ts</span>
+            </li>
+            <li data-part="item" data-value="engine-js" role="treeitem" tabindex="-1" aria-selected="false" aria-level="3" aria-setsize="2" aria-posinset="2">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>engine.js</span>
+            </li>
+          </ul>
+        </li>
+        <li data-part="item" data-value="package-json" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="4">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>package.json</span>
+        </li>
+        <li data-part="item" data-value="readme" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="5">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>README.md</span>
+        </li>
+        <li data-part="item" data-value="license" role="treeitem" tabindex="-1" aria-disabled="true" aria-level="2" aria-setsize="6" aria-posinset="6">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>LICENSE (read-only)</span>
+        </li>
+      </ul>
+    </li>
+    <li data-part="item" data-value="notes" role="treeitem" tabindex="-1" aria-selected="false" aria-level="1" aria-setsize="2" aria-posinset="2">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>notes.md</span>
+    </li>
+  </ul>
+</div>
+
+<!-- Checkbox tree — tri-state, propagating both ways
+     data-mode="checkbox": Space, Enter or a click checks an item and everything
+     enabled under it; a parent with some children checked reads
+     aria-checked="mixed" and draws a dash. A disabled item keeps its state. -->
+<div data-ui="surface" data-variant="raised" data-size="sm" data-max="narrow">
+  <ul data-ui="tree-view" data-mode="checkbox" data-state="selected" role="tree" aria-label="Folders to back up" aria-multiselectable="true">
+    <li data-part="item" data-state="expanded" data-value="documents" role="treeitem" tabindex="0" aria-checked="mixed" aria-expanded="true" aria-level="1" aria-setsize="4" aria-posinset="1">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Documents</span>
+      <ul data-part="group" role="group">
+        <li data-part="item" data-value="invoices" role="treeitem" tabindex="-1" aria-checked="true" aria-level="2" aria-setsize="3" aria-posinset="1">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Invoices</span>
+        </li>
+        <li data-part="item" data-state="expanded" data-value="taxes" role="treeitem" tabindex="-1" aria-checked="mixed" aria-expanded="true" aria-level="2" aria-setsize="3" aria-posinset="2">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Taxes</span>
+          <ul data-part="group" role="group">
+            <li data-part="item" data-value="taxes-2024" role="treeitem" tabindex="-1" aria-checked="true" aria-level="3" aria-setsize="2" aria-posinset="1">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>2024</span>
+            </li>
+            <li data-part="item" data-value="taxes-2025" role="treeitem" tabindex="-1" aria-checked="false" aria-level="3" aria-setsize="2" aria-posinset="2">
+              <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>2025</span>
+            </li>
+          </ul>
+        </li>
+        <li data-part="item" data-value="drafts" role="treeitem" tabindex="-1" aria-checked="false" aria-level="2" aria-setsize="3" aria-posinset="3">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Drafts</span>
+        </li>
+      </ul>
+    </li>
+    <li data-part="item" data-state="collapsed" data-value="photos" role="treeitem" tabindex="-1" aria-checked="true" aria-expanded="false" aria-level="1" aria-setsize="4" aria-posinset="2">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Photos</span>
+      <ul data-part="group" role="group" hidden>
+        <li data-part="item" data-value="holidays" role="treeitem" tabindex="-1" aria-checked="true" aria-level="2" aria-setsize="2" aria-posinset="1">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Holidays</span>
+        </li>
+        <li data-part="item" data-value="family" role="treeitem" tabindex="-1" aria-checked="true" aria-level="2" aria-setsize="2" aria-posinset="2">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Family</span>
+        </li>
+      </ul>
+    </li>
+    <li data-part="item" data-state="collapsed" data-value="music" role="treeitem" tabindex="-1" aria-checked="false" aria-expanded="false" aria-level="1" aria-setsize="4" aria-posinset="3">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Music</span>
+      <ul data-part="group" role="group" hidden>
+        <li data-part="item" data-value="playlists" role="treeitem" tabindex="-1" aria-checked="false" aria-level="2" aria-setsize="1" aria-posinset="1">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>Playlists</span>
+        </li>
+      </ul>
+    </li>
+    <li data-part="item" data-value="system" role="treeitem" tabindex="-1" aria-disabled="true" aria-checked="false" aria-level="1" aria-setsize="4" aria-posinset="4">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="checkbox" aria-hidden="true"></span><span data-part="icon" aria-hidden="true"></span>System files</span>
+    </li>
+  </ul>
+</div>
+
+<!-- Lazy children — loading, failure and retry
+     A data-lazy item has no children until it is first expanded. The controller
+     marks it aria-busy, shows a spinner and fires faqir:load; here the page's
+     fake loader answers after a pause through detail.respond(). "Shared drives"
+     fails the first time: the row shows Retry, and Right Arrow tries again. -->
+<div data-ui="surface" data-variant="raised" data-size="sm" data-max="narrow" l-data="{
+  folders: {
+    documents: [
+      { label: 'Budget 2026.xlsx', value: 'budget' },
+      { label: 'Roadmap.md', value: 'roadmap' },
+      { label: 'Contracts', value: 'contracts', lazy: true }
+    ],
+    contracts: [
+      { label: 'Master services.pdf', value: 'msa' },
+      { label: 'NDA.pdf', value: 'nda' }
+    ],
+    photos: [
+      { label: 'Lisbon, May', value: 'lisbon', children: [
+        { label: 'IMG_2041.jpg', value: 'img-2041' },
+        { label: 'IMG_2042.jpg', value: 'img-2042' }
+      ] },
+      { label: 'Profile.png', value: 'profile' }
+    ],
+    shared: [
+      { label: 'Design team', value: 'design', lazy: true },
+      { label: 'Marketing', value: 'marketing', lazy: true }
+    ],
+    design: [{ label: 'Brand kit.fig', value: 'brand-kit' }],
+    marketing: [{ label: 'Launch plan.md', value: 'launch' }],
+    trash: [{ label: 'old-logo.svg', value: 'old-logo' }]
+  },
+  load(detail) {
+    var items = this.folders[detail.value] || [];
+    var offline = detail.value === 'shared' &amp;&amp; detail.attempt === 1;
+    detail.respond(new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        if (offline) reject(new Error('The drive is offline'));
+        else resolve(items);
+      }, 900);
+    }));
+  }
+}">
+  <ul data-ui="tree-view" data-variant="lines" data-state="idle" role="tree" aria-label="Cloud drive" aria-multiselectable="false" @faqir:load="load($event.detail)">
+    <li data-part="item" data-state="expanded" data-value="my-drive" role="treeitem" tabindex="0" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="3" aria-posinset="1">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>My Drive</span>
+      <ul data-part="group" role="group">
+        <li data-part="item" data-state="collapsed" data-value="documents" data-lazy="true" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="2" aria-setsize="2" aria-posinset="1">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Documents</span>
+        </li>
+        <li data-part="item" data-state="collapsed" data-value="photos" data-lazy="true" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="2" aria-setsize="2" aria-posinset="2">
+          <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Photos</span>
+        </li>
+      </ul>
+    </li>
+    <li data-part="item" data-state="collapsed" data-value="shared" data-lazy="true" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="3" aria-posinset="2">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Shared drives</span>
+    </li>
+    <li data-part="item" data-state="collapsed" data-value="trash" data-lazy="true" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="3" aria-posinset="3">
+      <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Trash</span>
+    </li>
+  </ul>
+</div>
+
+<!-- Filter — matches stay visible with their ancestors open
+     The wrapper form: a filter input, the tree part, an empty message and a
+     polite status region. Typing hides what does not match, highlights the
+     match, and announces the count; clearing it restores the folders that were
+     open before. Down Arrow moves from the input into the tree, Escape clears. -->
+<div data-ui="surface" data-variant="raised" data-size="sm" data-max="narrow">
+  <div data-ui="tree-view" data-state="idle">
+    <input data-ui="input" data-part="filter" type="search" placeholder="Filter components" aria-label="Filter components" aria-controls="tree-view-filter-demo">
+    <ul data-part="tree" id="tree-view-filter-demo" role="tree" aria-label="Components" aria-multiselectable="false">
+      <li data-part="item" data-state="expanded" data-value="primitives" role="treeitem" tabindex="0" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="3" aria-posinset="1">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Primitives</span>
         <ul data-part="group" role="group">
-          <li data-part="item" data-value="readme" role="treeitem" tabindex="-1" aria-selected="false" aria-level="3" aria-setsize="2" aria-posinset="1">
-            <span data-part="label">
-              <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-              README.md
-            </span>
+          <li data-part="item" data-value="button" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="1">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Button</span>
           </li>
-          <li data-part="item" data-value="package" role="treeitem" tabindex="-1" aria-disabled="true" aria-level="3" aria-setsize="2" aria-posinset="2">
-            <span data-part="label">
-              <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-              package.json (locked)
-            </span>
+          <li data-part="item" data-value="card" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="2">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Card</span>
+          </li>
+          <li data-part="item" data-value="checkbox" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="3">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Checkbox</span>
+          </li>
+          <li data-part="item" data-value="icon" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="4">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Icon</span>
+          </li>
+          <li data-part="item" data-value="input" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="5">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Input</span>
+          </li>
+          <li data-part="item" data-value="stepper" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="6">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Stepper</span>
           </li>
         </ul>
       </li>
-      <li data-part="item" data-value="playground" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="2">
-        <span data-part="label">
-          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-          Playground
-        </span>
+      <li data-part="item" data-state="expanded" data-value="recipes" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="3" aria-posinset="2">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Recipes</span>
+        <ul data-part="group" role="group">
+          <li data-part="item" data-value="calendar" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="1">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Calendar</span>
+          </li>
+          <li data-part="item" data-value="combobox" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="2">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Combobox</span>
+          </li>
+          <li data-part="item" data-value="dialog" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="3">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Dialog</span>
+          </li>
+          <li data-part="item" data-value="tabs" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="4">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Tabs</span>
+          </li>
+          <li data-part="item" data-value="toast" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="5">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Toast</span>
+          </li>
+          <li data-part="item" data-value="tree-view" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="6" aria-posinset="6">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Tree view</span>
+          </li>
+        </ul>
+      </li>
+      <li data-part="item" data-state="collapsed" data-value="patterns" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="3" aria-posinset="3">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Patterns</span>
+        <ul data-part="group" role="group" hidden>
+          <li data-part="item" data-value="dashboard-shell" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="3" aria-posinset="1">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Dashboard shell</span>
+          </li>
+          <li data-part="item" data-value="inbox" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="3" aria-posinset="2">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Inbox</span>
+          </li>
+          <li data-part="item" data-value="wizard" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="3" aria-posinset="3">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Wizard</span>
+          </li>
+        </ul>
       </li>
     </ul>
-  </li>
+    <p data-part="empty" hidden>No components match.</p>
+    <p data-part="status" role="status"></p>
+  </div>
+</div>
 
-  <li data-part="item" data-state="collapsed" data-value="archive" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="3" aria-posinset="2">
-    <span data-part="label">
-      <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-      Archive
-    </span>
-    <ul data-part="group" role="group" hidden>
-      <li data-part="item" data-value="archive-2025" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="1">
-        <span data-part="label">
-          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-          2025
-        </span>
+<!-- Multi-select and drag-and-drop, by pointer or keyboard
+     data-mode="multiple": Ctrl/Cmd-click toggles, Shift-click selects a range,
+     Shift+Arrow extends it, Ctrl+A selects all. data-draggable="true": drag a row
+     before, after or into a folder — never into itself — or press Alt+Enter to
+     pick it up, Up/Down to choose a place (each one is announced), Enter to drop
+     and Escape to cancel. Every move fires the cancelable faqir:move. -->
+<div data-ui="surface" data-variant="raised" data-size="sm" data-max="narrow">
+  <div data-ui="stack" data-gap="2">
+    <p data-ui="text" data-variant="muted" data-size="sm" id="tree-view-move-hint">Drag lessons to reorder them, or press <kbd data-ui="kbd">Alt</kbd> + <kbd data-ui="kbd">Enter</kbd> to pick one up, the arrow keys to choose a place and <kbd data-ui="kbd">Enter</kbd> to drop it.</p>
+    <ul data-ui="tree-view" data-mode="multiple" data-draggable="true" data-variant="lines" data-state="selected" role="tree" aria-label="Course outline" aria-multiselectable="true" aria-describedby="tree-view-move-hint">
+      <li data-part="item" data-state="expanded" data-value="week-1" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="4" aria-posinset="1">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Week 1 · Foundations</span>
+        <ul data-part="group" role="group">
+          <li data-part="item" data-value="tokens" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="3" aria-posinset="1">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Design tokens</span>
+          </li>
+          <li data-part="item" data-value="themes" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="3" aria-posinset="2">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Themes and schemes</span>
+          </li>
+          <li data-part="item" data-value="attributes" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="3" aria-posinset="3">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>The five attributes</span>
+          </li>
+        </ul>
       </li>
-      <li data-part="item" data-value="invoices" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="2">
-        <span data-part="label">
-          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-          Invoices
-        </span>
+      <li data-part="item" data-state="expanded" data-value="week-2" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="4" aria-posinset="2">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Week 2 · Components</span>
+        <ul data-part="group" role="group">
+          <li data-part="item" data-value="primitives" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="3" aria-posinset="1">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Primitives</span>
+          </li>
+          <li data-part="item" data-value="recipes" role="treeitem" tabindex="0" aria-selected="true" aria-level="2" aria-setsize="3" aria-posinset="2">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Recipes</span>
+          </li>
+          <li data-part="item" data-value="patterns" role="treeitem" tabindex="-1" aria-selected="true" aria-level="2" aria-setsize="3" aria-posinset="3">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Patterns</span>
+          </li>
+        </ul>
+      </li>
+      <li data-part="item" data-state="collapsed" data-value="week-3" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="4" aria-posinset="3">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Week 3 · Shipping</span>
+        <ul data-part="group" role="group" hidden>
+          <li data-part="item" data-value="auditing" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="1">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Auditing</span>
+          </li>
+          <li data-part="item" data-value="releasing" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="2">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Releasing</span>
+          </li>
+        </ul>
+      </li>
+      <li data-part="item" data-state="expanded" data-value="backlog" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="4" aria-posinset="4">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" aria-hidden="true"></span>Backlog</span>
+        <ul data-part="group" role="group">
+          <li data-part="item" data-value="a11y" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="1" aria-posinset="1">
+            <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span><span data-part="icon" data-ui="icon" data-icon="file-text" aria-hidden="true"></span>Accessibility deep dive</span>
+          </li>
+        </ul>
       </li>
     </ul>
-  </li>
-
-  <li data-part="item" data-state="collapsed" data-value="shared" data-lazy="true" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="3" aria-posinset="3">
-    <span data-part="label">
-      <span data-part="toggle" aria-hidden="true">&#x203A;</span>
-      Shared with me
-    </span>
-  </li>
-</ul>
+  </div>
+</div>

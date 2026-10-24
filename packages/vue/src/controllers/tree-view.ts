@@ -4,14 +4,22 @@
 // the single source of truth; the drift guard keeps this copy in sync.
 // @ts-nocheck — registry controllers are plain JS by design (zero build step).
 // @ui:controller tree-view
-// @ui:provides select expand collapse toggle refresh getSelected destroy
+// @ui:provides select expand collapse toggle check selectAll filter load setLoader move refresh getSelected getSelection destroy
+
+import { uid } from "./_core-utils.js";
 
 /**
- * Single-select WAI-ARIA tree view with roving DOM focus.
+ * WAI-ARIA tree view with roving DOM focus, in three selection modes
+ * (`data-mode`: single, multiple, checkbox), lazy children, type-ahead,
+ * filtering and drag-and-drop that also works from the keyboard.
  *
  * Item queries are deliberately live. A tree root can be initialized before
  * keyed l-for templates render their nodes, and later reconciliations can move,
  * insert, or remove whole branches without recreating the controller.
+ *
+ * The root is either the `role="tree"` list itself, or a wrapper holding a
+ * `tree` part (the list) beside an optional `filter` input, `status` live
+ * region and `empty` message — the parts a `<ul role="tree">` cannot contain.
  */
 export function createTreeView(root) {
   if (root._faqirTreeView) {
@@ -19,18 +27,62 @@ export function createTreeView(root) {
     return root._faqirTreeView;
   }
 
+  const ITEM = "[data-part='item']";
+  const HIGHLIGHT = "faqir-tree-match";
+  const tree = root.querySelector(":scope > [data-part='tree']") ?? root;
+  const filterInput = part("filter");
+  const empty = part("empty");
+  let status = part("status");
+  let ownStatus = null;
+
   let currentItem = null;
   let selectedItem = null;
+  let anchor = null;
   let typeahead = "";
   let typeaheadTimer = null;
+  let announceTimer = null;
+  let expandTimer = null;
+  let loader = null;
+  let query = "";
+  let snapshot = null;
+  let ranges = [];
+  let grab = null;
+  let drag = null;
+  let indicator = null;
+  const filtered = new Set();
+  const loading = new Map();
+  const attempts = new WeakMap();
+  // Transient item states (loading, error, grabbed) win over expanded/collapsed.
+  const transient = new WeakMap();
+
+  function part(name) {
+    return [...root.querySelectorAll(`[data-part='${name}']`)].find(belongsToTree) ?? null;
+  }
+
+  // A new element with attributes; `text` becomes its textContent.
+  function make(tag, attrs, text) {
+    const element = document.createElement(tag);
+    for (const [name, value] of Object.entries(attrs)) element.setAttribute(name, value);
+    if (text) element.textContent = text;
+    return element;
+  }
+
+  function newGroup() {
+    return make("ul", { "data-part": "group", role: "group" });
+  }
+
+  // `item` becomes the one roving tab stop.
+  function rove(item) {
+    currentItem = item;
+    for (const candidate of items()) candidate.tabIndex = candidate === item ? 0 : -1;
+  }
 
   function belongsToTree(element) {
     return element?.closest("[data-ui='tree-view']") === root;
   }
 
   function items() {
-    return [...root.querySelectorAll("[data-part='item']")]
-      .filter(belongsToTree);
+    return [...root.querySelectorAll(ITEM)].filter(belongsToTree);
   }
 
   function groups() {
@@ -40,22 +92,43 @@ export function createTreeView(root) {
 
   function directItems(container) {
     return [...container.children]
-      .filter((child) => child.matches("[data-part='item']") && belongsToTree(child));
+      .filter((child) => child.matches(ITEM) && belongsToTree(child));
+  }
+
+  function childPart(item, name) {
+    return [...(item?.children ?? [])].find(
+      (child) => child.matches(`[data-part='${name}']`) && belongsToTree(child),
+    ) ?? null;
   }
 
   function directGroup(item) {
-    return [...item.children].find(
-      (child) => child.matches("[data-part='group']") && belongsToTree(child),
-    ) ?? null;
+    return childPart(item, "group");
+  }
+
+  function labelOf(item) {
+    return childPart(item, "label");
   }
 
   function parentItem(item) {
     const group = item.parentElement?.closest("[data-part='group']");
     if (!group || !belongsToTree(group)) return null;
     const parent = group.parentElement;
-    return parent?.matches("[data-part='item']") && belongsToTree(parent)
+    return parent?.matches(ITEM) && belongsToTree(parent)
       ? parent
       : null;
+  }
+
+  function descendants(item) {
+    return [...item.querySelectorAll(ITEM)].filter(belongsToTree);
+  }
+
+  function mode() {
+    const value = root.dataset.mode;
+    return value === "multiple" || value === "checkbox" ? value : "single";
+  }
+
+  function draggable() {
+    return root.hasAttribute("data-draggable") && root.dataset.draggable !== "false";
   }
 
   function isDisabled(item) {
@@ -73,6 +146,10 @@ export function createTreeView(root) {
     );
   }
 
+  function isOpen(item) {
+    return item.getAttribute("aria-expanded") === "true";
+  }
+
   function isVisible(item) {
     if (!item || item.hidden || !belongsToTree(item)) return false;
 
@@ -81,12 +158,7 @@ export function createTreeView(root) {
       if (ancestor.hidden) return false;
       if (ancestor.matches("[data-part='group']")) {
         const parent = ancestor.parentElement;
-        if (
-          parent?.matches("[data-part='item']") &&
-          parent.getAttribute("aria-expanded") !== "true"
-        ) {
-          return false;
-        }
+        if (parent?.matches(ITEM) && !isOpen(parent)) return false;
       }
       ancestor = ancestor.parentElement;
     }
@@ -98,19 +170,32 @@ export function createTreeView(root) {
   }
 
   function syncParentState(item) {
-    if (item.hasAttribute("aria-expanded")) {
-      item.dataset.state = item.getAttribute("aria-expanded") === "true"
-        ? "expanded"
-        : "collapsed";
+    const state = transient.get(item);
+    if (state) {
+      item.dataset.state = state;
+    } else if (item.hasAttribute("aria-expanded")) {
+      item.dataset.state = isOpen(item) ? "expanded" : "collapsed";
     } else if (
-      item.dataset.state === "expanded" ||
-      item.dataset.state === "collapsed"
+      ["expanded", "collapsed", "loading", "error", "grabbed"].includes(item.dataset.state)
     ) {
       item.removeAttribute("data-state");
     }
   }
 
-  function normalizeBranch(container, level) {
+  function setTransient(item, state) {
+    if (state) transient.set(item, state);
+    else transient.delete(item);
+    syncParentState(item);
+  }
+
+  function setOpen(item, open) {
+    item.setAttribute("aria-expanded", String(open));
+    const group = directGroup(item);
+    if (group) group.hidden = !open;
+    syncParentState(item);
+  }
+
+  function normalizeBranch(container, level, checkbox, dnd) {
     const siblings = directItems(container);
     const setSize = String(siblings.length);
 
@@ -119,17 +204,19 @@ export function createTreeView(root) {
       item.setAttribute("aria-level", String(level));
       item.setAttribute("aria-setsize", setSize);
       item.setAttribute("aria-posinset", String(index + 1));
+      if (dnd) item.draggable = !isDisabled(item);
+      if (checkbox) ensureCheckbox(item);
 
       const group = directGroup(item);
       if (group) {
         group.setAttribute("role", "group");
         const expanded = item.hasAttribute("aria-expanded")
-          ? item.getAttribute("aria-expanded") === "true"
+          ? isOpen(item)
           : !group.hidden;
         item.setAttribute("aria-expanded", String(expanded));
         group.hidden = !expanded;
         syncParentState(item);
-        normalizeBranch(group, level + 1);
+        normalizeBranch(group, level + 1, checkbox, dnd);
       } else if (isLazy(item) || item.hasAttribute("aria-expanded")) {
         if (!item.hasAttribute("aria-expanded")) {
           item.setAttribute("aria-expanded", "false");
@@ -142,9 +229,53 @@ export function createTreeView(root) {
     });
   }
 
+  function ensureCheckbox(item) {
+    const label = labelOf(item);
+    if (!label || childPart(label, "checkbox")) return;
+    const box = make("span", { "data-part": "checkbox", "aria-hidden": "true" });
+    const toggle = childPart(label, "toggle");
+    if (toggle) toggle.after(box);
+    else label.prepend(box);
+  }
+
+  // Checkbox mode: an item without a state takes its parent's definite one,
+  // then every parent is derived from its children — all on, all off, or mixed.
+  function inheritChecks(container, inherited) {
+    for (const item of directItems(container)) {
+      let state = item.getAttribute("aria-checked");
+      if (state !== "true" && state !== "false" && state !== "mixed") {
+        state = inherited ?? "false";
+        item.setAttribute("aria-checked", state);
+      }
+      const group = directGroup(item);
+      if (group) inheritChecks(group, state === "mixed" ? null : state);
+    }
+  }
+
+  function deriveChecks(container) {
+    const kids = directItems(container);
+    let on = 0;
+    let off = 0;
+    for (const item of kids) {
+      const group = directGroup(item);
+      if (group && directItems(group).length > 0) {
+        item.setAttribute("aria-checked", deriveChecks(group));
+      }
+      const state = item.getAttribute("aria-checked");
+      if (state === "true") on++;
+      else if (state === "false") off++;
+    }
+    return on === kids.length ? "true" : off === kids.length ? "false" : "mixed";
+  }
+
   function refresh() {
-    root.setAttribute("role", "tree");
-    root.setAttribute("aria-multiselectable", "false");
+    const current = mode();
+    tree.setAttribute("role", "tree");
+    tree.setAttribute("aria-multiselectable", String(current !== "single"));
+    if (filterInput && tree.id === "") tree.id = uid("faqir-tree");
+    if (filterInput && !filterInput.hasAttribute("aria-controls")) {
+      filterInput.setAttribute("aria-controls", tree.id);
+    }
 
     const before = items();
     const authoredTabStop = before.find(
@@ -152,26 +283,37 @@ export function createTreeView(root) {
     ) ?? null;
 
     groups().forEach((group) => group.setAttribute("role", "group"));
-    normalizeBranch(root, 1);
+    normalizeBranch(tree, 1, current === "checkbox", draggable());
 
     const allItems = items();
-    const selected = allItems.filter(
-      (item) => !isDisabled(item) && item.getAttribute("aria-selected") === "true",
-    );
-    const keepSelected = selected.includes(selectedItem)
-      ? selectedItem
-      : selected[0] ?? null;
+    let hasSelection;
+    if (current === "checkbox") {
+      allItems.forEach((item) => item.removeAttribute("aria-selected"));
+      inheritChecks(tree, null);
+      deriveChecks(tree);
+      selectedItem = null;
+      hasSelection = allItems.some((item) => item.getAttribute("aria-checked") === "true");
+    } else {
+      const selected = allItems.filter(
+        (item) => !isDisabled(item) && item.getAttribute("aria-selected") === "true",
+      );
+      const keep = current === "multiple"
+        ? selected
+        : [selected.includes(selectedItem) ? selectedItem : selected[0]].filter(Boolean);
 
-    for (const item of allItems) {
-      if (isDisabled(item)) {
-        item.removeAttribute("aria-selected");
-      } else {
-        item.setAttribute("aria-selected", item === keepSelected ? "true" : "false");
+      for (const item of allItems) {
+        item.removeAttribute("aria-checked");
+        if (isDisabled(item)) {
+          item.removeAttribute("aria-selected");
+        } else {
+          item.setAttribute("aria-selected", keep.includes(item) ? "true" : "false");
+        }
       }
+      selectedItem = keep.includes(selectedItem) ? selectedItem : keep[0] ?? null;
+      hasSelection = keep.length > 0;
     }
-    selectedItem = keepSelected;
 
-    const active = document.activeElement?.closest?.("[data-part='item']");
+    const active = document.activeElement?.closest?.(ITEM);
     const candidates = [currentItem, active, selectedItem, authoredTabStop];
     currentItem = candidates.find(
       (item) => allItems.includes(item) && isVisible(item) && !isDisabled(item),
@@ -181,13 +323,18 @@ export function createTreeView(root) {
       item.tabIndex = item === currentItem ? 0 : -1;
     }
 
-    root.dataset.state = selectedItem ? "selected" : "idle";
+    // Children an app appended itself (an l-for render, a listener) end a load.
+    for (const item of [...loading.keys()]) {
+      if (directGroup(item)) finishLoad(item, null);
+    }
+
+    root.dataset.state = hasSelection ? "selected" : "idle";
     return allItems;
   }
 
   function resolveItem(target) {
     const allItems = items();
-    if (target?.matches?.("[data-part='item']")) {
+    if (target?.matches?.(ITEM)) {
       return allItems.includes(target) ? target : null;
     }
     if (typeof target === "number") return allItems[target] ?? null;
@@ -200,7 +347,7 @@ export function createTreeView(root) {
   }
 
   function itemLabel(item) {
-    const label = item.querySelector("[data-part='label']");
+    const label = labelOf(item) ?? item.querySelector("[data-part='label']");
     if (label) {
       const readable = label.cloneNode(true);
       readable.querySelectorAll("[aria-hidden='true']").forEach((node) => node.remove());
@@ -213,53 +360,166 @@ export function createTreeView(root) {
     return item.dataset.value || item.id || itemLabel(item);
   }
 
-  function emit(type, detail) {
-    root.dispatchEvent(
-      new CustomEvent("faqir:" + type, { bubbles: true, detail }),
+  function describe(item) {
+    return { item, value: itemValue(item), label: itemLabel(item) };
+  }
+
+  function emit(type, detail, cancelable = false) {
+    return root.dispatchEvent(
+      new CustomEvent("faqir:" + type, { bubbles: true, cancelable, detail }),
     );
+  }
+
+  function ensureStatus() {
+    if (status) return status;
+    // A list cannot hold a live region, so one sits right after the tree.
+    status = tree === root
+      ? make("span", { role: "status", "data-ui": "visually-hidden" })
+      : make("p", { role: "status", "data-part": "status" });
+    if (tree === root) root.after(status);
+    else root.append(status);
+    ownStatus = status;
+    return status;
+  }
+
+  function announce(message) {
+    const region = ensureStatus();
+    // The same sentence twice is a change too, or it would not be read again.
+    region.textContent = region.textContent === message ? message + " " : message;
   }
 
   function focusItem(target) {
     const item = resolveItem(target);
     if (!item || isDisabled(item) || !isVisible(item)) return false;
 
-    currentItem = item;
-    for (const candidate of items()) {
-      candidate.tabIndex = candidate === item ? 0 : -1;
-    }
+    rove(item);
     item.focus();
     item.scrollIntoView?.({ block: "nearest" });
     return true;
   }
 
+  // ── Selection ──────────────────────────────────────────────────────────────
+
+  function commitSelection(list, item) {
+    const previousItem = selectedItem;
+    for (const candidate of items()) {
+      if (!isDisabled(candidate)) {
+        candidate.setAttribute("aria-selected", list.includes(candidate) ? "true" : "false");
+      }
+    }
+
+    selectedItem = list.includes(item) ? item : list[list.length - 1] ?? null;
+    rove(item);
+    root.dataset.state = list.length > 0 ? "selected" : "idle";
+
+    emit("select", {
+      ...describe(item),
+      previousItem,
+      previousValue: previousItem ? itemValue(previousItem) : null,
+      items: list,
+      values: list.map(itemValue),
+    });
+  }
+
+  /**
+   * Select one item, replacing the selection; in checkbox mode, check it.
+   * @param {Element|string|number} target an item, its value or id, or its index
+   * @returns {boolean} whether an enabled item matched
+   */
   function select(target) {
     refresh();
     const item = resolveItem(target);
     if (!item || isDisabled(item)) return false;
+    if (mode() === "checkbox") return check(item, true);
 
-    const previousItem = selectedItem;
-    for (const candidate of items()) {
-      if (!isDisabled(candidate)) {
-        candidate.setAttribute("aria-selected", candidate === item ? "true" : "false");
-      }
-    }
-
-    selectedItem = item;
-    currentItem = item;
-    for (const candidate of items()) {
-      candidate.tabIndex = candidate === item ? 0 : -1;
-    }
-    root.dataset.state = "selected";
-
-    emit("select", {
-      item,
-      value: itemValue(item),
-      label: itemLabel(item),
-      previousItem,
-      previousValue: previousItem ? itemValue(previousItem) : null,
-    });
+    anchor = item;
+    commitSelection([item], item);
     return true;
   }
+
+  function toggleSelected(item) {
+    const list = getSelection();
+    anchor = item;
+    commitSelection(
+      list.includes(item) ? list.filter((other) => other !== item) : [...list, item],
+      item,
+    );
+  }
+
+  function selectRange(from, to, additive) {
+    const visible = visibleItems();
+    const end = visible.indexOf(to);
+    if (end === -1) return;
+    const start = visible.includes(from) ? visible.indexOf(from) : end;
+    anchor = visible[start];
+    const range = visible.slice(Math.min(start, end), Math.max(start, end) + 1);
+    commitSelection(additive ? [...new Set([...getSelection(), ...range])] : range, to);
+  }
+
+  /**
+   * Select every visible enabled item (multiple mode), or check them all
+   * (checkbox mode).
+   * @returns {boolean} false in single mode, which has no "all"
+   */
+  function selectAll() {
+    refresh();
+    const current = mode();
+    const visible = visibleItems();
+    if (current === "single" || visible.length === 0) return false;
+    const item = visible.includes(currentItem) ? currentItem : visible[0];
+    if (current === "checkbox") {
+      for (const node of visible) setChecked(node, true);
+      deriveChecks(tree);
+      root.dataset.state = "selected";
+      emit("check", checkDetail(item, true));
+    } else {
+      commitSelection(visible, item);
+    }
+    announce(`${visible.length} ${visible.length === 1 ? "item" : "items"} selected`);
+    return true;
+  }
+
+  // ── Checkbox mode ──────────────────────────────────────────────────────────
+
+  function setChecked(item, on) {
+    for (const node of [item, ...descendants(item)]) {
+      if (!isDisabled(node)) node.setAttribute("aria-checked", String(on));
+    }
+  }
+
+  function checkDetail(item, checked) {
+    const list = getSelection();
+    return { ...describe(item), checked, items: list, values: list.map(itemValue) };
+  }
+
+  /**
+   * Check or uncheck an item and every enabled item under it, then derive its
+   * ancestors (checkbox mode). Without `state` it toggles: a parent whose
+   * enabled leaves are all checked unchecks, anything else checks.
+   * @param {Element|string|number} target the item
+   * @param {boolean} [state] true to check, false to uncheck
+   * @returns {boolean} whether an enabled item matched in checkbox mode
+   */
+  function check(target, state) {
+    refresh();
+    const item = resolveItem(target);
+    if (!item || isDisabled(item) || mode() !== "checkbox") return false;
+
+    const leaves = [item, ...descendants(item)].filter(
+      (node) => !isDisabled(node) && !directItems(directGroup(node) ?? node).length,
+    );
+    const next = state === undefined
+      ? !leaves.every((node) => node.getAttribute("aria-checked") === "true")
+      : Boolean(state);
+
+    setChecked(item, next);
+    deriveChecks(tree);
+    root.dataset.state = getSelection().length > 0 ? "selected" : "idle";
+    emit("check", checkDetail(item, next));
+    return true;
+  }
+
+  // ── Expansion and lazy children ────────────────────────────────────────────
 
   function setExpanded(target, expanded) {
     refresh();
@@ -268,45 +528,591 @@ export function createTreeView(root) {
 
     const next = Boolean(expanded);
     const changed = item.getAttribute("aria-expanded") !== String(next);
-    item.setAttribute("aria-expanded", String(next));
-    const group = directGroup(item);
-    if (group) group.hidden = !next;
-    syncParentState(item);
+    if (transient.get(item) === "error") transient.delete(item);
+    setOpen(item, next);
     refresh();
 
+    const lazy = isLazy(item) && !directGroup(item);
     if (changed) {
-      emit("expand", {
-        item,
-        value: itemValue(item),
-        label: itemLabel(item),
-        expanded: next,
-        lazy: isLazy(item) && !group,
-      });
+      emit("expand", { ...describe(item), expanded: next, lazy });
     }
+    // A listener may have supplied the children already; otherwise load them.
+    if (next && lazy && !directGroup(item)) load(item);
     return true;
   }
 
+  /**
+   * Expand a parent item; an unloaded lazy item starts loading its children.
+   * @param {Element|string|number} target the item
+   * @returns {boolean} whether an enabled parent matched
+   */
   function expand(target) {
     return setExpanded(target, true);
   }
 
+  /**
+   * Collapse a parent item.
+   * @param {Element|string|number} target the item
+   * @returns {boolean} whether an enabled parent matched
+   */
   function collapse(target) {
     return setExpanded(target, false);
   }
 
+  /**
+   * Expand a collapsed parent or collapse an expanded one.
+   * @param {Element|string|number} target the item
+   * @returns {boolean} whether a parent matched
+   */
   function toggle(target) {
     refresh();
     const item = resolveItem(target);
     if (!item || !isExpandable(item)) return false;
-    return setExpanded(item, item.getAttribute("aria-expanded") !== "true");
+    return setExpanded(item, !isOpen(item));
   }
 
+  /**
+   * Register the function that loads a lazy item's children: it receives
+   * `{ item, value, label, attempt }` and returns (a Promise of) an array of
+   * `{ label, value, lazy, disabled, checked, children }`, item elements or
+   * markup. Pass null to remove it.
+   * @param {Function|null} fn the loader
+   */
+  function setLoader(fn) {
+    loader = typeof fn === "function" ? fn : null;
+  }
+
+  /**
+   * Load a lazy item's children now — what expanding it does. Fires
+   * `faqir:load`, whose `detail.respond(result)` supplies them, then falls back
+   * to the registered loader, then waits for the app to append a group.
+   * @param {Element|string|number} target the lazy item
+   * @returns {boolean} whether a load started
+   */
+  function load(target) {
+    const item = resolveItem(target);
+    if (!item || !isLazy(item) || directGroup(item) || loading.has(item)) return false;
+
+    const attempt = (attempts.get(item) ?? 0) + 1;
+    attempts.set(item, attempt);
+    const token = {};
+    loading.set(item, token);
+    setTransient(item, "loading");
+    item.setAttribute("aria-busy", "true");
+    childPart(labelOf(item), "retry")?.remove();
+    if (!childPart(labelOf(item), "spinner")) {
+      labelOf(item)?.append(make("span", {
+        "data-ui": "spinner", "data-size": "sm", "data-part": "spinner", "aria-hidden": "true",
+      }));
+    }
+    announce(`Loading ${itemLabel(item)}`);
+
+    let result;
+    emit("load", { ...describe(item), attempt, respond(value) { result = value; } });
+    if (result === undefined && loader) result = loader({ ...describe(item), attempt });
+
+    if (directGroup(item)) {
+      finishLoad(item, null);
+    } else if (result !== undefined) {
+      Promise.resolve(result).then(
+        (content) => {
+          if (loading.get(item) !== token || !root.contains(item)) return;
+          const children = newGroup();
+          children.append(...toNodes(content));
+          item.append(children);
+          finishLoad(item, null);
+        },
+        (error) => {
+          if (loading.get(item) === token && root.contains(item)) {
+            finishLoad(item, error ?? new Error("load failed"));
+          }
+        },
+      );
+    }
+    return true;
+  }
+
+  function finishLoad(item, error) {
+    loading.delete(item);
+    item.removeAttribute("aria-busy");
+    const label = labelOf(item);
+    childPart(label, "spinner")?.remove();
+    setTransient(item, error ? "error" : null);
+    if (error) {
+      item.setAttribute("aria-expanded", "false");
+      // Pointer affordance only: the announcement gives keyboard users the key.
+      label?.append(make("button", {
+        type: "button", "data-part": "retry", tabindex: "-1", "aria-hidden": "true",
+      }, "Retry"));
+    }
+    refresh();
+
+    const group = directGroup(item);
+    const count = group ? directItems(group).length : 0;
+    const name = itemLabel(item);
+    announce(error
+      ? `Couldn't load ${name}. Press Right Arrow to try again.`
+      : `${name} loaded, ${count} ${count === 1 ? "item" : "items"}`);
+    emit("loaded", { ...describe(item), count, error: error ?? null });
+  }
+
+  function toNodes(content) {
+    if (content == null) return [];
+    if (typeof content === "string") {
+      const template = document.createElement("template");
+      template.innerHTML = content;
+      return [...template.content.childNodes];
+    }
+    if (Array.isArray(content)) {
+      return content.flatMap((entry) =>
+        entry && typeof entry === "object" && !(entry instanceof Node)
+          ? [buildItem(entry)]
+          : toNodes(entry));
+    }
+    if (content instanceof Node) {
+      return content.nodeType === 11 || content.matches?.("[data-part='group']")
+        ? [...content.childNodes]
+        : [content];
+    }
+    return [];
+  }
+
+  function buildItem(entry) {
+    const item = make("li", { "data-part": "item" });
+    if (entry.value != null) item.dataset.value = String(entry.value);
+    if (entry.lazy) item.dataset.lazy = "true";
+    if (entry.disabled) item.setAttribute("aria-disabled", "true");
+    if (entry.checked != null) item.setAttribute("aria-checked", String(entry.checked));
+
+    const label = make("span", { "data-part": "label" });
+    label.innerHTML = '<span data-part="toggle" aria-hidden="true">›</span>' +
+      (root.querySelector("[data-part='icon']") ? '<span data-part="icon" aria-hidden="true"></span>' : "");
+    label.append(String(entry.label ?? entry.value ?? ""));
+    item.append(label);
+
+    if (entry.children?.length) {
+      const children = newGroup();
+      children.hidden = true;
+      children.append(...entry.children.map(buildItem));
+      item.setAttribute("aria-expanded", "false");
+      item.append(children);
+    }
+    return item;
+  }
+
+  // ── Filtering ──────────────────────────────────────────────────────────────
+
+  function labelText(item) {
+    const label = labelOf(item);
+    const nodes = [];
+    let text = "";
+    if (!label) return { text, nodes };
+    const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement?.closest("[aria-hidden='true']")?.closest("[data-part='label']") === label) continue;
+      nodes.push([node, text.length]);
+      text += node.data;
+    }
+    return { text, nodes };
+  }
+
+  function highlight(nodes, start, length) {
+    const registry = globalThis.CSS?.highlights;
+    if (!registry || typeof Highlight === "undefined") return;
+    const range = document.createRange();
+    const place = (offset, edge) => {
+      const found = nodes.findLast(([, at]) => at <= offset) ?? nodes[0];
+      range[edge](found[0], Math.min(offset - found[1], found[0].length));
+    };
+    place(start, "setStart");
+    place(start + length, "setEnd");
+    let entry = registry.get(HIGHLIGHT);
+    if (!entry) registry.set(HIGHLIGHT, entry = new Highlight());
+    entry.add(range);
+    ranges.push(range);
+  }
+
+  function applyFilter(raw) {
+    const needle = String(raw ?? "").trim().toLocaleLowerCase();
+    const entry = globalThis.CSS?.highlights?.get(HIGHLIGHT);
+    for (const range of ranges) entry?.delete(range);
+    ranges = [];
+    for (const item of filtered) item.hidden = false;
+    filtered.clear();
+
+    let count = 0;
+    if (!needle) {
+      if (snapshot) {
+        for (const [item, open] of snapshot) if (root.contains(item)) setOpen(item, open);
+      }
+      snapshot = null;
+    } else {
+      snapshot ??= new Map(
+        items().filter((item) => item.hasAttribute("aria-expanded")).map((item) => [item, isOpen(item)]),
+      );
+      // A match keeps its ancestors visible and open; under a matching parent
+      // every child stays visible, as it was.
+      const walk = (container, keep) => {
+        let found = false;
+        for (const item of directItems(container)) {
+          const { text, nodes } = labelText(item);
+          const at = text.toLocaleLowerCase().indexOf(needle);
+          const group = directGroup(item);
+          const inner = group ? walk(group, keep || at !== -1) : false;
+          if (at !== -1) {
+            count++;
+            highlight(nodes, at, needle.length);
+          }
+          if (inner) setOpen(item, true);
+          if (at === -1 && !inner && !keep) {
+            item.hidden = true;
+            filtered.add(item);
+          }
+          found ||= at !== -1 || inner;
+        }
+        return found;
+      };
+      walk(tree, false);
+    }
+
+    query = needle;
+    if (empty) empty.hidden = !needle || count > 0;
+    refresh();
+    emit("filter", { query: String(raw ?? ""), count });
+    return count;
+  }
+
+  function filterMessage(count) {
+    if (!query) return "Filter cleared";
+    return count === 0
+      ? `No items match ${query}`
+      : `${count} ${count === 1 ? "item matches" : "items match"} ${query}`;
+  }
+
+  /**
+   * Show only items whose label contains `query` (case-insensitive), with
+   * their ancestors expanded, and announce the count. An empty query restores
+   * every item and the expansion from before filtering.
+   * @param {string} query the text to match
+   * @returns {number} how many items match
+   */
+  function filter(query) {
+    if (filterInput) filterInput.value = query ?? "";
+    const count = applyFilter(query);
+    announce(filterMessage(count));
+    return count;
+  }
+
+  function onFilterInput() {
+    const count = applyFilter(filterInput.value);
+    clearTimeout(announceTimer);
+    // Wait for typing to pause, so one count is read rather than one per key.
+    announceTimer = setTimeout(() => announce(filterMessage(count)), 400);
+  }
+
+  function onFilterKeyDown(event) {
+    if (event.key === "ArrowDown") {
+      const first = visibleItems()[0];
+      if (first) {
+        event.preventDefault();
+        focusItem(first);
+      }
+    } else if (event.key === "Escape" && filterInput.value) {
+      event.preventDefault();
+      filter("");
+    }
+  }
+
+  // ── Moving items ───────────────────────────────────────────────────────────
+
+  function canNest(item) {
+    return !isDisabled(item) &&
+      Boolean(directGroup(item) || (item.hasAttribute("aria-expanded") && !isLazy(item)));
+  }
+
+  function canDrop(source, target, position) {
+    return Boolean(source && target) && source !== target && !source.contains(target) &&
+      !isDisabled(source) && (position === "inside" ? canNest(target) : position === "before" || position === "after");
+  }
+
+  // Where a drop would put `source`: its new container and next sibling.
+  function destination(source, target, position) {
+    if (position === "inside") return [directGroup(target), null];
+    let next = position === "before" ? target : target.nextElementSibling;
+    while (next && (next === source || !next.matches(ITEM))) next = next.nextElementSibling;
+    return [target.parentElement, next];
+  }
+
+  function nextItem(item) {
+    let next = item.nextElementSibling;
+    while (next && !next.matches(ITEM)) next = next.nextElementSibling;
+    return next;
+  }
+
+  /**
+   * Move an item before or after another, or inside a parent (as its last
+   * child), then renumber levels and positions. Fires the cancelable
+   * `faqir:move` first; an item never moves into its own subtree.
+   * @param {Element|string|number} source the item to move
+   * @param {Element|string|number} target the item to move it next to or into
+   * @param {"before"|"after"|"inside"} position where, relative to target
+   * @returns {boolean} whether the item moved
+   */
+  function move(source, target, position) {
+    refresh();
+    const item = resolveItem(source);
+    const to = resolveItem(target);
+    if (!canDrop(item, to, position)) return false;
+
+    const [container, next] = destination(item, to, position);
+    const parent = position === "inside" ? to : parentItem(to);
+    const siblings = container ? directItems(container).filter((node) => node !== item) : [];
+    const index = next ? siblings.indexOf(next) : siblings.length;
+    const proceed = emit("move", {
+      ...describe(item),
+      target: to,
+      targetValue: itemValue(to),
+      position,
+      parent,
+      parentValue: parent ? itemValue(parent) : null,
+      index,
+    }, true);
+    if (!proceed) return false;
+
+    const hadFocus = item.contains(document.activeElement);
+    if (position === "inside") {
+      const children = directGroup(to) ?? to.appendChild(newGroup());
+      children.append(item);
+      setOpen(to, true);
+    } else if (position === "before") {
+      to.before(item);
+    } else {
+      to.after(item);
+    }
+    refresh();
+    if (hadFocus) focusItem(item);
+    return true;
+  }
+
+  function placeText(target, position) {
+    const where = position === "inside" ? "Inside" : position === "before" ? "Before" : "After";
+    const level = Number(target.getAttribute("aria-level")) + (position === "inside" ? 1 : 0);
+    return `${where} ${itemLabel(target)}, level ${level}`;
+  }
+
+  function movedText(item, target, position) {
+    const where = position === "inside" ? "into" : position;
+    return `Moved ${itemLabel(item)} ${where} ${itemLabel(target)}`;
+  }
+
+  // Every place the grabbed item could go, in reading order; `origin` counts
+  // the places above where it sits now. Places that would not move it are left out.
+  function dropTargets(source) {
+    const list = [];
+    let origin = 0;
+    const [home, homeNext] = [source.parentElement, nextItem(source)];
+    const add = (target, position) => {
+      const [container, next] = destination(source, target, position);
+      if (!(container === home && next === homeNext)) list.push([target, position]);
+    };
+    const walk = (container) => {
+      const kids = directItems(container).filter((item) => !item.hidden);
+      const last = kids.filter((item) => item !== source).pop();
+      for (const item of kids) {
+        if (item === source) {
+          origin = list.length;
+          continue;
+        }
+        add(item, "before");
+        if (canNest(item)) add(item, "inside");
+        if (directGroup(item) && isOpen(item)) walk(directGroup(item));
+        if (item === last) add(item, "after");
+      }
+    };
+    walk(tree);
+    return { list, origin };
+  }
+
+  function showIndicator(target, position) {
+    if (!indicator) {
+      indicator = tree.appendChild(make("li", { "data-part": "drop-indicator", "aria-hidden": "true" }));
+    }
+    const label = labelOf(target) ?? target;
+    const base = tree.getBoundingClientRect();
+    const row = label.getBoundingClientRect();
+    const box = position === "after" ? target.getBoundingClientRect() : row;
+    const rtl = getComputedStyle(tree).direction === "rtl";
+    indicator.dataset.state = position;
+    Object.assign(indicator.style, {
+      insetBlockStart: `${(position === "after" ? box.bottom : box.top) - base.top + tree.scrollTop}px`,
+      insetInlineStart: `${rtl ? base.right - row.right : row.left - base.left}px`,
+      inlineSize: `${row.width}px`,
+      blockSize: position === "inside" ? `${row.height}px` : "",
+    });
+  }
+
+  function hideIndicator() {
+    indicator?.remove();
+    indicator = null;
+  }
+
+  function pickUp(item) {
+    const { list, origin } = dropTargets(item);
+    grab = { item, list, origin, index: -1 };
+    setTransient(item, "grabbed");
+    announce(`Picked up ${itemLabel(item)}. Press Up or Down Arrow to choose a place, Enter to drop, Escape to cancel.`);
+  }
+
+  function endGrab(message) {
+    if (!grab) return;
+    const { item } = grab;
+    grab = null;
+    hideIndicator();
+    setTransient(item, null);
+    if (message) announce(message);
+  }
+
+  function cancelText(item) {
+    return `Move cancelled. ${itemLabel(item)} stays where it was.`;
+  }
+
+  function onGrabKey(event) {
+    const { item, list, origin, index } = grab;
+    const key = event.key;
+    if (key === "Escape" || key === "Tab") {
+      if (key === "Escape") event.preventDefault();
+      endGrab(cancelText(item));
+      return;
+    }
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      const chosen = list[index];
+      endGrab();
+      announce(chosen && move(item, chosen[0], chosen[1])
+        ? movedText(item, chosen[0], chosen[1])
+        : `${itemLabel(item)} was not moved`);
+      return;
+    }
+    const delta = { ArrowDown: 1, ArrowUp: -1 }[key];
+    if (!delta && key !== "Home" && key !== "End") {
+      // Left and Right would expand or leave the item: nothing else moves here.
+      if (key === "ArrowLeft" || key === "ArrowRight") event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    let next = key === "Home" ? 0 : key === "End" ? list.length - 1
+      : index === -1 ? origin - (delta < 0 ? 1 : 0) : index + delta;
+    if (list.length === 0 || next < 0 || next >= list.length) {
+      announce(list.length === 0 ? "There is nowhere else to move it"
+        : next < 0 ? "Top of the tree" : "End of the tree");
+      return;
+    }
+    grab.index = next;
+    const [target, position] = list[next];
+    showIndicator(target, position);
+    announce(placeText(target, position));
+  }
+
+  function dropAt(event) {
+    const target = event.target instanceof Element ? event.target.closest(ITEM) : null;
+    if (!target || !belongsToTree(target)) return null;
+    const row = (labelOf(target) ?? target).getBoundingClientRect();
+    const y = (event.clientY - row.top) / (row.height || 1);
+    let position = canNest(target)
+      ? y < 0.25 ? "before" : y > 0.75 ? "after" : "inside"
+      : y < 0.5 ? "before" : "after";
+    let at = target;
+    // Below an open parent's row is its first child's top edge, not its end.
+    const first = position === "after" && isOpen(target) && directGroup(target)
+      ? directItems(directGroup(target)).find((node) => !node.hidden)
+      : null;
+    if (first) {
+      at = first;
+      position = "before";
+    }
+    return canDrop(drag.item, at, position) ? [at, position] : null;
+  }
+
+  function onDragStart(event) {
+    if (!draggable() || !(event.target instanceof Element)) return;
+    const item = event.target.closest(ITEM);
+    if (!item || !belongsToTree(item) || isDisabled(item)) return;
+    drag = { item, hit: null };
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", itemValue(item));
+      const label = labelOf(item);
+      if (label) event.dataTransfer.setDragImage?.(label, 16, 12);
+    }
+    // After the browser has taken its drag image of the undimmed row.
+    setTimeout(() => drag?.item === item && setTransient(item, "grabbed"));
+  }
+
+  function onDragOver(event) {
+    if (!drag) return;
+    const hit = dropAt(event);
+    const [target, position] = hit ?? [];
+    if (target !== drag.hit?.[0] || position !== drag.hit?.[1]) {
+      clearTimeout(expandTimer);
+      // Hovering inside a closed parent opens it, so a drop can reach deeper.
+      if (position === "inside" && !isOpen(target)) {
+        expandTimer = setTimeout(() => drag && expand(target), 700);
+      }
+    }
+    drag.hit = hit;
+    if (!hit) {
+      hideIndicator();
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    showIndicator(target, position);
+  }
+
+  function onDragLeave(event) {
+    if (drag && !root.contains(event.relatedTarget)) {
+      drag.hit = null;
+      hideIndicator();
+    }
+  }
+
+  function endDrag() {
+    clearTimeout(expandTimer);
+    if (drag) setTransient(drag.item, null);
+    drag = null;
+    hideIndicator();
+  }
+
+  function onDrop(event) {
+    if (!drag) return;
+    event.preventDefault();
+    const { item, hit } = drag;
+    endDrag();
+    if (hit && move(item, hit[0], hit[1])) announce(movedText(item, hit[0], hit[1]));
+  }
+
+  // ── Keyboard and pointer ───────────────────────────────────────────────────
+
+  /**
+   * The selected item (single and multiple mode), or null.
+   * @returns {Element|null}
+   */
   function getSelected() {
     refresh();
     return selectedItem;
   }
 
-  function move(item, delta) {
+  /**
+   * Every selected item, or every checked item in checkbox mode, in tree order.
+   * @returns {Element[]}
+   */
+  function getSelection() {
+    const attr = mode() === "checkbox" ? "aria-checked" : "aria-selected";
+    return items().filter((item) => item.getAttribute(attr) === "true");
+  }
+
+  function step(item, delta) {
     const visible = visibleItems();
     const index = visible.indexOf(item);
     if (index === -1) return false;
@@ -328,7 +1134,7 @@ export function createTreeView(root) {
       typeaheadTimer = null;
     }, 500);
 
-    const query = [...typeahead].every((character) => character === typeahead[0])
+    const prefix = [...typeahead].every((character) => character === typeahead[0])
       ? typeahead[0]
       : typeahead;
     const visible = visibleItems();
@@ -337,7 +1143,7 @@ export function createTreeView(root) {
 
     for (let offset = 1; offset <= visible.length; offset++) {
       const candidate = visible[(start + offset) % visible.length];
-      if (itemLabel(candidate).toLocaleLowerCase().startsWith(query)) {
+      if (itemLabel(candidate).toLocaleLowerCase().startsWith(prefix)) {
         return focusItem(candidate);
       }
     }
@@ -346,46 +1152,62 @@ export function createTreeView(root) {
 
   function onKeyDown(event) {
     if (!(event.target instanceof Element)) return;
-    const item = event.target.closest("[data-part='item']");
+    const item = event.target.closest(ITEM);
     if (!item || !belongsToTree(item) || isDisabled(item)) return;
+    if (grab) {
+      onGrabKey(event);
+      return;
+    }
+
+    const current = mode();
+    const multiple = current === "multiple";
+    const command = event.ctrlKey || event.metaKey;
+    const ranged = multiple && event.shiftKey;
+    if (!anchor || !items().includes(anchor)) anchor = item;
+
+    if (event.key === "Enter" && event.altKey && draggable()) {
+      event.preventDefault();
+      pickUp(item);
+      return;
+    }
+    if (current !== "single" && command && event.key.toLowerCase() === "a") {
+      event.preventDefault();
+      selectAll();
+      return;
+    }
 
     switch (event.key) {
       case "ArrowDown":
-        event.preventDefault();
-        move(item, 1);
-        break;
       case "ArrowUp":
         event.preventDefault();
-        move(item, -1);
+        if (step(item, event.key === "ArrowDown" ? 1 : -1) && ranged) {
+          selectRange(anchor, currentItem);
+        }
         break;
-      case "Home": {
-        event.preventDefault();
-        const first = visibleItems()[0];
-        if (first) focusItem(first);
-        break;
-      }
+      case "Home":
       case "End": {
         event.preventDefault();
         const visible = visibleItems();
-        if (visible.length > 0) focusItem(visible[visible.length - 1]);
+        const edge = event.key === "Home" ? visible[0] : visible[visible.length - 1];
+        if (edge && focusItem(edge) && ranged && command) selectRange(item, edge);
         break;
       }
       case "ArrowRight": {
         event.preventDefault();
         if (!isExpandable(item)) break;
-        if (item.getAttribute("aria-expanded") !== "true") {
+        if (!isOpen(item)) {
           expand(item);
           break;
         }
         const child = directGroup(item)
-          ? directItems(directGroup(item)).find((candidate) => !isDisabled(candidate))
+          ? directItems(directGroup(item)).find((candidate) => !isDisabled(candidate) && isVisible(candidate))
           : null;
         if (child) focusItem(child);
         break;
       }
       case "ArrowLeft": {
         event.preventDefault();
-        if (isExpandable(item) && item.getAttribute("aria-expanded") === "true") {
+        if (isExpandable(item) && isOpen(item)) {
           collapse(item);
           break;
         }
@@ -396,7 +1218,11 @@ export function createTreeView(root) {
       case "Enter":
       case " ":
         event.preventDefault();
-        select(item);
+        if (current === "checkbox") check(item);
+        else if (multiple && event.key === " ") {
+          if (event.shiftKey) selectRange(anchor, item);
+          else toggleSelected(item);
+        } else select(item);
         break;
       case "*": {
         event.preventDefault();
@@ -421,18 +1247,30 @@ export function createTreeView(root) {
 
   function onClick(event) {
     if (!(event.target instanceof Element)) return;
-    const item = event.target.closest("[data-part='item']");
+    const item = event.target.closest(ITEM);
     if (!item || !belongsToTree(item)) return;
     if (isDisabled(item)) {
       event.preventDefault();
       return;
     }
+    if (grab) endGrab(cancelText(grab.item));
 
+    const current = mode();
+    const from = anchor && items().includes(anchor) ? anchor : currentItem;
     focusItem(item);
-    const togglePart = event.target.closest("[data-part='toggle']");
-    if (togglePart && togglePart.closest("[data-part='item']") === item) {
+    const owned = (name) => event.target.closest(`[data-part='${name}']`)?.closest(ITEM) === item;
+    if (owned("retry")) {
+      event.preventDefault();
+      expand(item);
+    } else if (owned("toggle")) {
       event.preventDefault();
       toggle(item);
+    } else if (current === "checkbox") {
+      check(item);
+    } else if (current === "multiple" && event.shiftKey) {
+      selectRange(from, item, event.ctrlKey || event.metaKey);
+    } else if (current === "multiple" && (event.ctrlKey || event.metaKey)) {
+      toggleSelected(item);
     } else {
       select(item);
     }
@@ -440,32 +1278,56 @@ export function createTreeView(root) {
 
   function onFocusIn(event) {
     if (!(event.target instanceof Element)) return;
-    const item = event.target.closest("[data-part='item']");
+    const item = event.target.closest(ITEM);
     if (!item || !belongsToTree(item) || isDisabled(item)) return;
 
-    currentItem = item;
-    for (const candidate of items()) {
-      candidate.tabIndex = candidate === item ? 0 : -1;
-    }
+    rove(item);
   }
 
-  root.addEventListener("keydown", onKeyDown);
-  root.addEventListener("click", onClick);
-  root.addEventListener("focusin", onFocusIn);
+  function onFocusOut(event) {
+    if (grab && !grab.item.contains(event.relatedTarget)) endGrab(cancelText(grab.item));
+  }
+
+  const listeners = [
+    ["keydown", onKeyDown],
+    ["click", onClick],
+    ["focusin", onFocusIn],
+    ["focusout", onFocusOut],
+    ["dragstart", onDragStart],
+    ["dragover", onDragOver],
+    ["dragleave", onDragLeave],
+    ["drop", onDrop],
+    ["dragend", endDrag],
+  ];
+  for (const [type, listener] of listeners) root.addEventListener(type, listener);
+  filterInput?.addEventListener("input", onFilterInput);
+  filterInput?.addEventListener("keydown", onFilterKeyDown);
 
   function onMutation() {
     refresh();
+    // Nodes rendered while a filter is on are filtered too.
+    if (query) applyFilter(query);
   }
 
   const observer = new MutationObserver(onMutation);
   observer.observe(root, { childList: true, subtree: true });
 
+  /**
+   * Remove every listener, the observer and the timers, and end any drag.
+   */
   function destroy() {
-    root.removeEventListener("keydown", onKeyDown);
-    root.removeEventListener("click", onClick);
-    root.removeEventListener("focusin", onFocusIn);
+    for (const [type, listener] of listeners) root.removeEventListener(type, listener);
+    filterInput?.removeEventListener("input", onFilterInput);
+    filterInput?.removeEventListener("keydown", onFilterKeyDown);
     observer.disconnect();
     if (typeaheadTimer) clearTimeout(typeaheadTimer);
+    clearTimeout(announceTimer);
+    endGrab();
+    endDrag();
+    loading.clear();
+    const marks = globalThis.CSS?.highlights?.get(HIGHLIGHT);
+    for (const range of ranges) marks?.delete(range);
+    ownStatus?.remove();
     delete root._faqirTreeView;
   }
 
@@ -474,11 +1336,19 @@ export function createTreeView(root) {
     expand,
     collapse,
     toggle,
+    check,
+    selectAll,
+    filter,
+    load,
+    setLoader,
+    move,
     refresh,
     getSelected,
+    getSelection,
     destroy,
   };
   root._faqirTreeView = api;
   refresh();
+  if (draggable() || items().some(isLazy)) ensureStatus();
   return api;
 }

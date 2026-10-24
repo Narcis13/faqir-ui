@@ -14,6 +14,10 @@
       later step can never block an earlier one (and vice-versa).
     · Step visibility + indicator state are pure `:hidden` / `:data-state`
       bindings off `step`. No classes, no controller.
+    · The stepper's steps are buttons that set `step` too: a completed step
+      goes back to its panel (`:disabled` while it is still ahead, so the only
+      way forward stays Next and its validation), the current one carries
+      aria-current="step", and a visually hidden status part says "Completed".
 -->
 <form
   data-ui="wizard"
@@ -25,15 +29,17 @@
   <h1 data-part="heading">Create your account</h1>
 
   <div data-ui="stepper" data-part="steps" role="navigation" aria-label="Progress">
-    <div data-part="step" data-state="active" :data-state="step &gt; 0 ? &#39;completed&#39; : (step === 0 ? &#39;active&#39; : null)">
+    <button type="button" data-part="step" data-state="active" aria-current="step" :data-state="step &gt; 0 ? &#39;completed&#39; : (step === 0 ? &#39;active&#39; : null)" :aria-current="step === 0 ? &#39;step&#39; : null" @click="step = 0">
       <span data-part="indicator">1</span>
       <span data-part="label">Profile</span>
-    </div>
-    <div data-part="connector"></div>
-    <div data-part="step" :data-state="step &gt; 1 ? &#39;completed&#39; : (step === 1 ? &#39;active&#39; : null)">
+      <span data-part="status" l-text="step &gt; 0 ? &#39;Completed&#39; : &#39;&#39;"></span>
+    </button>
+    <div data-part="connector" :data-state="step &gt; 0 ? &#39;completed&#39; : null"></div>
+    <button type="button" data-part="step" disabled :data-state="step &gt; 1 ? &#39;completed&#39; : (step === 1 ? &#39;active&#39; : null)" :aria-current="step === 1 ? &#39;step&#39; : null" :disabled="step &lt; 1" @click="step = 1">
       <span data-part="indicator">2</span>
       <span data-part="label">Plan</span>
-    </div>
+      <span data-part="status" l-text="step &gt; 1 ? &#39;Completed&#39; : &#39;&#39;"></span>
+    </button>
   </div>
 
   <section data-ui="card" data-variant="outlined" data-part="panel" :hidden="step !== 0">

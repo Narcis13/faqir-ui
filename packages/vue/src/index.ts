@@ -173,4 +173,4 @@ export type { LToggleGroupProps, LToggleGroupMode, LToggleGroupStyleVariant } fr
 export { LTooltip } from "./recipes/tooltip.js";
 export type { LTooltipProps, LTooltipPosition } from "./recipes/tooltip.js";
 export { LTreeView } from "./recipes/tree-view.js";
-export type { LTreeViewProps } from "./recipes/tree-view.js";
+export type { LTreeViewProps, LTreeViewVariant } from "./recipes/tree-view.js";

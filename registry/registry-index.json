@@ -1042,22 +1042,22 @@
       "name": "stepper",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "files": [
         {
           "path": "stepper.css",
-          "sha256": "57b73c1b6af5d74ad741c3206f329ba724613b2f544a196bcfd583fd0fea9c3d"
+          "sha256": "cfd25168420c811b950556b62f535a92b0f3791ba2ccca3c7954d76beedee23f"
         },
         {
           "path": "stepper.html",
-          "sha256": "7736b45d69a53f703c6852c46681bb40e4c6d0e2e346a4a3da30d2ae5d25bb4d"
+          "sha256": "5b7aaf62823283a47a980d678d7385e3e9fe6b9b763f74cc82cfe935b0448166"
         },
         {
           "path": "stepper.manifest.json",
-          "sha256": "699b06e18f47563ebec66364d4474bdeb890229ef8a3d64d93aa52dd0c3a74d0"
+          "sha256": "f1423a0ef1025dfd4fe0fb7cdf56a21fe4639c3f55aacc5a064e19380fbd9082"
         }
       ],
-      "hash": "e434677fe440a6b694fa4af35a3bae92d237804e2cfbc99f35994303cc62bad4",
+      "hash": "b4cb19f2697ba3f2ff873420b286215524b466ab70024ebf9783e27a45194a75",
       "deps": []
     },
     {
@@ -2004,27 +2004,31 @@
       "name": "tree-view",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "files": [
         {
           "path": "tree-view.css",
-          "sha256": "bde3e5a2534e64006594b19a4b7f19df6fe958473c34e298ae88ab2934c997ab"
+          "sha256": "3519a6e2f4942bb0a185ce691f4530f544d1fd7ab887c4c6fe9bfedebddaf26b"
         },
         {
           "path": "tree-view.html",
-          "sha256": "820c938b411d0c921a5797b6bbed78bf424e329912e82242f3ce09b83799c684"
+          "sha256": "d7729f4c9c1f7e52337b3715cc5d5310605589cbcc87e2a869f03ada3362c5f9"
         },
         {
           "path": "tree-view.js",
-          "sha256": "a3af36a2f76b3ac528a82ed91e8d989604cd234b13b995c9c69ab678aa6c172d"
+          "sha256": "fc96114f6f518b9641f8d6e63635e13e572c712f60e33011b198185f1e6c613e"
         },
         {
           "path": "tree-view.manifest.json",
-          "sha256": "ee60e09c54f8995242dea7442e174098558ce044a785ed43b65ec07d03ad8e42"
+          "sha256": "eb2c0a9523d71fe86cde026eb7d9d8991e97302e064c85eca4fe73f4c82c16d7"
         }
       ],
-      "hash": "a049a0ff20b2e97d947ea45e39d43504db156e3177ede8bdaccaf05aef900478",
-      "deps": []
+      "hash": "4eb719c94108fe930bd8ee799dffd22bbf66b3a8484c55252a95227698cf843b",
+      "deps": [
+        "input",
+        "spinner",
+        "icon"
+      ]
     },
     {
       "name": "article",
@@ -2648,7 +2652,7 @@
       "name": "wizard",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "wizard.css",
@@ -2656,14 +2660,14 @@
         },
         {
           "path": "wizard.html",
-          "sha256": "0c32937f4b1abc916738f2c854aa194097fff24fd6e330795236c60b413d1e8a"
+          "sha256": "2acf8ab0e6ae8f1c0ca4a01379d96f345cc2b2cf31f901c3cded717b827ad38a"
         },
         {
           "path": "wizard.manifest.json",
-          "sha256": "23c7771e994a6eb78e580fc7b539867d8c5f24afb8e9dca14588f45d71fc6d06"
+          "sha256": "fc861dec52d8182cac6b1aad9b5bc2092ece16d51d91c00ca27350802136df64"
         }
       ],
-      "hash": "94bc99f7d08316d0e89ab1bd29188f13750950f7df7b906b9420a91e0b149f96",
+      "hash": "681abedf70c618a88e67d9e2953cb4204d056f9697ecbf40f60576de79241423",
       "deps": [
         "stepper",
         "card",
