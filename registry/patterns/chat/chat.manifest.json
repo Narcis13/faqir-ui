@@ -1,0 +1,298 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "chat",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "A messaging app: a searchable, filterable conversation list (the list recipe in single-select listbox mode — avatar, name, last-message preview, time, unread badge) beside the open conversation (a header with avatar, name and presence; a chat-thread of chat-message bubbles with a typing indicator; the composer). Two panes from the md breakpoint, one at a time with a back button below it. Wired entirely by one l-data scope and bindings — selecting a conversation shows its thread and clears its unread count, sending appends an outgoing bubble through a keyed l-for and updates the preview — with no custom JavaScript.",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='chat']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "sidebar": {
+      "selector": "[data-part='sidebar']",
+      "required": true,
+      "tag_hint": "section",
+      "description": "The conversation column. aria-labelledby its title, and bind :data-state to active while nothing is open (active === null), inactive otherwise."
+    },
+    "sidebar-header": {
+      "selector": "[data-part='sidebar-header']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Title row of the conversation column."
+    },
+    "sidebar-title": {
+      "selector": "[data-part='sidebar-title']",
+      "required": true,
+      "tag_hint": "h2",
+      "description": "'Chats'. Give it an id for the sidebar's aria-labelledby."
+    },
+    "sidebar-actions": {
+      "selector": "[data-part='sidebar-actions']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Icon buttons beside the title (new chat, menu), each a [data-part='action']."
+    },
+    "search": {
+      "selector": "[data-part='search']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Search well: an aria-hidden search icon and an <input type='search'> with an aria-label, bound with l-model. The well draws the focus ring."
+    },
+    "filters": {
+      "selector": "[data-part='filters']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "role='group' row of filter toggles (All / Unread / Groups)."
+    },
+    "filter": {
+      "selector": "[data-part='filter']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "One filter: a toggle button whose aria-pressed is bound to the active filter."
+    },
+    "main": {
+      "selector": "[data-part='main']",
+      "required": true,
+      "tag_hint": "section",
+      "description": "The open conversation's column: one [data-part='conversation'] per chat, the empty state, and the shared composer. Bind :data-state to active while a chat is open."
+    },
+    "conversation": {
+      "selector": "[data-part='conversation']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "One chat: its header and its chat-thread, shown with :hidden='active !== {id}'. Every authored conversation but the initially open one also carries a static hidden attribute as the pre-boot guard."
+    },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The conversation header: back, peer avatar, peer-info and actions."
+    },
+    "back": {
+      "selector": "[data-part='back']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Back to the list (@click='active = null'), with an aria-label. Shown only below the md breakpoint, where one pane is on screen at a time."
+    },
+    "peer": {
+      "selector": "[data-part='peer']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "aria-hidden wrapper for the chat's avatar (a person, or a group picture)."
+    },
+    "peer-info": {
+      "selector": "[data-part='peer-info']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Stacks the chat's name over its presence line."
+    },
+    "peer-name": {
+      "selector": "[data-part='peer-name']",
+      "required": true,
+      "tag_hint": "h3",
+      "description": "The chat's name, as a heading; its id names the chat-thread (aria-labelledby)."
+    },
+    "presence": {
+      "selector": "[data-part='presence']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "'online', 'last seen today at 07:58', the members of a group, or — with data-state='typing' — 'typing…' in the accent."
+    },
+    "actions": {
+      "selector": "[data-part='actions']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Header icon buttons (video, voice, search), each a [data-part='action'] with an aria-label."
+    },
+    "action": {
+      "selector": "[data-part='action']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "A round icon button in the sidebar header or the conversation header. Always a real button with an aria-label."
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "What the main column shows from md up when nothing is open (:hidden='active !== null'): an illustration, a heading and a line of help."
+    }
+  },
+  "variants": {},
+  "states": {
+    "active": {
+      "attr": "data-state=\"active\"",
+      "applied_to": "sidebar, main",
+      "description": "The pane worth showing: the list while nothing is open, the conversation once one is. From md up both panes show regardless."
+    },
+    "inactive": {
+      "attr": "data-state=\"inactive\"",
+      "applied_to": "sidebar, main",
+      "description": "The other pane. Below the md floor (48rem) it is display:none — that IS the responsive collapse."
+    },
+    "typing": {
+      "attr": "data-state=\"typing\"",
+      "applied_to": "presence",
+      "description": "The presence line says the peer is typing, in the accent."
+    }
+  },
+  "props": {
+    "--chat-height": {
+      "type": "string",
+      "default": "40rem",
+      "description": "Block size of the whole app (custom property). It needs one so the thread scrolls inside it — 100dvh for a full-screen chat."
+    },
+    "--chat-sidebar-width": {
+      "type": "string",
+      "default": "22rem",
+      "description": "Widest the conversation column grows from md up (custom property); it never shrinks below 17rem."
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-labelledby on sidebar",
+      "aria-label on back",
+      "aria-label on action",
+      "role=\"group\" on filters",
+      "aria-pressed on filter"
+    ],
+    "keyboard": {
+      "Tab": "search → filters → the conversation list (one tab stop) → the open conversation's header buttons → its message log → the controls in its messages → the composer",
+      "ArrowUp / ArrowDown / Home / End in the list": "move between conversations (list recipe, single-select listbox)",
+      "Enter / Space in the list": "open the focused conversation",
+      "Printable characters in the list": "type-ahead to a conversation by name",
+      "Enter in the composer": "send; Shift+Enter for a new line (composer recipe)",
+      "Enter / Space on back": "return to the list (one-pane layout)"
+    },
+    "notes": [
+      "Selection is the listbox's aria-selected, bound to the l-data `active` id in both directions: the list's faqir:select sets it, and the back button clears it, which deselects the option.",
+      "Each chat-thread is a role='log' named by its conversation's heading, so a sent or arriving message is announced politely without moving focus; the composer keeps focus after a send.",
+      "The unread badge reads its count plus a visually hidden 'unread', so the option's name is 'Maya Chen, Meet at the bakery at 8?, 09:24, 2 unread'.",
+      "Search and filters hide options with the hidden attribute; the list controller leaves hidden options out of focus, type-ahead and range selection.",
+      "The one-pane collapse is CSS keyed on each pane's data-state; nothing is removed from the DOM, so the open thread keeps its scroll position across back and forth."
+    ]
+  },
+  "tokens_used": [
+    "space-40",
+    "space-8",
+    "space-1",
+    "space-2",
+    "space-16",
+    "space-4",
+    "space-0h",
+    "space-3",
+    "space-1h",
+    "space-2h",
+    "space-6",
+    "space-64",
+    "space-24",
+    "card-border-width",
+    "color-border",
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-border-strong",
+    "color-primary",
+    "color-primary-subtle",
+    "radius-xl",
+    "radius-full",
+    "radius-lg",
+    "corner-shape",
+    "shadow-md",
+    "font-ui",
+    "font-heading",
+    "text-lg",
+    "text-xl",
+    "text-sm",
+    "text-base",
+    "text-xs",
+    "duration-fast",
+    "ease-default",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset",
+    "weight-bold",
+    "weight-medium",
+    "weight-semibold",
+    "leading-tight",
+    "leading-snug",
+    "heading-tracking",
+    "heading-transform",
+    "heading-weight",
+    "control-height-sm",
+    "input-border-width",
+    "border-width",
+    "measure-narrow"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"chat\" style=\"--chat-height: {height}\" l-data=\"{ active: '{first_id}', unread: { {first_id}: 0 }, sent: { {first_id}: [] }, names: { {first_id}: '{first_name}' }, open(id) { this.active = id; this.unread[id] = 0; }, send(detail) { this.sent[this.active].push({ id: Date.now(), text: detail.text, time: new Date().toTimeString().slice(0, 5) }); } }\">\n  <section data-part=\"sidebar\" data-state=\"inactive\" :data-state=\"active ? 'inactive' : 'active'\" aria-labelledby=\"{id}-title\">\n    <div data-part=\"sidebar-header\"><h2 data-part=\"sidebar-title\" id=\"{id}-title\">Chats</h2></div>\n    <div data-ui=\"list\" data-selection=\"single\" @faqir:select=\"open($event.detail.value)\">\n      <ul data-part=\"items\" role=\"listbox\" aria-label=\"Conversations\" aria-multiselectable=\"false\">\n        <li data-part=\"item\" role=\"option\" data-value=\"{first_id}\" aria-selected=\"true\" tabindex=\"0\" :aria-selected=\"active === '{first_id}' ? 'true' : 'false'\">\n          <span data-part=\"leading\"><span data-ui=\"avatar\"><span data-part=\"fallback\">{initials}</span></span></span>\n          <span data-part=\"content\"><span data-part=\"title\">{first_name}</span><span data-part=\"subtitle\">{preview}</span></span>\n          <span data-part=\"meta\">{time}</span>\n        </li>\n      </ul>\n    </div>\n  </section>\n  <section data-part=\"main\" data-state=\"active\" :data-state=\"active ? 'active' : 'inactive'\" aria-label=\"Conversation\">\n    <div data-part=\"conversation\" :hidden=\"active !== '{first_id}'\">\n      <div data-part=\"header\">\n        <button type=\"button\" data-part=\"back\" aria-label=\"Back to chats\" @click=\"active = null\"><span data-ui=\"icon\" data-icon=\"arrow-left\" aria-hidden=\"true\"></span></button>\n        <div data-part=\"peer-info\"><h3 data-part=\"peer-name\" id=\"{id}-{first_id}\">{first_name}</h3><span data-part=\"presence\">{presence}</span></div>\n      </div>\n      <div data-ui=\"chat-thread\" role=\"log\" aria-labelledby=\"{id}-{first_id}\" tabindex=\"0\">\n        <ol data-part=\"messages\">\n          <li data-ui=\"chat-message\" data-variant=\"incoming\"><div data-part=\"bubble\"><span data-part=\"label\">{first_name}</span><p data-part=\"text\">{preview}</p><span data-part=\"meta\"><time>{time}</time></span></div></li>\n          <template l-for=\"(m, i) in sent.{first_id}\" l-key=\"m.id\">\n            <li data-ui=\"chat-message\" data-variant=\"outgoing\" :data-continued=\"i > 0\"><div data-part=\"bubble\"><span data-part=\"label\">You</span><p data-part=\"text\" l-text=\"m.text\"></p><span data-part=\"meta\"><time l-text=\"m.time\"></time></span></div></li>\n          </template>\n        </ol>\n      </div>\n    </div>\n    <div data-part=\"empty\" hidden :hidden=\"active !== null\"><h3>{empty_title}</h3><p>{empty_text}</p></div>\n    <div data-ui=\"composer\" data-state=\"empty\" :hidden=\"!active\" @faqir:send=\"send($event.detail)\">\n      <div data-part=\"bar\">\n        <div data-part=\"field\"><textarea data-part=\"input\" rows=\"1\" aria-label=\"Message\" placeholder=\"Message\"></textarea></div>\n        <button type=\"button\" data-part=\"send\" aria-label=\"Send\" disabled><span data-ui=\"icon\" data-icon=\"send\" aria-hidden=\"true\"></span></button>\n      </div>\n    </div>\n  </section>\n</div>"
+  },
+  "data_shape": {
+    "note": "What an agent binds where. The pattern owns its state in one l-data scope on the root; every binding sits BELOW the root.",
+    "scope": {
+      "active": "string | null — the id of the open conversation. null opens nothing (the list on a phone, the empty state from md up).",
+      "unread": "{ [id]: number } — the badge per conversation; open(id) zeroes it.",
+      "sent": "{ [id]: Array<{ id, text, files, time }> } — what this session sent, rendered after the authored messages by a keyed l-for.",
+      "last / time": "{ [id]: string } — the preview line and time each option shows; send() updates both.",
+      "query / filter": "the search text (l-model) and the active filter ('all' | 'unread' | 'groups'); show(id) combines them for each option's :hidden."
+    },
+    "events": {
+      "faqir:select (list)": "@faqir:select=\"open($event.detail.value)\" on the list root",
+      "faqir:send (composer)": "@faqir:send=\"send($event.detail)\" on the composer root; detail is { text, files }"
+    }
+  },
+  "safe_transforms": [
+    "add-a-conversation",
+    "remove-a-conversation",
+    "start-with-nothing-open",
+    "bind-the-list-and-threads-to-an-l-source-collection",
+    "drop-the-search-or-the-filters",
+    "change-the-header-actions",
+    "make-it-full-screen-with-100dvh"
+  ],
+  "unsafe_transforms": [
+    "replace-the-list-with-clickable-divs",
+    "put-buttons-inside-a-conversation-option",
+    "remove-the-back-button",
+    "drop-the-static-hidden-guard-from-an-authored-conversation",
+    "move-bindings-onto-the-l-data-root",
+    "add-custom-script"
+  ],
+  "composition": {
+    "contains": [
+      "list",
+      "chat-thread",
+      "chat-message",
+      "composer",
+      "avatar",
+      "icon"
+    ],
+    "used_in": [],
+    "notes": [
+      "Slot ownership: a data-part belongs to its nearest data-ui ancestor. The rows are the list's items, the bubbles' parts are chat-message's, the field and send button are the composer's — the chat pattern owns only its panes, headers, search, filters and the empty state.",
+      "The list's options carry no controls (a listbox option is one control); per-chat actions live in the conversation header.",
+      "The composer is shared by every conversation: send() appends to whichever conversation is active, and the textarea's aria-label is bound to its name.",
+      "Below md the inactive pane is display:none and nothing re-renders, so switching back and forth keeps each thread's scroll position — and a column-reverse chat-thread opens on its newest message by itself."
+    ]
+  },
+  "files": {
+    "html": "chat.html",
+    "css": "chat.css",
+    "manifest": "chat.manifest.json"
+  },
+  "tests": [
+    "manifest-validates-against-the-schema",
+    "reference-is-audit-clean",
+    "selecting-a-conversation-shows-its-thread-and-clears-unread",
+    "back-deselects-and-shows-the-list-pane",
+    "sending-appends-an-outgoing-bubble-and-updates-the-preview",
+    "attachments-are-sent-as-file-cards",
+    "search-and-filters-hide-options",
+    "one-pane-below-md-two-from-md"
+  ]
+}

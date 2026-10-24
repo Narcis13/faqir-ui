@@ -1,0 +1,168 @@
+/* @ui:component chat-thread */
+/* @ui:tokens color-bg-muted color-bg color-fg color-primary color-border color-fg-muted text-sm text-xs text-base space-2 space-4 space-3 space-12 space-0h space-px space-1 space-1h space-24 space-40 space-6 font-body font-ui focus-ring-width focus-ring-style focus-ring-color card-border-width radius-lg radius-md corner-shape shadow-xs weight-medium weight-semibold leading-tight leading-snug measure-narrow */
+
+/* ── Root: the scrolling message log ──
+   `column-reverse` with ONE child is the whole stick-to-bottom behaviour, in
+   CSS: the scroll origin is the END of the content, so a thread opens on its
+   latest message, short threads sit on the composer the way a chat does, and
+   a message appended while the reader is at the bottom stays in view — no
+   scroll listener, no scrollTop arithmetic. Scrolled up, the reader stays
+   where they are.
+
+   The wallpaper is the muted plate in light and the page in dark — the
+   reverse of the incoming bubble (see chat-message.css), so bubbles always
+   read lighter than what they sit on. The doodle is drawn in gradients from
+   the ink and the accent at low alpha, so it is faint on both schemes and
+   takes the theme's hue. */
+[data-ui="chat-thread"] {
+  --chat-wallpaper: light-dark(var(--color-bg-muted), var(--color-bg));
+  --chat-pill-bg: light-dark(var(--color-bg), var(--color-bg-muted));
+  --chat-doodle-ink: color-mix(in oklab, var(--color-fg) 6%, transparent);
+  --chat-doodle-accent: color-mix(in oklab, var(--color-primary) 15%, transparent);
+  --chat-text-size: var(--text-sm);
+
+  display: flex;
+  flex-direction: column-reverse;
+  box-sizing: border-box;
+  block-size: var(--chat-thread-height, auto);
+  max-block-size: 100%;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-block: var(--space-2) var(--space-4);
+  padding-inline: clamp(var(--space-3), 5%, var(--space-12));
+  background-color: var(--chat-wallpaper);
+  background-image:
+    radial-gradient(circle at 18% 22%, var(--chat-doodle-ink) var(--space-0h), transparent calc(var(--space-0h) + var(--space-px))),
+    radial-gradient(circle at 64% 38%, transparent var(--space-1), var(--chat-doodle-accent) calc(var(--space-1) + var(--space-px)) var(--space-1h), transparent calc(var(--space-1h) + var(--space-px))),
+    radial-gradient(var(--space-1h) var(--space-px) at 34% 76%, var(--chat-doodle-ink) 80%, transparent),
+    radial-gradient(var(--space-px) var(--space-1h) at 34% 76%, var(--chat-doodle-ink) 80%, transparent),
+    radial-gradient(circle at 86% 82%, var(--chat-doodle-accent) var(--space-0h), transparent calc(var(--space-0h) + var(--space-px))),
+    radial-gradient(circle at 40% 14%, transparent var(--space-1h), var(--chat-doodle-ink) calc(var(--space-1h) + var(--space-px)) var(--space-2), transparent calc(var(--space-2) + var(--space-px))),
+    radial-gradient(var(--space-1) var(--space-px) at 90% 52%, var(--chat-doodle-accent) 80%, transparent),
+    radial-gradient(var(--space-px) var(--space-1) at 90% 52%, var(--chat-doodle-accent) 80%, transparent),
+    radial-gradient(circle at 8% 64%, var(--chat-doodle-ink) var(--space-px), transparent calc(var(--space-px) * 2));
+  background-size:
+    var(--space-24) var(--space-24),
+    var(--space-24) var(--space-24),
+    var(--space-24) var(--space-24),
+    var(--space-24) var(--space-24),
+    var(--space-24) var(--space-24),
+    var(--space-40) var(--space-40),
+    var(--space-40) var(--space-40),
+    var(--space-40) var(--space-40),
+    var(--space-40) var(--space-40);
+  background-position:
+    0 0, 0 0, 0 0, 0 0, 0 0,
+    var(--space-12) var(--space-6), var(--space-12) var(--space-6), var(--space-12) var(--space-6), var(--space-12) var(--space-6);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--color-fg) 22%, transparent) transparent;
+}
+
+[data-ui="chat-thread"][data-variant="plain"] {
+  background-image: none;
+}
+
+[data-ui="chat-thread"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+/* ── Sizes: the message text scale, inherited by every chat-message ── */
+[data-ui="chat-thread"][data-size="sm"] {
+  --chat-text-size: var(--text-xs);
+}
+
+[data-ui="chat-thread"][data-size="lg"] {
+  --chat-text-size: var(--text-base);
+}
+
+/* ── The list of entries ── */
+[data-ui="chat-thread"] > [data-part="messages"] {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── Date separator ──
+   A pill that sticks to the top while its day is on screen; the next day's
+   pill scrolls up over it, which is how a reader always knows which day they
+   are reading. Stuck pills are siblings, so they stack rather than push one
+   another off; a common minimum width keeps the one underneath from peeking
+   out around a shorter label on top. */
+[data-ui="chat-thread"] > :where([data-part="messages"]) > [data-part="day"] {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  align-self: center;
+  box-sizing: border-box;
+  min-inline-size: var(--space-24);
+  text-align: center;
+  margin-block: var(--space-4) var(--space-1);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border: var(--card-border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  background: var(--chat-pill-bg);
+  box-shadow: var(--shadow-xs);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--color-fg-muted);
+  list-style: none;
+}
+
+/* ── System message ── centred, muted: joins, renames, the encryption note. */
+[data-ui="chat-thread"] > :where([data-part="messages"]) > [data-part="system"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  align-self: center;
+  max-inline-size: min(var(--measure-narrow), 90%);
+  margin-block: var(--space-3) var(--space-1);
+  padding-block: var(--space-1h);
+  padding-inline: var(--space-3);
+  border: var(--card-border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  background: var(--chat-pill-bg);
+  box-shadow: var(--shadow-xs);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-fg-muted);
+  text-align: center;
+  text-wrap: balance;
+  list-style: none;
+}
+
+/* ── Unread divider ── where the reader left off. */
+[data-ui="chat-thread"] > :where([data-part="messages"]) > [data-part="unread"] {
+  align-self: stretch;
+  margin-block: var(--space-4) var(--space-1);
+  padding-block: var(--space-1h);
+  border-radius: var(--radius-md);
+  corner-shape: var(--corner-shape);
+  background: var(--chat-pill-bg);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-primary);
+  text-align: center;
+  list-style: none;
+}
+
+@media (forced-colors: active) {
+  [data-ui="chat-thread"] > :where([data-part="messages"]) > [data-part="day"],
+  [data-ui="chat-thread"] > :where([data-part="messages"]) > [data-part="system"] {
+    border-color: CanvasText;
+  }
+}

@@ -1,0 +1,65 @@
+<!-- @ui:component composer -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots attachments bar field action input attach file send -->
+<!-- @ui:states empty ready -->
+<!-- @ui:composition chip icon -->
+<!--
+  The message composer
+  Type and it grows (up to --composer-max-lines, then it scrolls); Enter sends, Shift+Enter starts a new line, and an Enter that commits an IME composition is left alone. Attach (or paste, or drop) files and they line up as removable chips. Sending fires faqir:send { text, files } and the composer clears and keeps focus — listen for it to append the message wherever it belongs.
+-->
+<div data-ui="stack" data-gap="6">
+  <!-- Ready to type: the send button stays dimmed until there is something to send -->
+  <div data-ui="composer" data-state="empty">
+    <div data-part="attachments" role="list" aria-label="Attachments" aria-live="polite" hidden></div>
+    <div data-part="bar">
+      <div data-part="field">
+        <button type="button" data-part="action" aria-label="Emoji">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+        </button>
+        <textarea data-part="input" rows="1" aria-label="Message Maya Chen" placeholder="Message"></textarea>
+        <button type="button" data-part="attach" aria-label="Attach files"><span data-ui="icon" data-icon="paperclip" aria-hidden="true"></span></button>
+        <input type="file" data-part="file" multiple hidden aria-label="Files to attach">
+      </div>
+      <button type="button" data-part="send" aria-label="Send" disabled><span data-ui="icon" data-icon="send" aria-hidden="true"></span></button>
+    </div>
+  </div>
+
+  <!-- Mid-message: two files attached and three lines typed -->
+  <div data-ui="composer" data-state="ready">
+    <div data-part="attachments" role="list" aria-label="Attachments" aria-live="polite">
+      <span data-ui="chip" data-size="sm" role="listitem">
+        <span data-part="label">brief-v3.pdf · 1.2 MB</span>
+        <button type="button" data-part="dismiss" aria-label="Remove brief-v3.pdf">&times;</button>
+      </span>
+      <span data-ui="chip" data-size="sm" role="listitem">
+        <span data-part="label">moodboard.png · 840 KB</span>
+        <button type="button" data-part="dismiss" aria-label="Remove moodboard.png">&times;</button>
+      </span>
+    </div>
+    <div data-part="bar">
+      <div data-part="field">
+        <button type="button" data-part="action" aria-label="Emoji">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+        </button>
+        <textarea data-part="input" rows="3" aria-label="Message the design team" placeholder="Message">Here is the latest brief and the moodboard.
+Shout if anything in section 2 reads oddly —
+I will merge the notes tonight.</textarea>
+        <button type="button" data-part="attach" aria-label="Attach files"><span data-ui="icon" data-icon="paperclip" aria-hidden="true"></span></button>
+        <input type="file" data-part="file" multiple hidden aria-label="Files to attach">
+      </div>
+      <button type="button" data-part="send" aria-label="Send"><span data-ui="icon" data-icon="send" aria-hidden="true"></span></button>
+    </div>
+  </div>
+
+  <!-- Long-form: Enter breaks the line, Ctrl/Cmd+Enter sends; up to ten lines -->
+  <div data-ui="composer" data-state="empty" data-enter="newline" style="--composer-max-lines: 10">
+    <div data-part="bar">
+      <div data-part="field">
+        <textarea data-part="input" rows="1" aria-label="Post an update" aria-describedby="composer-longform-hint" placeholder="Share an update with the team…"></textarea>
+        <button type="button" data-part="action" aria-label="Record a voice note"><span data-ui="icon" data-icon="mic" aria-hidden="true"></span></button>
+      </div>
+      <button type="button" data-part="send" aria-label="Post" disabled><span data-ui="icon" data-icon="send" aria-hidden="true"></span></button>
+    </div>
+    <p id="composer-longform-hint" data-ui="text" data-variant="muted" data-size="sm">Ctrl+Enter or ⌘+Enter to post.</p>
+  </div>
+</div>

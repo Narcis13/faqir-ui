@@ -1,0 +1,564 @@
+/* @ui:component list */
+/* @ui:tokens color-bg color-bg-subtle color-primary-subtle color-fg color-fg-muted color-primary color-border color-bg-muted color-surface-1-border color-fg-subtle color-primary-fg space-4 space-2h space-3 space-1h space-5 space-2 space-8 space-12 space-0h space-6 space-1 space-px space-10 text-sm text-xs text-base text-3xl font-ui weight-semibold weight-medium weight-bold leading-tight leading-snug heading-transform duration-fast ease-default radius-md radius-xl radius-full radius-sm corner-shape focus-ring-width focus-ring-style focus-ring-color focus-ring-offset disabled-opacity divider-width divider-style card-border-width shadow-xs shadow-lg border-width-md border-width-lg border-width measure-narrow */
+
+/* ── Root ──
+   A wrapper, not the list itself, so the parts that are not items — the
+   selection toolbar, the empty state, the live region the controller
+   announces reorders in — can sit beside the list without breaking its
+   semantics. The items live in [data-part="items"], directly or inside
+   [data-part="section"]s, and every item rule below reaches them by one of
+   exactly those two child paths:
+
+     list > items > item
+     list > items > section > items > item
+
+   so a list nested inside an item keeps its own rules. The knobs are custom
+   properties: the size variants and the inset variant only re-point them. */
+[data-ui="list"] {
+  --list-bg: var(--color-bg);
+  --list-pad-x: var(--space-4);
+  --list-pad-y: var(--space-2h);
+  --list-gap: var(--space-3);
+  --list-title-size: var(--text-sm);
+  --list-subtitle-size: var(--text-sm);
+  --list-hover: var(--color-bg-subtle);
+  --list-selected: var(--color-primary-subtle);
+  --list-header-bg: color-mix(in oklab, var(--list-bg) 88%, transparent);
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-block-size: var(--list-max-height, none);
+  background: var(--list-bg);
+  color: var(--color-fg);
+  font-family: var(--font-ui);
+}
+
+[data-ui="list"][data-size="sm"] {
+  --list-pad-x: var(--space-3);
+  --list-pad-y: var(--space-1h);
+  --list-gap: var(--space-2h);
+  --list-subtitle-size: var(--text-xs);
+}
+
+[data-ui="list"][data-size="lg"] {
+  --list-pad-x: var(--space-5);
+  --list-pad-y: var(--space-3);
+  --list-gap: var(--space-4);
+  --list-title-size: var(--text-base);
+}
+
+[data-ui="list"] > [data-part="items"],
+[data-ui="list"] > :where([data-part="items"]) > :where([data-part="section"]) > [data-part="items"] {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The items container is the scroller, not the root: a capped list scrolls
+   its rows while the toolbar stays put above them, and the section headers
+   stick to the top of the rows rather than sliding under the toolbar. */
+[data-ui="list"] > [data-part="items"] {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* ── Sections and sticky headers ──
+   The header sticks inside its own section, so the next section's header
+   pushes it off rather than stacking over it. A translucent fill over a frost
+   keeps it legible above whatever scrolls beneath it, in every theme. */
+[data-ui="list"] > :where([data-part="items"]) > [data-part="section"] {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-ui="list"] > :where([data-part="items"]) > :where([data-part="section"]) > [data-part="header"] {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  margin: 0;
+  padding-block: var(--space-1h);
+  padding-inline: var(--list-pad-x);
+  background: var(--list-header-bg);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-fg-muted);
+  text-transform: var(--heading-transform);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
+  [data-ui="list"] > :where([data-part="items"]) > :where([data-part="section"]) > [data-part="header"] {
+    -webkit-backdrop-filter: blur(var(--space-2));
+    backdrop-filter: blur(var(--space-2));
+  }
+}
+
+/* ── Item ──
+   Named grid columns, so a missing part costs nothing: an absent column is
+   zero wide and the gaps are margins on the parts that exist.
+
+     check | handle | leading | content | meta | trailing
+
+   Meta and trailing sit side by side — the value beside the chevron. On a
+   two-line item (one with a subtitle) the meta rides the title line, and a
+   badge in the trailing slot drops beneath it into the same column — the
+   time above the unread count. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"] {
+  position: relative;
+  display: grid;
+  grid-template-columns: [check] auto [handle] auto [leading] auto [content] minmax(0, 1fr) [meta] auto [trailing] auto;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding-block: var(--list-pad-y);
+  padding-inline: var(--list-pad-x);
+  color: var(--color-fg);
+  list-style: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"]:has(> [data-part="content"] > [data-part="subtitle"]) {
+  grid-template-rows: auto auto;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="handle"] {
+  grid-column: handle;
+  grid-row: 1 / -1;
+  margin-inline-end: var(--list-gap);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="leading"] {
+  grid-column: leading;
+  grid-row: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-end: var(--list-gap);
+}
+
+/* An icon in the leading slot gets a tile; set data-accent on the item to
+   colour it. A bare image is a thumbnail. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="leading"]:has(> [data-ui="icon"]) {
+  inline-size: var(--space-8);
+  block-size: var(--space-8);
+  border-radius: var(--radius-md);
+  corner-shape: var(--corner-shape);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: var(--text-base);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="leading"]) > img {
+  display: block;
+  inline-size: var(--space-12);
+  block-size: var(--space-12);
+  border-radius: var(--radius-md);
+  corner-shape: var(--corner-shape);
+  object-fit: cover;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="content"] {
+  display: grid;
+  grid-column: content;
+  grid-row: 1 / -1;
+  gap: var(--space-0h);
+  min-inline-size: 0;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="content"]) > [data-part="title"] {
+  overflow: hidden;
+  font-size: var(--list-title-size);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="content"]) > [data-part="subtitle"] {
+  overflow: hidden;
+  font-size: var(--list-subtitle-size);
+  line-height: var(--leading-snug);
+  color: var(--color-fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A link or button in the title stretches over the whole row: one tab stop,
+   the row is the hit area, and trailing controls stay on top of it. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="content"]) > :where([data-part="title"]) > :is(a, button) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="content"]) > :where([data-part="title"]) > :is(a, button)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="content"]) > :where([data-part="title"]) > :is(a, button):focus-visible {
+  outline: none;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="content"]) > :where([data-part="title"]) > :is(a, button):focus-visible::after {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="content"]) > :where([data-part="title"]) > :is(a, button):disabled {
+  opacity: var(--disabled-opacity);
+  cursor: not-allowed;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"]:has(> [data-part="content"] > [data-part="title"] > :is(a, button:enabled)):hover {
+  background: var(--list-hover);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="meta"] {
+  grid-column: meta;
+  margin-inline-start: var(--list-gap);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-tight);
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="trailing"] {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  grid-column: trailing;
+  grid-row: 1 / -1;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: var(--list-gap);
+  color: var(--color-fg-muted);
+}
+
+/* On a two-line row the meta rides the title line, the way a mail or chat
+   list sets its time… */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]:has(> [data-part="content"] > [data-part="subtitle"])) > [data-part="meta"] {
+  grid-row: 1;
+  align-self: end;
+  justify-self: end;
+}
+
+/* …unless a control or chevron sits beside it, when both centre on the row… */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]:has(> [data-part="content"] > [data-part="subtitle"]):has(> [data-part="trailing"]):not(:has(> [data-part="trailing"] > :is([data-ui="badge"], [data-part="count"])))) > [data-part="meta"] {
+  grid-row: 1 / -1;
+  align-self: center;
+}
+
+/* …and a count or badge (unread messages) drops under it, into the same column. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]:has(> [data-part="content"] > [data-part="subtitle"]):has(> [data-part="trailing"] > :is([data-ui="badge"], [data-part="count"]))) > [data-part="trailing"] {
+  grid-column: meta;
+  grid-row: 2;
+  align-self: start;
+  justify-self: end;
+}
+
+/* An unread count: a solid accent pill. While it shows, the row's meta takes
+   the accent too, so an unread conversation reads as one at a glance. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > :where([data-part="trailing"]) > [data-part="count"] {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-inline-size: var(--space-5);
+  block-size: var(--space-5);
+  padding-inline: var(--space-1h);
+  border-radius: var(--radius-full);
+  corner-shape: var(--corner-shape);
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-tight);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]:has(> [data-part="trailing"] > [data-part="count"]:not([hidden]))) > [data-part="meta"] {
+  color: var(--color-primary);
+  font-weight: var(--weight-medium);
+}
+
+/* ── Divided: a hairline under every item but the last, starting where the
+   content does — so it is inset past an avatar or icon, iOS-style, and full
+   width for a text-only row. */
+:where([data-ui="list"][data-variant="divided"] > [data-part="items"], [data-ui="list"][data-variant="divided"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"]:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  grid-column: content / -1;
+  inset-block-end: 0;
+  inset-inline: 0 calc(-1 * var(--list-pad-x));
+  border-block-end: var(--divider-width) var(--divider-style) var(--color-border);
+  pointer-events: none;
+}
+
+/* ── Inset: sections as rounded cards on a subtle ground ── */
+[data-ui="list"][data-variant="inset"] {
+  --list-bg: var(--color-bg-subtle);
+  --list-hover: var(--color-bg-muted);
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+[data-ui="list"][data-variant="inset"] > [data-part="items"] {
+  gap: var(--space-5);
+}
+
+[data-ui="list"][data-variant="inset"] > [data-part="items"]:not(:has(> [data-part="section"])),
+[data-ui="list"][data-variant="inset"] > :where([data-part="items"]) > :where([data-part="section"]) > [data-part="items"] {
+  overflow: clip;
+  border: var(--card-border-width) solid var(--color-surface-1-border);
+  border-radius: var(--radius-xl);
+  corner-shape: var(--corner-shape);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-xs);
+}
+
+[data-ui="list"][data-variant="inset"] > :where([data-part="items"]) > :where([data-part="section"]) > [data-part="header"] {
+  position: static;
+  padding-block: 0 var(--space-1h);
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:where([data-ui="list"][data-variant="inset"] > [data-part="items"], [data-ui="list"][data-variant="inset"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"]:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  grid-column: content / -1;
+  inset-block-end: 0;
+  inset-inline: 0 calc(-1 * var(--list-pad-x));
+  border-block-end: var(--divider-width) var(--divider-style) var(--color-border);
+  pointer-events: none;
+}
+
+/* ── Selectable (role="listbox") ── */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][role="option"] {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][role="option"]:hover {
+  background: var(--list-hover);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][aria-selected="true"],
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][aria-selected="true"]:hover {
+  background: var(--list-selected);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][role="option"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][aria-disabled="true"] {
+  opacity: var(--disabled-opacity);
+  cursor: not-allowed;
+}
+
+/* The multi-select mark: a ring in the check column that fills and takes a
+   tick once the option is selected. Generated content carries empty alt
+   text, so the tick is not read — aria-selected is. */
+:where([data-ui="list"][data-selection="multi"] > [data-part="items"], [data-ui="list"][data-selection="multi"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"]::before {
+  content: "";
+  content: "" / "";
+  display: grid;
+  grid-column: check;
+  grid-row: 1 / -1;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: var(--space-5);
+  block-size: var(--space-5);
+  margin-inline-end: var(--list-gap);
+  border: var(--border-width-md) solid var(--color-fg-subtle);
+  border-radius: var(--radius-full);
+  color: var(--color-primary-fg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  transition:
+    background-color var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default);
+}
+
+:where([data-ui="list"][data-selection="multi"] > [data-part="items"], [data-ui="list"][data-selection="multi"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][aria-selected="true"]::before {
+  content: "\2713";
+  content: "\2713" / "";
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+/* ── Reordering ── */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="handle"] {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: var(--space-6);
+  block-size: var(--space-6);
+  margin-inline-start: calc(-1 * var(--space-1));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-fg-subtle);
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Six dots, two by three, painted in currentColor. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="handle"]::before {
+  content: "";
+  inline-size: calc(var(--space-2) + var(--space-0h));
+  block-size: var(--space-4);
+  background-image: radial-gradient(circle, currentColor calc(var(--space-px) * 1.4), transparent calc(var(--space-px) * 1.9));
+  background-size: 50% calc(100% / 3);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="handle"]:hover {
+  color: var(--color-fg-muted);
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="handle"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+:where([data-ui="list"]:not([data-reorderable]) > [data-part="items"], [data-ui="list"]:not([data-reorderable]) > [data-part="items"] > [data-part="section"] > [data-part="items"], [data-ui="list"][data-reorderable="false"] > [data-part="items"], [data-ui="list"][data-reorderable="false"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"]) > [data-part="handle"] {
+  display: none;
+}
+
+/* Lifted: following the pointer (--list-drag-y, written by the controller)
+   or held from the keyboard. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][data-state="dragging"] {
+  z-index: 3;
+  translate: 0 var(--list-drag-y, 0);
+  background: var(--list-bg);
+  box-shadow: var(--shadow-lg), 0 0 0 var(--border-width-md) var(--color-primary);
+  transition: none;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > :where([data-part="item"][data-state="dragging"]) > [data-part="handle"] {
+  color: var(--color-primary);
+  cursor: grabbing;
+}
+
+/* Where the dragged item will land: an accent rule across the edge it will
+   take, drawn by the item's ::after (which a divided list otherwise uses for
+   its hairline) so it never shifts the layout. */
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"]:is([data-state="drop-before"], [data-state="drop-after"])::after {
+  content: "";
+  position: absolute;
+  grid-column: 1 / -1;
+  inset-inline: calc(-1 * var(--list-pad-x));
+  inset-block: auto;
+  z-index: 2;
+  border: 0;
+  border-block-start: var(--border-width-lg) solid var(--color-primary);
+  pointer-events: none;
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][data-state="drop-before"]::after {
+  inset-block-start: calc(-0.5 * var(--border-width-lg));
+}
+
+:where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][data-state="drop-after"]::after {
+  inset-block-end: calc(-0.5 * var(--border-width-lg));
+}
+
+/* ── Toolbar, empty state, live region ── */
+[data-ui="list"] > [data-part="toolbar"] {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  padding-inline: var(--list-pad-x);
+  border-block-end: var(--border-width) solid var(--color-border);
+  background: var(--list-bg);
+  font-size: var(--text-sm);
+}
+
+[data-ui="list"] > [data-part="empty"] {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-10);
+  padding-inline: var(--space-4);
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+[data-ui="list"][data-state="empty"] > [data-part="empty"] {
+  display: flex;
+}
+
+[data-ui="list"] > [data-part="empty"] > [data-ui="icon"] {
+  font-size: var(--text-3xl);
+  color: var(--color-fg-subtle);
+}
+
+[data-ui="list"] > [data-part="empty"] > p {
+  margin: 0;
+  max-inline-size: var(--measure-narrow);
+}
+
+[data-ui="list"][data-state="empty"] > [data-part="items"] {
+  display: none;
+}
+
+[data-ui="list"] > [data-part="live"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: calc(-1 * var(--space-px));
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"],
+  :where([data-ui="list"][data-selection="multi"] > [data-part="items"], [data-ui="list"][data-selection="multi"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"]::before {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  :where([data-ui="list"] > [data-part="items"], [data-ui="list"] > [data-part="items"] > [data-part="section"] > [data-part="items"]) > [data-part="item"][aria-selected="true"] {
+    outline: var(--border-width-md) solid Highlight;
+    outline-offset: calc(-1 * var(--border-width-md));
+  }
+}

@@ -1,0 +1,377 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "chat-message",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "One message of a conversation, messaging-app style: incoming and outgoing bubbles with a tail on the first bubble of each run, sender name and avatar once per run in group chats, the time and sent/delivered/read ticks tucked into the bubble's corner, replies with a coloured quote bar, images with captions, file cards, voice notes, reaction pills and a typing indicator. Pure CSS — grouping is one boolean per message, and every colour is a token pair the contrast gate already holds.",
+  "anatomy": {
+    "tag": "li",
+    "selector": "[data-ui='chat-message']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "avatar": {
+      "selector": "[data-part='avatar']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Wrapper for the sender's avatar primitive, group chats only. Put it on EVERY incoming message of a group chat so the column never collapses — a continued message keeps the space and hides the picture. Mark it aria-hidden: the sender is named in text."
+    },
+    "bubble": {
+      "selector": "[data-part='bubble']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The bubble. Holds, in order, any of: sender or label, quote, media, file, voice, dots, text, meta. The first bubble of a run (no data-continued on the message) grows a tail from its top corner, drawn in the bubble's own fill and edge."
+    },
+    "sender": {
+      "selector": "[data-part='sender']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Visible sender name on the first message of a run in a group chat, coloured by the accent — set data-accent on the message to give each person a stable hue. Read by screen readers; do not add a label beside it."
+    },
+    "label": {
+      "selector": "[data-part='label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Screen-reader-only author line ('Maya Chen', 'You', 'Maya Chen is typing') for every message that shows no visible sender. Visually hidden by this stylesheet."
+    },
+    "quote": {
+      "selector": "[data-part='quote']",
+      "required": false,
+      "tag_hint": "blockquote",
+      "description": "The message being replied to, inside the bubble, with an accent bar: a cite (who) over an excerpt (what). Give it its own data-accent to colour it as the quoted sender."
+    },
+    "cite": {
+      "selector": "[data-part='cite']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Inside a quote: who wrote the quoted message."
+    },
+    "excerpt": {
+      "selector": "[data-part='excerpt']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Inside a quote: the quoted text, clamped to two lines."
+    },
+    "media": {
+      "selector": "[data-part='media']",
+      "required": false,
+      "tag_hint": "figure",
+      "description": "An image (an <img> with width, height and alt). The bubble tightens its padding around it; a [data-part='text'] after it is the caption. With no caption the time sits on a scrim over the picture."
+    },
+    "text": {
+      "selector": "[data-part='text']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "The message text. Whitespace is preserved (pre-wrap), so newlines typed with Shift+Enter survive — write the text with no indentation inside the element. A spacer after the last word reserves room for the time."
+    },
+    "meta": {
+      "selector": "[data-part='meta']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Time and delivery status in the bubble's inline-end corner, on the last line of the text when it fits. Not hidden from assistive tech: the time is read once, here."
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Delivery ticks: role='img' with an aria-label ('Sent', 'Delivered', 'Read', 'Sending', 'Not sent') around an icon primitive — check for sent, check-check for delivered and read, clock for pending, circle-alert for failed. data-status colours it: read takes the accent, failed the destructive colour."
+    },
+    "edited": {
+      "selector": "[data-part='edited']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The word 'edited' before the time, set in italics."
+    },
+    "file": {
+      "selector": "[data-part='file']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "A document card: an icon tile, the name over its details, and an optional action button (download, open)."
+    },
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Inside a file card: the accent tile holding an icon primitive (file-text, image, music …). Decorative: aria-hidden."
+    },
+    "name": {
+      "selector": "[data-part='name']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Inside a file card: the file name, truncated with an ellipsis."
+    },
+    "info": {
+      "selector": "[data-part='info']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Inside a file card: pages, type and size, already formatted ('4 pages · PDF · 1.2 MB')."
+    },
+    "action": {
+      "selector": "[data-part='action']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Inside a file card: the round download/open control — a real button or link with an aria-label naming the file."
+    },
+    "voice": {
+      "selector": "[data-part='voice']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "A voice note: play button, waveform and duration."
+    },
+    "play": {
+      "selector": "[data-part='play']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Play/pause button with an aria-label that includes the duration ('Play voice message, 0:42')."
+    },
+    "waveform": {
+      "selector": "[data-part='waveform']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Decorative trace (aria-hidden), drawn by CSS masks. --chat-progress (a percentage) colours the played part in the accent."
+    },
+    "duration": {
+      "selector": "[data-part='duration']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Length of the note, already formatted ('0:42')."
+    },
+    "reactions": {
+      "selector": "[data-part='reactions']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Reaction pills hung over the bubble's lower edge. role='group' with aria-label='Reactions'."
+    },
+    "reaction": {
+      "selector": "[data-part='reaction']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "One reaction: a real toggle button — aria-pressed says whether you reacted, and the aria-label says the emoji in words and the count ('Heart, 2 reactions, including yours')."
+    },
+    "count": {
+      "selector": "[data-part='count']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Inside a reaction: the number beside the emoji."
+    },
+    "dots": {
+      "selector": "[data-part='dots']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Typing indicator: three empty <span> children that rise in turn (still under reduced motion). aria-hidden; the label says who is typing. Use with data-state='typing'."
+    }
+  },
+  "variants": {
+    "direction": {
+      "values": [
+        "incoming",
+        "outgoing"
+      ],
+      "default": "incoming",
+      "attr": "data-variant",
+      "applied_to": "root",
+      "description": "incoming = from someone else, aligned to the start on the page-coloured (light) or muted (dark) fill; outgoing = yours, aligned to the end on the accent's subtle fill."
+    }
+  },
+  "states": {
+    "typing": {
+      "attr": "data-state=\"typing\"",
+      "applied_to": "root",
+      "description": "A typing indicator rather than a message: the bubble holds [data-part='dots'] and a label naming who is typing. Inside a chat-thread (role='log') adding or unhiding it is announced politely."
+    }
+  },
+  "props": {
+    "continued": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-continued",
+      "description": "This message continues the previous one's run (same sender, no break): no tail, the avatar is hidden but keeps its column, and the gap above shrinks. The first message of a run is the one without it; the last is the one whose next sibling lacks it."
+    },
+    "status": {
+      "type": "enum",
+      "values": [
+        "sent",
+        "delivered",
+        "read",
+        "pending",
+        "failed"
+      ],
+      "default": "sent",
+      "attr": "data-status",
+      "description": "On [data-part='status']: which delivery state the ticks show. read colours them with the accent, failed with the destructive colour; the others use the muted ink. Keep the icon and the aria-label in step with it."
+    },
+    "--chat-bubble-bg": {
+      "type": "string",
+      "default": "light-dark(var(--color-bg), var(--color-bg-muted)) incoming, var(--color-primary-subtle) outgoing",
+      "description": "Bubble (and tail) fill (custom property). Pick a token the text colours clear AA on."
+    },
+    "--chat-radius": {
+      "type": "string",
+      "default": "var(--radius-xl)",
+      "description": "Bubble corner radius (custom property)."
+    },
+    "--chat-tail": {
+      "type": "string",
+      "default": "var(--space-2)",
+      "description": "Size of the tail on the first bubble of a run (custom property). 0 removes it."
+    },
+    "--chat-text-size": {
+      "type": "string",
+      "default": "var(--text-sm)",
+      "description": "Message text size (custom property). A chat-thread sets it from its data-size, so every message in it follows."
+    },
+    "--chat-media-max": {
+      "type": "string",
+      "default": "18rem",
+      "description": "Widest an image may render inside a bubble (custom property)."
+    },
+    "--chat-media-ratio": {
+      "type": "string",
+      "default": "auto",
+      "description": "Force an aspect ratio on images (custom property); auto keeps the image's own."
+    },
+    "--chat-progress": {
+      "type": "string",
+      "default": "0%",
+      "description": "On [data-part='waveform']: how much of the voice note has played (custom property)."
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-hidden=\"true\" on avatar",
+      "role=\"img\" on status",
+      "aria-label on status"
+    ],
+    "keyboard": {
+      "Tab": "reaches the controls a message holds — links in the text, the file action, the play button and each reaction — in reading order",
+      "Enter / Space on a reaction": "toggle your reaction (native button; the page flips aria-pressed and the count)"
+    },
+    "notes": [
+      "Reading order is the announcement: author (the visible sender, or the visually hidden label), quote, media alt text, the file's name and details, the text, the time, then the status ticks' aria-label. Nothing is said twice — the time is read from the visible <time>, and the ticks are only their label.",
+      "Give every message that shows no visible sender a [data-part='label']: in a 1:1 chat that is every message ('Maya Chen', 'You'); in a group chat, every continued message.",
+      "Images carry real alt text. A reaction is a toggle button with aria-pressed and an aria-label that says the emoji in words — screen readers read raw emoji inconsistently.",
+      "Colour is never the only signal: read and delivered differ in the label as well as the tint, and the failed state has its own icon.",
+      "The typing indicator's dots are aria-hidden and freeze under prefers-reduced-motion; its label says who is typing."
+    ]
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary-subtle",
+    "color-primary",
+    "color-destructive",
+    "color-bg-subtle",
+    "color-primary-fg",
+    "color-primary-hover",
+    "card-border-width",
+    "radius-xl",
+    "radius-md",
+    "radius-full",
+    "radius-lg",
+    "radius-none",
+    "space-2",
+    "space-10",
+    "space-3",
+    "space-0h",
+    "space-12",
+    "space-1h",
+    "space-16",
+    "space-2h",
+    "space-px",
+    "space-1",
+    "space-64",
+    "space-8",
+    "space-48",
+    "space-24",
+    "space-6",
+    "space-5",
+    "space-7",
+    "font-body",
+    "font-ui",
+    "text-sm",
+    "text-xs",
+    "text-base",
+    "text-lg",
+    "leading-snug",
+    "leading-tight",
+    "measure-narrow",
+    "corner-shape",
+    "shadow-xs",
+    "weight-semibold",
+    "weight-medium",
+    "link-decoration",
+    "link-underline-offset",
+    "border-width",
+    "border-width-md",
+    "duration-fast",
+    "duration-slower",
+    "ease-default",
+    "ease-in-out",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset"
+  ],
+  "templates": {
+    "html": "<li data-ui=\"chat-message\" data-variant=\"incoming\">\n  <div data-part=\"bubble\">\n    <span data-part=\"label\">{sender}</span>\n    <p data-part=\"text\">{text}</p>\n    <span data-part=\"meta\"><time datetime=\"{datetime}\">{time}</time></span>\n  </div>\n</li>",
+    "html_outgoing": "<li data-ui=\"chat-message\" data-variant=\"outgoing\">\n  <div data-part=\"bubble\">\n    <span data-part=\"label\">You</span>\n    <p data-part=\"text\">{text}</p>\n    <span data-part=\"meta\">\n      <time datetime=\"{datetime}\">{time}</time>\n      <span data-part=\"status\" data-status=\"read\" role=\"img\" aria-label=\"Read\"><span data-ui=\"icon\" data-icon=\"check-check\"></span></span>\n    </span>\n  </div>\n</li>",
+    "html_group": "<li data-ui=\"chat-message\" data-variant=\"incoming\" data-accent=\"{accent}\">\n  <span data-part=\"avatar\" aria-hidden=\"true\"><span data-ui=\"avatar\" data-size=\"sm\"><span data-part=\"fallback\">{initials}</span></span></span>\n  <div data-part=\"bubble\">\n    <span data-part=\"sender\">{sender}</span>\n    <p data-part=\"text\">{text}</p>\n    <span data-part=\"meta\"><time datetime=\"{datetime}\">{time}</time></span>\n  </div>\n</li>",
+    "html_reply": "<li data-ui=\"chat-message\" data-variant=\"outgoing\">\n  <div data-part=\"bubble\">\n    <span data-part=\"label\">You</span>\n    <blockquote data-part=\"quote\" data-accent=\"{quoted_accent}\">\n      <span data-part=\"cite\">{quoted_sender}</span>\n      <span data-part=\"excerpt\">{quoted_text}</span>\n    </blockquote>\n    <p data-part=\"text\">{text}</p>\n    <span data-part=\"meta\">\n      <time datetime=\"{datetime}\">{time}</time>\n      <span data-part=\"status\" data-status=\"delivered\" role=\"img\" aria-label=\"Delivered\"><span data-ui=\"icon\" data-icon=\"check-check\"></span></span>\n    </span>\n  </div>\n</li>",
+    "html_file": "<li data-ui=\"chat-message\" data-variant=\"incoming\">\n  <div data-part=\"bubble\">\n    <span data-part=\"label\">{sender}</span>\n    <div data-part=\"file\">\n      <span data-part=\"icon\" aria-hidden=\"true\"><span data-ui=\"icon\" data-icon=\"file-text\"></span></span>\n      <span data-part=\"name\">{file_name}</span>\n      <span data-part=\"info\">{file_info}</span>\n      <button type=\"button\" data-part=\"action\" aria-label=\"Download {file_name}\"><span data-ui=\"icon\" data-icon=\"download\" aria-hidden=\"true\"></span></button>\n    </div>\n    <span data-part=\"meta\"><time datetime=\"{datetime}\">{time}</time></span>\n  </div>\n</li>",
+    "html_voice": "<li data-ui=\"chat-message\" data-variant=\"incoming\">\n  <div data-part=\"bubble\">\n    <span data-part=\"label\">{sender}</span>\n    <div data-part=\"voice\">\n      <button type=\"button\" data-part=\"play\" aria-label=\"Play voice message, {duration}\"><span data-ui=\"icon\" data-icon=\"play\" aria-hidden=\"true\"></span></button>\n      <span data-part=\"waveform\" aria-hidden=\"true\"></span>\n      <span data-part=\"duration\">{duration}</span>\n    </div>\n    <span data-part=\"meta\"><time datetime=\"{datetime}\">{time}</time></span>\n  </div>\n</li>",
+    "html_typing": "<li data-ui=\"chat-message\" data-variant=\"incoming\" data-state=\"typing\">\n  <div data-part=\"bubble\">\n    <span data-part=\"label\">{sender} is typing</span>\n    <span data-part=\"dots\" aria-hidden=\"true\"><span></span><span></span><span></span></span>\n  </div>\n</li>"
+  },
+  "safe_transforms": [
+    "change-direction",
+    "mark-as-continued",
+    "add-sender-name-and-avatar-for-group-chats",
+    "set-a-sender-accent",
+    "add-a-quote",
+    "add-an-image-with-or-without-caption",
+    "add-a-file-card",
+    "add-a-voice-note",
+    "add-reactions",
+    "change-delivery-status",
+    "mark-as-edited",
+    "retint-with-custom-properties"
+  ],
+  "unsafe_transforms": [
+    "remove-the-label-from-a-message-with-no-visible-sender",
+    "aria-hide-the-time",
+    "remove-the-status-label",
+    "show-the-sender-and-the-label-together",
+    "drop-alt-text-from-media",
+    "indent-the-text-inside-a-pre-wrap-text-part",
+    "use-a-div-reaction-instead-of-a-button"
+  ],
+  "composition": {
+    "contains": [
+      "avatar",
+      "icon"
+    ],
+    "used_in": [
+      "chat-thread",
+      "chat"
+    ]
+  },
+  "files": {
+    "html": "chat-message.html",
+    "css": "chat-message.css",
+    "manifest": "chat-message.manifest.json"
+  },
+  "tests": [
+    "manifest-validates-against-the-schema",
+    "reference-is-audit-clean",
+    "every-part-in-the-reference-is-a-declared-slot",
+    "tail-only-on-the-first-bubble-of-a-run",
+    "continued-messages-hide-the-avatar-but-keep-its-column",
+    "messages-without-a-visible-sender-carry-a-label",
+    "status-ticks-are-labelled-images",
+    "typing-dots-freeze-under-reduced-motion",
+    "reactions-are-pressed-toggle-buttons"
+  ]
+}

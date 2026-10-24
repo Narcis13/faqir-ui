@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-55 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+57 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -305,6 +305,117 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `Change data-variant to column, bar or line`, `Add, remove or reorder table rows (categories) and columns (series)`, `Edit a cell's text, or add a data-value with its number`, `Change data-table to auto, visible or hidden`, `Set --chart-accent to another colour token`
 - **Unsafe (never do):** `Remove the data table`, `Draw the chart without the table (an SVG alone has no accessible numbers and nothing to print without JavaScript)`, `Give the marks literal colours`
 - **Required ARIA:** `a <table data-part="data"> with th scope="col" headers and th scope="row" category labels`; `the drawn svg carries role="img" and an aria-label reading the caption, the kind and every value`
+
+## chat-message
+
+_kind: primitive · category: data-display_
+
+One message of a conversation, messaging-app style: incoming and outgoing bubbles with a tail on the first bubble of each run, sender name and avatar once per run in group chats, the time and sent/delivered/read ticks tucked into the bubble's corner, replies with a coloured quote bar, images with captions, file cards, voice notes, reaction pills and a typing indicator. Pure CSS — grouping is one boolean per message, and every colour is a token pair the contrast gate already holds.
+
+```html
+<li data-ui="chat-message" data-variant="incoming">
+  <div data-part="bubble">
+    <span data-part="label">{sender}</span>
+    <p data-part="text">{text}</p>
+    <span data-part="meta"><time datetime="{datetime}">{time}</time></span>
+  </div>
+</li>
+```
+
+**Anatomy**
+
+```text
+[data-ui='chat-message']  ·  <li> · content: slots
+├─ [data-part='avatar']  <span>  optional  — Wrapper for the sender's avatar primitive, group chats only. Put it on EVERY incoming message of a group chat so the column never collapses — a continued message keeps the space and hides the picture. Mark it aria-hidden: the sender is named in text.
+├─ [data-part='bubble']  <div>  required  — The bubble. Holds, in order, any of: sender or label, quote, media, file, voice, dots, text, meta. The first bubble of a run (no data-continued on the message) grows a tail from its top corner, drawn in the bubble's own fill and edge.
+├─ [data-part='sender']  <span>  optional  — Visible sender name on the first message of a run in a group chat, coloured by the accent — set data-accent on the message to give each person a stable hue. Read by screen readers; do not add a label beside it.
+├─ [data-part='label']  <span>  optional  — Screen-reader-only author line ('Maya Chen', 'You', 'Maya Chen is typing') for every message that shows no visible sender. Visually hidden by this stylesheet.
+├─ [data-part='quote']  <blockquote>  optional  — The message being replied to, inside the bubble, with an accent bar: a cite (who) over an excerpt (what). Give it its own data-accent to colour it as the quoted sender.
+├─ [data-part='cite']  <span>  optional  — Inside a quote: who wrote the quoted message.
+├─ [data-part='excerpt']  <span>  optional  — Inside a quote: the quoted text, clamped to two lines.
+├─ [data-part='media']  <figure>  optional  — An image (an <img> with width, height and alt). The bubble tightens its padding around it; a [data-part='text'] after it is the caption. With no caption the time sits on a scrim over the picture.
+├─ [data-part='text']  <p>  optional  — The message text. Whitespace is preserved (pre-wrap), so newlines typed with Shift+Enter survive — write the text with no indentation inside the element. A spacer after the last word reserves room for the time.
+├─ [data-part='meta']  <span>  optional  — Time and delivery status in the bubble's inline-end corner, on the last line of the text when it fits. Not hidden from assistive tech: the time is read once, here.
+├─ [data-part='status']  <span>  optional  — Delivery ticks: role='img' with an aria-label ('Sent', 'Delivered', 'Read', 'Sending', 'Not sent') around an icon primitive — check for sent, check-check for delivered and read, clock for pending, circle-alert for failed. data-status colours it: read takes the accent, failed the destructive colour.
+├─ [data-part='edited']  <span>  optional  — The word 'edited' before the time, set in italics.
+├─ [data-part='file']  <div>  optional  — A document card: an icon tile, the name over its details, and an optional action button (download, open).
+├─ [data-part='icon']  <span>  optional  — Inside a file card: the accent tile holding an icon primitive (file-text, image, music …). Decorative: aria-hidden.
+├─ [data-part='name']  <span>  optional  — Inside a file card: the file name, truncated with an ellipsis.
+├─ [data-part='info']  <span>  optional  — Inside a file card: pages, type and size, already formatted ('4 pages · PDF · 1.2 MB').
+├─ [data-part='action']  <button>  optional  — Inside a file card: the round download/open control — a real button or link with an aria-label naming the file.
+├─ [data-part='voice']  <div>  optional  — A voice note: play button, waveform and duration.
+├─ [data-part='play']  <button>  optional  — Play/pause button with an aria-label that includes the duration ('Play voice message, 0:42').
+├─ [data-part='waveform']  <span>  optional  — Decorative trace (aria-hidden), drawn by CSS masks. --chat-progress (a percentage) colours the played part in the accent.
+├─ [data-part='duration']  <span>  optional  — Length of the note, already formatted ('0:42').
+├─ [data-part='reactions']  <div>  optional  — Reaction pills hung over the bubble's lower edge. role='group' with aria-label='Reactions'.
+├─ [data-part='reaction']  <button>  optional  — One reaction: a real toggle button — aria-pressed says whether you reacted, and the aria-label says the emoji in words and the count ('Heart, 2 reactions, including yours').
+├─ [data-part='count']  <span>  optional  — Inside a reaction: the number beside the emoji.
+└─ [data-part='dots']  <span>  optional  — Typing indicator: three empty <span> children that rise in turn (still under reduced motion). aria-hidden; the label says who is typing. Use with data-state='typing'.
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| direction | `incoming`, `outgoing` | `incoming` | `data-variant` | root |
+
+- **Safe transforms:** `change-direction`, `mark-as-continued`, `add-sender-name-and-avatar-for-group-chats`, `set-a-sender-accent`, `add-a-quote`, `add-an-image-with-or-without-caption`, `add-a-file-card`, `add-a-voice-note`, `add-reactions`, `change-delivery-status`, `mark-as-edited`, `retint-with-custom-properties`
+- **Unsafe (never do):** `remove-the-label-from-a-message-with-no-visible-sender`, `aria-hide-the-time`, `remove-the-status-label`, `show-the-sender-and-the-label-together`, `drop-alt-text-from-media`, `indent-the-text-inside-a-pre-wrap-text-part`, `use-a-div-reaction-instead-of-a-button`
+- **A11y:** keys: Tab, Enter / Space on a reaction
+- **Required ARIA:** `aria-hidden="true" on avatar`; `role="img" on status`; `aria-label on status`
+
+## chat-thread
+
+_kind: primitive · category: data-display_
+
+A conversation log on a themed wallpaper: a role='log' scroll container that opens on the newest message and stays pinned to it as messages arrive — in CSS alone, with column-reverse — holding chat-message entries, sticky date pills, centred system lines and an unread divider. The wallpaper's doodle is drawn from the ink and the accent, so it is faint and on-hue in every theme and both schemes.
+
+```html
+<div data-ui="chat-thread" role="log" aria-label="{conversation_label}" tabindex="0" style="--chat-thread-height: {height}">
+  <ol data-part="messages">
+    <li data-part="day"><time datetime="{date}">{day_label}</time></li>
+    <li data-ui="chat-message" data-variant="incoming">
+      <div data-part="bubble">
+        <span data-part="label">{sender}</span>
+        <p data-part="text">{text}</p>
+        <span data-part="meta"><time datetime="{datetime}">{time}</time></span>
+      </div>
+    </li>
+    <li data-ui="chat-message" data-variant="outgoing">
+      <div data-part="bubble">
+        <span data-part="label">You</span>
+        <p data-part="text">{reply}</p>
+        <span data-part="meta">
+          <time datetime="{reply_datetime}">{reply_time}</time>
+          <span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span>
+        </span>
+      </div>
+    </li>
+  </ol>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='chat-thread']  ·  <div> · content: slots
+├─ [data-part='messages']  <ol>  required  — The ONE child of the root: an ordered list of entries (chat-message items, day, system and unread lines). Keep it the only child — the stick-to-bottom behaviour depends on it.
+├─ [data-part='day']  <li>  optional  — Date separator pill ('Today', 'Yesterday', 'Tue 21 Oct'), sticky to the top while its day is on screen. Wrap the words in a <time datetime>.
+├─ [data-part='system']  <li>  optional  — A centred, muted line that is not a message: someone joined, the group was renamed, the encryption note. May start with an aria-hidden icon primitive.
+└─ [data-part='unread']  <li>  optional  — Divider above the first unread message ('3 unread messages').
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| wallpaper | `doodle`, `plain` | `doodle` | `data-variant` | root |
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `add-messages`, `add-a-date-separator`, `add-a-system-line`, `add-an-unread-divider`, `render-messages-with-l-for`, `switch-to-the-plain-wallpaper`, `change-the-text-size`, `retint-the-wallpaper-with-custom-properties`
+- **Unsafe (never do):** `remove-role-log`, `remove-the-log-accessible-name`, `remove-tabindex-from-the-scroll-container`, `add-a-second-child-to-the-root`, `reverse-the-dom-order-of-messages`
+- **A11y:** role=log · keys: Tab, ArrowUp / ArrowDown, PageUp / PageDown, Home / End
+- **Required ARIA:** `role="log" on root`; `aria-label on root`; `tabindex="0" on root`
 
 ## checkbox
 

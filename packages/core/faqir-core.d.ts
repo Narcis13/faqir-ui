@@ -455,6 +455,18 @@ export interface CommandPaletteApi extends ControllerApi {
   registerCommand(command: Record<string, unknown>): void;
 }
 
+export interface ComposerApi extends ControllerApi {
+  /** Sends unless a `faqir:send` listener cancels; false when there is nothing to send. */
+  send(): boolean;
+  clear(): void;
+  focus(): void;
+  setValue(text: string): void;
+  /** Returns how many files were added (duplicates are dropped). */
+  addFiles(files: Iterable<File> | ArrayLike<File>): number;
+  removeFile(index: number): boolean;
+  getFiles(): File[];
+}
+
 export interface ContextMenuApi extends ControllerApi {
   open(x?: number, y?: number): void;
   close(options?: { restoreFocus?: boolean }): void;
@@ -525,6 +537,18 @@ export interface LightboxApi extends ControllerApi {
   zoomIn(): void;
   zoomOut(): void;
   resetZoom(): void;
+}
+
+export interface ListApi extends ControllerApi {
+  select(target: string | number | Element, extend?: boolean): boolean;
+  toggle(target: string | number | Element): boolean;
+  selectAll(): boolean;
+  clear(): boolean;
+  /** The selected items' values, in document order. */
+  getSelected(): string[];
+  /** Moves an item to an index within its section; returns the index it landed at. */
+  move(target: string | number | Element, index: number): number;
+  refresh(): void;
 }
 
 export interface MenubarApi extends ControllerApi {
@@ -727,6 +751,7 @@ export interface ControllerApis {
   carousel: CarouselApi;
   combobox: ComboboxApi;
   "command-palette": CommandPaletteApi;
+  composer: ComposerApi;
   "context-menu": ContextMenuApi;
   "date-picker": DatePickerApi;
   dialog: DialogApi;
@@ -737,6 +762,7 @@ export interface ControllerApis {
   "input-otp": InputOtpApi;
   knob: KnobApi;
   lightbox: LightboxApi;
+  list: ListApi;
   menubar: MenubarApi;
   pagination: PaginationApi;
   popover: PopoverApi;
@@ -1051,7 +1077,8 @@ declare namespace Faqir {
     PopoverApi, QrCodeApi, SelectCustomApi, SheetApi, SidebarApi, SliderApi,
     TableSort, TableState, TableApi, TabsApi, TagInputApi, ToastApi,
     ToggleGroupApi, TooltipApi, TreeViewApi, ImageCompareApi, KnobApi,
-    LightboxApi, VideoPlayerApi, ControllerApis, ProtocolState,
+    LightboxApi, VideoPlayerApi, ComposerApi, ListApi, ControllerApis,
+    ProtocolState,
     Inspection, DevtoolsScope, DevtoolsComponent, DevtoolsWarning, Devtools,
     ValidatorResult, ValidatorContext, FieldValidator, ValidateApi,
     RulesState, RulesApi, FaqirGlobal };
@@ -1102,7 +1129,8 @@ declare global {
       PaginationApi, PopoverApi, QrCodeApi, SelectCustomApi, SheetApi,
       SidebarApi, SliderApi, TableSort, TableState, TableApi, TabsApi,
       TagInputApi, ToastApi, ToggleGroupApi, TooltipApi, TreeViewApi,
-      ImageCompareApi, KnobApi, LightboxApi, VideoPlayerApi,
+      ImageCompareApi, KnobApi, LightboxApi, VideoPlayerApi, ComposerApi,
+      ListApi,
       ControllerApis, ProtocolState, Inspection, DevtoolsScope,
       DevtoolsComponent, DevtoolsWarning, Devtools, ValidatorResult,
       ValidatorContext, FieldValidator, ValidateApi, RulesState, FaqirGlobal };

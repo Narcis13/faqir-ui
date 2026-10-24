@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 111,
+  "count": 116,
   "components": [
     {
       "name": "aspect-ratio",
@@ -203,6 +203,57 @@
       ],
       "hash": "8b5bc7ca06c38020d9d9a37ba115ef54d20157cca27848a3fbf396dd1260dac3",
       "deps": []
+    },
+    {
+      "name": "chat-message",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "chat-message.css",
+          "sha256": "6f01eb562c773f3f188200f0c5db8d01fae567f3c57c715811e31a00cb19e173"
+        },
+        {
+          "path": "chat-message.html",
+          "sha256": "1ba4dd93072fd79ed881a803d18ef6cb0c291388565e479bde7a9cabb6a0b749"
+        },
+        {
+          "path": "chat-message.manifest.json",
+          "sha256": "8cfca958249e2ec23f690de0623a2d498b8090ca9fab7b51c361ebaeaed4a3e8"
+        }
+      ],
+      "hash": "07a6349ccc1df46fe38cb1336ef3b8f59191c98ee3bc7e57f47ab2c6a82a2c8c",
+      "deps": [
+        "avatar",
+        "icon"
+      ]
+    },
+    {
+      "name": "chat-thread",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "chat-thread.css",
+          "sha256": "b6a69977c4fb204ae8f80d66ac499fb226f5d7d315aaca42c324a9fb016ef151"
+        },
+        {
+          "path": "chat-thread.html",
+          "sha256": "ddf8a30447097635b8d29e069063da67989015c13c4b78c0ca7c1ce1bdfd03f0"
+        },
+        {
+          "path": "chat-thread.manifest.json",
+          "sha256": "6f939d3a9bc1a0033f5d2231473d9e050c5979cb6a9aaa3330e88b3b58b938ce"
+        }
+      ],
+      "hash": "70a16e632754b2ac1b776f13f948e3c054de861a00af29fbb6a6096f8a3368f2",
+      "deps": [
+        "chat-message",
+        "avatar",
+        "icon"
+      ]
     },
     {
       "name": "checkbox",
@@ -1425,6 +1476,35 @@
       ]
     },
     {
+      "name": "composer",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "composer.css",
+          "sha256": "4506fa72af484a809e913d9ba984c7d10f88fe1e56958bde390769387eed2887"
+        },
+        {
+          "path": "composer.html",
+          "sha256": "161fadb01fefe06d1add05ac7993b031ff54720ac5d50e2deefa35df4f912484"
+        },
+        {
+          "path": "composer.js",
+          "sha256": "1b3b342f2bb620c2ab73b1308596cf602d6595eaf0064a641bc95e55e245574c"
+        },
+        {
+          "path": "composer.manifest.json",
+          "sha256": "f1b36517c237befa95c630ff082877f1c7a5b1ef7ec38ff6fd3958e13ce8846f"
+        }
+      ],
+      "hash": "bd1465447798f6ad0d878288d7ae6e08d6b7b77f2754b3a06ded53e73a7a61fe",
+      "deps": [
+        "chip",
+        "icon"
+      ]
+    },
+    {
       "name": "context-menu",
       "kind": "recipe",
       "layer": "recipes",
@@ -1692,6 +1772,37 @@
       "hash": "9c2eaa2e384153a37c3123db7e0f1fc363bdece1bc5639188356712589fd39da",
       "deps": [
         "image"
+      ]
+    },
+    {
+      "name": "list",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "list.css",
+          "sha256": "0c5116cd2beeb359a06bf36ff528fdb44990211bcfea3bb17d0c4813adb084c6"
+        },
+        {
+          "path": "list.html",
+          "sha256": "b6d3da9237b696fb4c39fd4171d885f0eb540ea5d47313ec75afa8c5084b7fe8"
+        },
+        {
+          "path": "list.js",
+          "sha256": "9ed288211ee7bc68405b2e95f7d648b4a712eff7b6c0d94d782d63de5caa67e8"
+        },
+        {
+          "path": "list.manifest.json",
+          "sha256": "b818fd22c9b30bc4f58d018367b916453d97b924089c5e0d03199371557a6cc4"
+        }
+      ],
+      "hash": "98978ef4ca7aed05ba1245bc6f36c0c074ad06f1a4aa17ded269cc90ed8d4db9",
+      "deps": [
+        "avatar",
+        "badge",
+        "button",
+        "icon"
       ]
     },
     {
@@ -2216,6 +2327,35 @@
       "hash": "7ed1c7e373be3ed35ec7e1e51cb26402895935792d93e3ba853d977380ae7104",
       "deps": [
         "backdrop",
+        "icon"
+      ]
+    },
+    {
+      "name": "chat",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "chat.css",
+          "sha256": "78032b9e6c4e4bf2c1817eb53fcc822a9b97ce594f5e98bdf793cd74cb310294"
+        },
+        {
+          "path": "chat.html",
+          "sha256": "b34477373d4f77704d3c8cb50c673c59289d9a5357e88ccaaab95a3fdc5cbf04"
+        },
+        {
+          "path": "chat.manifest.json",
+          "sha256": "9adb4aa1ac3468909054ce8729964752df3ebcf85657c4b08a2b9fa4e54dff1a"
+        }
+      ],
+      "hash": "d7fb03c3b00ba4caee77225bac9b29623d05b9f5ebfff8fe31b726d04b39f847",
+      "deps": [
+        "list",
+        "chat-thread",
+        "chat-message",
+        "composer",
+        "avatar",
         "icon"
       ]
     },

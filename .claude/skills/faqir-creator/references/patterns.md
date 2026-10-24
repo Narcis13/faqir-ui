@@ -2,7 +2,7 @@
 
 # Faqir Patterns Reference
 
-23 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+24 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## article
 
@@ -182,6 +182,85 @@ _No variants._
 - **Unsafe (never do):** `replace-items-list-with-divs`, `replace-item-surface-with-a-nested-card`, `write-data-span-on-the-root`, `remove-aria-labelledby`, `remove-aria-hidden-from-media-or-icon-plate`, `promote-tile-titles-to-h2`, `add-custom-script`
 - **A11y:** keys: Tab
 - **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-hidden='true' on every media area and icon plate — they are decoration`; `tile titles are real headings one level below the section heading`
+
+## chat
+
+_kind: pattern · category: composite_
+
+A messaging app: a searchable, filterable conversation list (the list recipe in single-select listbox mode — avatar, name, last-message preview, time, unread badge) beside the open conversation (a header with avatar, name and presence; a chat-thread of chat-message bubbles with a typing indicator; the composer). Two panes from the md breakpoint, one at a time with a back button below it. Wired entirely by one l-data scope and bindings — selecting a conversation shows its thread and clears its unread count, sending appends an outgoing bubble through a keyed l-for and updates the preview — with no custom JavaScript.
+
+```html
+<div data-ui="chat" style="--chat-height: {height}" l-data="{ active: '{first_id}', unread: { {first_id}: 0 }, sent: { {first_id}: [] }, names: { {first_id}: '{first_name}' }, open(id) { this.active = id; this.unread[id] = 0; }, send(detail) { this.sent[this.active].push({ id: Date.now(), text: detail.text, time: new Date().toTimeString().slice(0, 5) }); } }">
+  <section data-part="sidebar" data-state="inactive" :data-state="active ? 'inactive' : 'active'" aria-labelledby="{id}-title">
+    <div data-part="sidebar-header"><h2 data-part="sidebar-title" id="{id}-title">Chats</h2></div>
+    <div data-ui="list" data-selection="single" @faqir:select="open($event.detail.value)">
+      <ul data-part="items" role="listbox" aria-label="Conversations" aria-multiselectable="false">
+        <li data-part="item" role="option" data-value="{first_id}" aria-selected="true" tabindex="0" :aria-selected="active === '{first_id}' ? 'true' : 'false'">
+          <span data-part="leading"><span data-ui="avatar"><span data-part="fallback">{initials}</span></span></span>
+          <span data-part="content"><span data-part="title">{first_name}</span><span data-part="subtitle">{preview}</span></span>
+          <span data-part="meta">{time}</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+  <section data-part="main" data-state="active" :data-state="active ? 'active' : 'inactive'" aria-label="Conversation">
+    <div data-part="conversation" :hidden="active !== '{first_id}'">
+      <div data-part="header">
+        <button type="button" data-part="back" aria-label="Back to chats" @click="active = null"><span data-ui="icon" data-icon="arrow-left" aria-hidden="true"></span></button>
+        <div data-part="peer-info"><h3 data-part="peer-name" id="{id}-{first_id}">{first_name}</h3><span data-part="presence">{presence}</span></div>
+      </div>
+      <div data-ui="chat-thread" role="log" aria-labelledby="{id}-{first_id}" tabindex="0">
+        <ol data-part="messages">
+          <li data-ui="chat-message" data-variant="incoming"><div data-part="bubble"><span data-part="label">{first_name}</span><p data-part="text">{preview}</p><span data-part="meta"><time>{time}</time></span></div></li>
+          <template l-for="(m, i) in sent.{first_id}" l-key="m.id">
+            <li data-ui="chat-message" data-variant="outgoing" :data-continued="i > 0"><div data-part="bubble"><span data-part="label">You</span><p data-part="text" l-text="m.text"></p><span data-part="meta"><time l-text="m.time"></time></span></div></li>
+          </template>
+        </ol>
+      </div>
+    </div>
+    <div data-part="empty" hidden :hidden="active !== null"><h3>{empty_title}</h3><p>{empty_text}</p></div>
+    <div data-ui="composer" data-state="empty" :hidden="!active" @faqir:send="send($event.detail)">
+      <div data-part="bar">
+        <div data-part="field"><textarea data-part="input" rows="1" aria-label="Message" placeholder="Message"></textarea></div>
+        <button type="button" data-part="send" aria-label="Send" disabled><span data-ui="icon" data-icon="send" aria-hidden="true"></span></button>
+      </div>
+    </div>
+  </section>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='chat']  ·  <div> · content: slots
+├─ [data-part='sidebar']  <section>  required  — The conversation column. aria-labelledby its title, and bind :data-state to active while nothing is open (active === null), inactive otherwise.
+├─ [data-part='sidebar-header']  <div>  required  — Title row of the conversation column.
+├─ [data-part='sidebar-title']  <h2>  required  — 'Chats'. Give it an id for the sidebar's aria-labelledby.
+├─ [data-part='sidebar-actions']  <div>  optional  — Icon buttons beside the title (new chat, menu), each a [data-part='action'].
+├─ [data-part='search']  <div>  optional  — Search well: an aria-hidden search icon and an <input type='search'> with an aria-label, bound with l-model. The well draws the focus ring.
+├─ [data-part='filters']  <div>  optional  — role='group' row of filter toggles (All / Unread / Groups).
+├─ [data-part='filter']  <button>  optional  — One filter: a toggle button whose aria-pressed is bound to the active filter.
+├─ [data-part='main']  <section>  required  — The open conversation's column: one [data-part='conversation'] per chat, the empty state, and the shared composer. Bind :data-state to active while a chat is open.
+├─ [data-part='conversation']  <div>  required  — One chat: its header and its chat-thread, shown with :hidden='active !== {id}'. Every authored conversation but the initially open one also carries a static hidden attribute as the pre-boot guard.
+├─ [data-part='header']  <div>  required  — The conversation header: back, peer avatar, peer-info and actions.
+├─ [data-part='back']  <button>  required  — Back to the list (@click='active = null'), with an aria-label. Shown only below the md breakpoint, where one pane is on screen at a time.
+├─ [data-part='peer']  <span>  optional  — aria-hidden wrapper for the chat's avatar (a person, or a group picture).
+├─ [data-part='peer-info']  <div>  required  — Stacks the chat's name over its presence line.
+├─ [data-part='peer-name']  <h3>  required  — The chat's name, as a heading; its id names the chat-thread (aria-labelledby).
+├─ [data-part='presence']  <span>  optional  — 'online', 'last seen today at 07:58', the members of a group, or — with data-state='typing' — 'typing…' in the accent.
+├─ [data-part='actions']  <div>  optional  — Header icon buttons (video, voice, search), each a [data-part='action'] with an aria-label.
+├─ [data-part='action']  <button>  optional  — A round icon button in the sidebar header or the conversation header. Always a real button with an aria-label.
+└─ [data-part='empty']  <div>  required  — What the main column shows from md up when nothing is open (:hidden='active !== null'): an illustration, a heading and a line of help.
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-a-conversation`, `remove-a-conversation`, `start-with-nothing-open`, `bind-the-list-and-threads-to-an-l-source-collection`, `drop-the-search-or-the-filters`, `change-the-header-actions`, `make-it-full-screen-with-100dvh`
+- **Unsafe (never do):** `replace-the-list-with-clickable-divs`, `put-buttons-inside-a-conversation-option`, `remove-the-back-button`, `drop-the-static-hidden-guard-from-an-authored-conversation`, `move-bindings-onto-the-l-data-root`, `add-custom-script`
+- **A11y:** keys: Tab, ArrowUp / ArrowDown / Home / End in the list, Enter / Space in the list, Printable characters in the list, Enter in the composer, Enter / Space on back
+- **Required ARIA:** `aria-labelledby on sidebar`; `aria-label on back`; `aria-label on action`; `role="group" on filters`; `aria-pressed on filter`
 
 ## crud-table
 

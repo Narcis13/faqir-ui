@@ -1,0 +1,159 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "chat-thread",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "A conversation log on a themed wallpaper: a role='log' scroll container that opens on the newest message and stays pinned to it as messages arrive — in CSS alone, with column-reverse — holding chat-message entries, sticky date pills, centred system lines and an unread divider. The wallpaper's doodle is drawn from the ink and the accent, so it is faint and on-hue in every theme and both schemes.",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='chat-thread']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "messages": {
+      "selector": "[data-part='messages']",
+      "required": true,
+      "tag_hint": "ol",
+      "description": "The ONE child of the root: an ordered list of entries (chat-message items, day, system and unread lines). Keep it the only child — the stick-to-bottom behaviour depends on it."
+    },
+    "day": {
+      "selector": "[data-part='day']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "Date separator pill ('Today', 'Yesterday', 'Tue 21 Oct'), sticky to the top while its day is on screen. Wrap the words in a <time datetime>."
+    },
+    "system": {
+      "selector": "[data-part='system']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "A centred, muted line that is not a message: someone joined, the group was renamed, the encryption note. May start with an aria-hidden icon primitive."
+    },
+    "unread": {
+      "selector": "[data-part='unread']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "Divider above the first unread message ('3 unread messages')."
+    }
+  },
+
+  "variants": {
+    "wallpaper": {
+      "values": ["doodle", "plain"],
+      "default": "doodle",
+      "attr": "data-variant",
+      "applied_to": "root",
+      "description": "doodle = the patterned wallpaper; plain = the wallpaper colour alone."
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root",
+      "description": "Message text scale: sm = text-xs, md = text-sm, lg = text-base. Inherited by every chat-message through --chat-text-size."
+    }
+  },
+
+  "states": {},
+
+  "props": {
+    "--chat-thread-height": {
+      "type": "string",
+      "default": "auto",
+      "description": "Block size of the log (custom property). Give the thread a height — or put it in a flex/grid cell that does — so it scrolls instead of growing."
+    },
+    "--chat-wallpaper": {
+      "type": "string",
+      "default": "light-dark(var(--color-bg-muted), var(--color-bg))",
+      "description": "Wallpaper colour under the doodle (custom property). Keep it the opposite side of the incoming bubble fill so bubbles stand off it."
+    },
+    "--chat-doodle-ink": {
+      "type": "string",
+      "default": "color-mix(in oklab, var(--color-fg) 7%, transparent)",
+      "description": "Ink of the neutral doodle marks (custom property)."
+    },
+    "--chat-doodle-accent": {
+      "type": "string",
+      "default": "color-mix(in oklab, var(--color-primary) 18%, transparent)",
+      "description": "Ink of the accent doodle marks (custom property)."
+    }
+  },
+
+  "a11y": {
+    "role": "log",
+    "required_attrs": [
+      "role=\"log\" on root",
+      "aria-label on root",
+      "tabindex=\"0\" on root"
+    ],
+    "keyboard": {
+      "Tab": "focus the log (it is a scroll container), then the controls inside its messages",
+      "ArrowUp / ArrowDown": "scroll the focused log line by line",
+      "PageUp / PageDown": "scroll the focused log a screen at a time",
+      "Home / End": "jump to the oldest / newest loaded message"
+    },
+    "notes": [
+      "role='log' is an implicit polite live region with aria-relevant='additions text': a message appended to [data-part='messages'] — or a typing indicator revealed — is announced without moving focus.",
+      "Name the log for its conversation ('Conversation with Maya Chen', 'Lisbon trip, group chat').",
+      "Date pills, system lines and the unread divider are plain list items, read in order with the messages.",
+      "The column-reverse layout changes visual scroll origin only; DOM order, reading order and focus order stay oldest-first."
+    ]
+  },
+
+  "tokens_used": [
+    "color-bg-muted", "color-bg", "color-fg", "color-primary", "color-border", "color-fg-muted",
+    "text-sm", "text-xs", "text-base", "space-2", "space-4", "space-3", "space-12", "space-0h",
+    "space-px", "space-1", "space-1h", "space-24", "space-40", "space-6", "font-body", "font-ui",
+    "focus-ring-width", "focus-ring-style", "focus-ring-color", "card-border-width", "radius-lg",
+    "radius-md", "corner-shape", "shadow-xs", "weight-medium", "weight-semibold", "leading-tight",
+    "leading-snug", "measure-narrow"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"chat-thread\" role=\"log\" aria-label=\"{conversation_label}\" tabindex=\"0\" style=\"--chat-thread-height: {height}\">\n  <ol data-part=\"messages\">\n    <li data-part=\"day\"><time datetime=\"{date}\">{day_label}</time></li>\n    <li data-ui=\"chat-message\" data-variant=\"incoming\">\n      <div data-part=\"bubble\">\n        <span data-part=\"label\">{sender}</span>\n        <p data-part=\"text\">{text}</p>\n        <span data-part=\"meta\"><time datetime=\"{datetime}\">{time}</time></span>\n      </div>\n    </li>\n    <li data-ui=\"chat-message\" data-variant=\"outgoing\">\n      <div data-part=\"bubble\">\n        <span data-part=\"label\">You</span>\n        <p data-part=\"text\">{reply}</p>\n        <span data-part=\"meta\">\n          <time datetime=\"{reply_datetime}\">{reply_time}</time>\n          <span data-part=\"status\" data-status=\"read\" role=\"img\" aria-label=\"Read\"><span data-ui=\"icon\" data-icon=\"check-check\"></span></span>\n        </span>\n      </div>\n    </li>\n  </ol>\n</div>",
+    "html_system": "<li data-part=\"system\">{text}</li>",
+    "html_unread": "<li data-part=\"unread\">{count} unread messages</li>"
+  },
+
+  "safe_transforms": [
+    "add-messages",
+    "add-a-date-separator",
+    "add-a-system-line",
+    "add-an-unread-divider",
+    "render-messages-with-l-for",
+    "switch-to-the-plain-wallpaper",
+    "change-the-text-size",
+    "retint-the-wallpaper-with-custom-properties"
+  ],
+
+  "unsafe_transforms": [
+    "remove-role-log",
+    "remove-the-log-accessible-name",
+    "remove-tabindex-from-the-scroll-container",
+    "add-a-second-child-to-the-root",
+    "reverse-the-dom-order-of-messages"
+  ],
+
+  "composition": {
+    "contains": ["chat-message", "avatar", "icon"],
+    "used_in": ["chat"]
+  },
+
+  "files": {
+    "html": "chat-thread.html",
+    "css": "chat-thread.css",
+    "manifest": "chat-thread.manifest.json"
+  },
+
+  "tests": [
+    "manifest-validates-against-the-schema",
+    "reference-is-audit-clean",
+    "root-is-a-named-focusable-log",
+    "messages-is-the-only-child",
+    "column-reverse-pins-the-newest-message",
+    "day-pills-are-sticky",
+    "size-sets-the-message-text-scale"
+  ]
+}

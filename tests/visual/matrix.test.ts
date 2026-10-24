@@ -254,12 +254,12 @@ describe("matrix membership policy (1.1A-13)", () => {
     expect(per("fixture-reduced")).toBe(patterns.length * 2);
   });
 
-  test("a non-matrix theme costs 46 captures, not 444", () => {
+  test("a non-matrix theme costs 48 captures, not 464", () => {
     const components = discoverComponents();
     const cases = buildMatrix(components, ["reduced"], () => ({ visual_matrix: false }));
-    expect(components.length).toBe(111);
-    expect(components.length * SCHEMES.length * DIRECTIONS.length).toBe(444);
-    expect(cases.length).toBe(46);
+    expect(components.length).toBe(116);
+    expect(components.length * SCHEMES.length * DIRECTIONS.length).toBe(464);
+    expect(cases.length).toBe(48);
   });
 
   test("the reduced sweep is patterns only, both schemes, ltr only", () => {

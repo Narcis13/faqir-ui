@@ -1,0 +1,554 @@
+<!-- @ui:component chat -->
+<!-- @ui:kind pattern -->
+<!-- @ui:slots sidebar sidebar-header sidebar-title sidebar-actions search filters filter main conversation header back peer peer-info peer-name presence actions action empty -->
+<!-- @ui:states active inactive -->
+<!-- @ui:composition list chat-thread chat-message composer avatar icon -->
+<!-- @ui:requires faqir-core.js -->
+<!--
+  A messaging app, wired declaratively
+  One l-data scope and bindings, no custom script.
+  · The conversation list is a single-select list recipe; its faqir:select calls open(id), which sets `active` and clears that chat's unread count. Each option's aria-selected is bound back to `active`, so the back button (active = null) deselects it too.
+  · Every conversation is authored once and shown with :hidden; the composer is shared, and its faqir:send calls send(), which appends to that conversation's `sent` array — rendered by a keyed l-for at the end of its thread — and updates the list's preview line and time.
+  · Search (l-model) and the All / Unread / Groups filters hide options with :hidden; the list controller skips hidden options for focus and typing.
+  · Each pane mirrors the selection into data-state active | inactive. Below the canon md floor (48rem) only the active pane shows, with a back button in the thread header; from md up both panes are on screen.
+-->
+<div data-ui="chat" style="--chat-height: 44rem" l-data="{
+  active: 'lisbon',
+  query: '',
+  filter: 'all',
+  groups: ['lisbon', 'design'],
+  names: { design: 'Design crit', maya: 'Maya Chen', lisbon: 'Lisbon trip', priya: 'Priya Shah', sam: 'Sam Rivera' },
+  unread: { design: 5, maya: 2, lisbon: 0, priya: 0, sam: 0 },
+  last: { design: 'Amara: the empty states are so much better', maya: 'Meet at the bakery at 8?', lisbon: 'Maya: Voice message (0:42)', priya: 'You are a star', sam: 'Thank you! Grabbing coffee with her Friday' },
+  time: { design: '11:05', maya: '09:24', lisbon: '08:31', priya: 'Yesterday', sam: 'Tue' },
+  sent: { design: [], maya: [], lisbon: [], priya: [], sam: [] },
+  show(id) {
+    const q = this.query.trim().toLowerCase();
+    return (this.filter !== 'unread' || this.unread[id] > 0)
+      && (this.filter !== 'groups' || this.groups.includes(id))
+      && (!q || this.names[id].toLowerCase().includes(q));
+  },
+  open(id) { this.active = id; this.unread[id] = 0; },
+  send(detail) {
+    const id = this.active;
+    const files = detail.files.map(function (f) {
+      return { name: f.name, size: f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB' };
+    });
+    this.sent[id].push({ id: Date.now() + this.sent[id].length, text: detail.text, files: files, time: new Date().toTimeString().slice(0, 5) });
+    this.last[id] = 'You: ' + (detail.text || files[0].name);
+    this.time[id] = new Date().toTimeString().slice(0, 5);
+  }
+}">
+
+  <!-- ── Conversation list ── -->
+  <section data-part="sidebar" data-state="inactive" :data-state="active ? 'inactive' : 'active'" aria-labelledby="chat-sidebar-title">
+    <div data-part="sidebar-header">
+      <h2 data-part="sidebar-title" id="chat-sidebar-title">Chats</h2>
+      <div data-part="sidebar-actions">
+        <button type="button" data-part="action" aria-label="New chat"><span data-ui="icon" data-icon="pencil" aria-hidden="true"></span></button>
+        <button type="button" data-part="action" aria-label="Chat settings"><span data-ui="icon" data-icon="ellipsis" aria-hidden="true"></span></button>
+      </div>
+    </div>
+
+    <div data-part="search">
+      <span data-ui="icon" data-icon="search" aria-hidden="true"></span>
+      <input type="search" l-model="query" aria-label="Search chats" placeholder="Search chats">
+    </div>
+
+    <div data-part="filters" role="group" aria-label="Show">
+      <button type="button" data-part="filter" aria-pressed="true" :aria-pressed="filter === 'all' ? 'true' : 'false'" @click="filter = 'all'">All</button>
+      <button type="button" data-part="filter" aria-pressed="false" :aria-pressed="filter === 'unread' ? 'true' : 'false'" @click="filter = 'unread'">Unread</button>
+      <button type="button" data-part="filter" aria-pressed="false" :aria-pressed="filter === 'groups' ? 'true' : 'false'" @click="filter = 'groups'">Groups</button>
+    </div>
+
+    <div data-ui="list" data-selection="single" @faqir:select="open($event.detail.value)">
+      <ul data-part="items" role="listbox" aria-label="Conversations" aria-multiselectable="false">
+        <li data-part="item" role="option" data-value="design" aria-selected="false" tabindex="-1" :aria-selected="active === 'design' ? 'true' : 'false'" :hidden="!show('design')">
+          <span data-part="leading"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2393c5fd'/%3E%3Cstop offset='1' stop-color='%234f46e5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Cpath d='M24 50l12-24 8 14 6-8 10 18z' fill='%23fff' fill-opacity='.92'/%3E%3Ccircle cx='54' cy='26' r='5' fill='%23fff' fill-opacity='.92'/%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>DC</span></span></span>
+          <span data-part="content">
+            <span data-part="title">Design crit</span>
+            <span data-part="subtitle" l-text="last.design">Amara: the empty states are so much better</span>
+          </span>
+          <span data-part="meta" l-text="time.design">11:05</span>
+          <span data-part="trailing"><span data-part="count" :hidden="!unread.design"><span aria-hidden="true" l-text="unread.design">5</span><span data-ui="visually-hidden"> unread</span></span></span>
+        </li>
+        <li data-part="item" role="option" data-value="maya" aria-selected="false" tabindex="-1" :aria-selected="active === 'maya' ? 'true' : 'false'" :hidden="!show('maya')">
+          <span data-part="leading"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+          <span data-part="content">
+            <span data-part="title">Maya Chen</span>
+            <span data-part="subtitle" l-text="last.maya">Meet at the bakery at 8?</span>
+          </span>
+          <span data-part="meta" l-text="time.maya">09:24</span>
+          <span data-part="trailing"><span data-part="count" :hidden="!unread.maya"><span aria-hidden="true" l-text="unread.maya">2</span><span data-ui="visually-hidden"> unread</span></span></span>
+        </li>
+        <li data-part="item" role="option" data-value="lisbon" aria-selected="true" tabindex="0" :aria-selected="active === 'lisbon' ? 'true' : 'false'" :hidden="!show('lisbon')">
+          <span data-part="leading"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fdba74'/%3E%3Cstop offset='1' stop-color='%23db2777'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ccircle cx='31' cy='30' r='9' fill='%23fff'/%3E%3Cpath d='M13 60c3-12 10-18 18-18s15 6 18 18' fill='%23fff'/%3E%3Ccircle cx='53' cy='32' r='8' fill='%23fff' fill-opacity='.75'/%3E%3Cpath d='M45 46c3-2 5-2 8-2 7 0 13 5 15 16H50c0-5-2-10-5-14z' fill='%23fff' fill-opacity='.75'/%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>LT</span></span></span>
+          <span data-part="content">
+            <span data-part="title">Lisbon trip</span>
+            <span data-part="subtitle" l-text="last.lisbon">Maya: Voice message (0:42)</span>
+          </span>
+          <span data-part="meta" l-text="time.lisbon">08:31</span>
+          <span data-part="trailing"><span data-part="count" hidden :hidden="!unread.lisbon"><span aria-hidden="true" l-text="unread.lisbon">0</span><span data-ui="visually-hidden"> unread</span></span></span>
+        </li>
+        <li data-part="item" role="option" data-value="priya" aria-selected="false" tabindex="-1" :aria-selected="active === 'priya' ? 'true' : 'false'" :hidden="!show('priya')">
+          <span data-part="leading"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c4b5fd'/%3E%3Cstop offset='1' stop-color='%236d28d9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EPS%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>PS</span></span></span>
+          <span data-part="content">
+            <span data-part="title">Priya Shah</span>
+            <span data-part="subtitle" l-text="last.priya">You are a star</span>
+          </span>
+          <span data-part="meta" l-text="time.priya">Yesterday</span>
+        </li>
+        <li data-part="item" role="option" data-value="sam" aria-selected="false" tabindex="-1" :aria-selected="active === 'sam' ? 'true' : 'false'" :hidden="!show('sam')">
+          <span data-part="leading"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fcd34d'/%3E%3Cstop offset='1' stop-color='%23c2410c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3ESR%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>SR</span></span></span>
+          <span data-part="content">
+            <span data-part="title">Sam Rivera</span>
+            <span data-part="subtitle" l-text="last.sam">Thank you! Grabbing coffee with her Friday</span>
+          </span>
+          <span data-part="meta" l-text="time.sam">Tue</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── The open conversation ── -->
+  <section data-part="main" data-state="active" :data-state="active ? 'active' : 'inactive'" aria-label="Conversation">
+
+    <!-- Design crit -->
+    <div data-part="conversation" hidden :hidden="active !== 'design'">
+      <div data-part="header">
+        <button type="button" data-part="back" aria-label="Back to chats" @click="active = null"><span data-ui="icon" data-icon="arrow-left" aria-hidden="true"></span></button>
+        <span data-part="peer" aria-hidden="true"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2393c5fd'/%3E%3Cstop offset='1' stop-color='%234f46e5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Cpath d='M24 50l12-24 8 14 6-8 10 18z' fill='%23fff' fill-opacity='.92'/%3E%3Ccircle cx='54' cy='26' r='5' fill='%23fff' fill-opacity='.92'/%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>DC</span></span></span>
+        <div data-part="peer-info">
+          <h3 data-part="peer-name" id="chat-design-title">Design crit</h3>
+          <span data-part="presence">Léa, Noor, Amara, You</span>
+        </div>
+        <div data-part="actions">
+          <button type="button" data-part="action" aria-label="Video call"><span data-ui="icon" data-icon="video" aria-hidden="true"></span></button>
+          <button type="button" data-part="action" aria-label="Search in conversation"><span data-ui="icon" data-icon="search" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <div data-ui="chat-thread" role="log" aria-labelledby="chat-design-title" tabindex="0">
+        <ol data-part="messages">
+          <li data-part="day"><time datetime="2026-10-24">Today</time></li>
+          <li data-part="unread">5 unread messages</li>
+          <li data-part="system">Léa pinned a message</li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="indigo">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23a5b4fc'/%3E%3Cstop offset='1' stop-color='%233730a3'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3ELT%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>LT</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Léa Thomas</span>
+              <p data-part="text">Crit moved to 15:00 — same room, bring the laptop with the prototype on it.</p>
+              <span data-part="meta"><time>10:40</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="pink">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235eead4'/%3E%3Cstop offset='1' stop-color='%230f766e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3ENB%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>NB</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Noor Bakr</span>
+              <p data-part="text">Uploading the new onboarding flows now</p>
+              <span data-part="meta"><time>10:52</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="pink" data-continued>
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235eead4'/%3E%3Cstop offset='1' stop-color='%230f766e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3ENB%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>NB</span></span></span>
+            <div data-part="bubble">
+              <span data-part="label">Noor Bakr</span>
+              <div data-part="file">
+                <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="layers"></span></span>
+                <span data-part="name">onboarding-v4.fig</span><span data-part="info">Figma file · 18 MB</span>
+                <button type="button" data-part="action" aria-label="Download onboarding-v4.fig"><span data-ui="icon" data-icon="download" aria-hidden="true"></span></button>
+              </div>
+              <span data-part="meta"><time>10:53</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="orange">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236ee7b7'/%3E%3Cstop offset='1' stop-color='%23047857'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EAK%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>AK</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Amara Kone</span>
+              <p data-part="text">The empty states are so much better 🔥</p>
+              <span data-part="meta"><time>11:05</time></span>
+            </div>
+            <div data-part="reactions" role="group" aria-label="Reactions">
+              <button type="button" data-part="reaction" aria-pressed="false" aria-label="Clapping hands, 2 reactions">👏 <span data-part="count">2</span></button>
+            </div>
+          </li>
+          <template l-for="(m, i) in sent.design" l-key="m.id">
+            <li data-ui="chat-message" data-variant="outgoing" :data-continued="i > 0">
+              <div data-part="bubble">
+                <span data-part="label">You</span>
+                <template l-for="f in m.files">
+                  <div data-part="file">
+                    <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file"></span></span>
+                    <span data-part="name" l-text="f.name"></span><span data-part="info" l-text="f.size"></span>
+                  </div>
+                </template>
+                <template l-if="m.text"><p data-part="text" l-text="m.text"></p></template>
+                <span data-part="meta"><time l-text="m.time"></time><span data-part="status" data-status="sent" role="img" aria-label="Sent"><span data-ui="icon" data-icon="check"></span></span></span>
+              </div>
+            </li>
+          </template>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Maya Chen -->
+    <div data-part="conversation" hidden :hidden="active !== 'maya'">
+      <div data-part="header">
+        <button type="button" data-part="back" aria-label="Back to chats" @click="active = null"><span data-ui="icon" data-icon="arrow-left" aria-hidden="true"></span></button>
+        <span data-part="peer" aria-hidden="true"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+        <div data-part="peer-info">
+          <h3 data-part="peer-name" id="chat-maya-title">Maya Chen</h3>
+          <span data-part="presence" data-state="typing">typing…</span>
+        </div>
+        <div data-part="actions">
+          <button type="button" data-part="action" aria-label="Video call"><span data-ui="icon" data-icon="video" aria-hidden="true"></span></button>
+          <button type="button" data-part="action" aria-label="Voice call"><span data-ui="icon" data-icon="phone" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <div data-ui="chat-thread" role="log" aria-labelledby="chat-maya-title" tabindex="0">
+        <ol data-part="messages">
+          <li data-part="day"><time datetime="2026-10-24">Today</time></li>
+          <li data-ui="chat-message" data-variant="incoming">
+            <div data-part="bubble">
+              <span data-part="label">Maya Chen</span>
+              <p data-part="text">Morning! Did the parcel from the bike shop arrive? 🚲</p>
+              <span data-part="meta"><time>09:12</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="outgoing">
+            <div data-part="bubble">
+              <span data-part="label">You</span>
+              <p data-part="text">It did — new chain and the bell you picked 🔔</p>
+              <span data-part="meta"><time>09:14</time><span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="outgoing" data-continued>
+            <div data-part="bubble">
+              <span data-part="label">You</span>
+              <figure data-part="media">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23d9e8e3'/%3E%3Crect y='210' width='400' height='90' fill='%23b8cfc7'/%3E%3Cg fill='none' stroke='%23264653' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='110' cy='196' r='58'/%3E%3Ccircle cx='292' cy='196' r='58'/%3E%3Cpath d='M110 196l58-86h96l28 86M168 110l46 86h78M150 92h40M264 110l-8-26h28'/%3E%3C/g%3E%3Ccircle cx='214' cy='196' r='10' fill='%23e76f51'/%3E%3C/svg%3E" width="400" height="300" alt="A teal bicycle against a pale green wall">
+              </figure>
+              <span data-part="meta"><time>09:14</time><span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span></span>
+            </div>
+          </li>
+          <li data-part="unread">2 unread messages</li>
+          <li data-ui="chat-message" data-variant="incoming">
+            <div data-part="bubble">
+              <span data-part="label">Maya Chen</span>
+              <blockquote data-part="quote" data-accent="indigo">
+                <span data-part="cite">You</span>
+                <span data-part="excerpt">It did — new chain and the bell you picked 🔔</span>
+              </blockquote>
+              <p data-part="text">Looks brand new. Sunday’s route is up — 42 km, mostly flat.</p>
+              <span data-part="meta"><span data-part="edited">edited</span><time>09:20</time></span>
+            </div>
+            <div data-part="reactions" role="group" aria-label="Reactions">
+              <button type="button" data-part="reaction" aria-pressed="true" aria-label="Thumbs up, 1 reaction, yours">👍 <span data-part="count">1</span></button>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-continued>
+            <div data-part="bubble">
+              <span data-part="label">Maya Chen</span>
+              <p data-part="text">Meet at the bakery at 8? ☕</p>
+              <span data-part="meta"><time>09:24</time></span>
+            </div>
+          </li>
+          <template l-for="(m, i) in sent.maya" l-key="m.id">
+            <li data-ui="chat-message" data-variant="outgoing" :data-continued="i > 0">
+              <div data-part="bubble">
+                <span data-part="label">You</span>
+                <template l-for="f in m.files">
+                  <div data-part="file">
+                    <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file"></span></span>
+                    <span data-part="name" l-text="f.name"></span><span data-part="info" l-text="f.size"></span>
+                  </div>
+                </template>
+                <template l-if="m.text"><p data-part="text" l-text="m.text"></p></template>
+                <span data-part="meta"><time l-text="m.time"></time><span data-part="status" data-status="sent" role="img" aria-label="Sent"><span data-ui="icon" data-icon="check"></span></span></span>
+              </div>
+            </li>
+          </template>
+          <li data-ui="chat-message" data-variant="incoming" data-state="typing">
+            <div data-part="bubble">
+              <span data-part="label">Maya Chen is typing</span>
+              <span data-part="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Lisbon trip -->
+    <div data-part="conversation" :hidden="active !== 'lisbon'">
+      <div data-part="header">
+        <button type="button" data-part="back" aria-label="Back to chats" @click="active = null"><span data-ui="icon" data-icon="arrow-left" aria-hidden="true"></span></button>
+        <span data-part="peer" aria-hidden="true"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fdba74'/%3E%3Cstop offset='1' stop-color='%23db2777'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ccircle cx='31' cy='30' r='9' fill='%23fff'/%3E%3Cpath d='M13 60c3-12 10-18 18-18s15 6 18 18' fill='%23fff'/%3E%3Ccircle cx='53' cy='32' r='8' fill='%23fff' fill-opacity='.75'/%3E%3Cpath d='M45 46c3-2 5-2 8-2 7 0 13 5 15 16H50c0-5-2-10-5-14z' fill='%23fff' fill-opacity='.75'/%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>LT</span></span></span>
+        <div data-part="peer-info">
+          <h3 data-part="peer-name" id="chat-lisbon-title">Lisbon trip</h3>
+          <span data-part="presence">Maya, Jonah, Priya, You</span>
+        </div>
+        <div data-part="actions">
+          <button type="button" data-part="action" aria-label="Video call"><span data-ui="icon" data-icon="video" aria-hidden="true"></span></button>
+          <button type="button" data-part="action" aria-label="Voice call"><span data-ui="icon" data-icon="phone" aria-hidden="true"></span></button>
+          <button type="button" data-part="action" aria-label="Search in conversation"><span data-ui="icon" data-icon="search" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <div data-ui="chat-thread" role="log" aria-labelledby="chat-lisbon-title" tabindex="0">
+        <ol data-part="messages">
+          <li data-part="system"><span data-ui="icon" data-icon="lock" aria-hidden="true"></span> Messages are end-to-end encrypted. No one outside this chat can read them.</li>
+          <li data-part="day"><time datetime="2026-10-23">Yesterday</time></li>
+          <li data-part="system">Maya created the group “Lisbon trip” and added you</li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="pink">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Maya Chen</span>
+              <p data-part="text">Flights are booked ✈️ We land Friday at 10:40.</p>
+              <span data-part="meta"><time>18:02</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="pink" data-continued>
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+            <div data-part="bubble">
+              <span data-part="label">Maya Chen</span>
+              <p data-part="text">Who is up for pastéis de nata at Manteigaria before we even drop the bags?</p>
+              <span data-part="meta"><time>18:03</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="blue">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237dd3fc'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EJL%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>JL</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Jonah Lee</span>
+              <blockquote data-part="quote" data-accent="pink">
+                <span data-part="cite">Maya Chen</span>
+                <span data-part="excerpt">Who is up for pastéis de nata at Manteigaria before we even drop the bags?</span>
+              </blockquote>
+              <p data-part="text">Obviously. Then the 28 tram up to Graça 🚋</p>
+              <span data-part="meta"><time>18:05</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="outgoing">
+            <div data-part="bubble">
+              <span data-part="label">You</span>
+              <p data-part="text">Count me in! 🙋</p>
+              <span data-part="meta"><time>18:06</time><span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span></span>
+            </div>
+          </li>
+          <li data-part="day"><time datetime="2026-10-24">Today</time></li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="violet">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c4b5fd'/%3E%3Cstop offset='1' stop-color='%236d28d9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EPS%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>PS</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Priya Shah</span>
+              <figure data-part="media">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='320' viewBox='0 0 480 320'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f7a08b'/%3E%3Cstop offset='.6' stop-color='%23fcc79f'/%3E%3Cstop offset='1' stop-color='%23ffe0b0'/%3E%3C/linearGradient%3E%3ClinearGradient id='w' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%236a93bd'/%3E%3Cstop offset='1' stop-color='%23253f63'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='480' height='320' fill='url(%23s)'/%3E%3Ccircle cx='318' cy='196' r='46' fill='%23fff3dc'/%3E%3Cpath d='M0 214 60 168l44 22 64-58 54 52 40-30 70 60H0Z' fill='%23523a4f' fill-opacity='.7'/%3E%3Cpath d='M300 214l40-46 26 18 50-40 64 68Z' fill='%23523a4f' fill-opacity='.45'/%3E%3Crect y='212' width='480' height='108' fill='url(%23w)'/%3E%3Cpath d='M268 232h100M240 252h150M290 272h70M30 244h120M120 290h200' stroke='%23fff' stroke-opacity='.35' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" width="480" height="320" alt="Sunset over the river from a hillside viewpoint, rooftops in silhouette">
+              </figure>
+              <p data-part="text">The view from the Miradouro last time 😍 Golden hour, all of us, Saturday.</p>
+              <span data-part="meta"><time>08:12</time></span>
+            </div>
+            <div data-part="reactions" role="group" aria-label="Reactions">
+              <button type="button" data-part="reaction" aria-pressed="true" aria-label="Heart eyes, 3 reactions, including yours">😍 <span data-part="count">3</span></button>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="blue">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237dd3fc'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EJL%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>JL</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Jonah Lee</span>
+              <div data-part="file">
+                <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file-text"></span></span>
+                <span data-part="name">Lisbon-itinerary.pdf</span><span data-part="info">4 pages · PDF · 1.2 MB</span>
+                <button type="button" data-part="action" aria-label="Download Lisbon-itinerary.pdf"><span data-ui="icon" data-icon="download" aria-hidden="true"></span></button>
+              </div>
+              <p data-part="text">Every place we mentioned, in one file 😎</p>
+              <span data-part="meta"><time>08:20</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="outgoing">
+            <div data-part="bubble">
+              <span data-part="label">You</span>
+              <blockquote data-part="quote" data-accent="blue">
+                <span data-part="cite">Jonah Lee</span>
+                <span data-part="excerpt">Lisbon-itinerary.pdf</span>
+              </blockquote>
+              <p data-part="text">Perfect — printing two copies 🧳</p>
+              <span data-part="meta"><time>08:24</time><span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span></span>
+            </div>
+            <div data-part="reactions" role="group" aria-label="Reactions">
+              <button type="button" data-part="reaction" aria-pressed="false" aria-label="Thumbs up, 2 reactions">👍 <span data-part="count">2</span></button>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="pink">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f9a8d4'/%3E%3Cstop offset='1' stop-color='%23be185d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EMC%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>MC</span></span></span>
+            <div data-part="bubble">
+              <span data-part="sender">Maya Chen</span>
+              <div data-part="voice">
+                <button type="button" data-part="play" aria-label="Play voice message, 0:42"><span data-ui="icon" data-icon="play" aria-hidden="true"></span></button>
+                <span data-part="waveform" aria-hidden="true" style="--chat-progress: 38%"></span>
+                <span data-part="duration">0:42</span>
+              </div>
+              <span data-part="meta"><time>08:31</time></span>
+            </div>
+          </li>
+          <template l-for="(m, i) in sent.lisbon" l-key="m.id">
+            <li data-ui="chat-message" data-variant="outgoing" :data-continued="i > 0">
+              <div data-part="bubble">
+                <span data-part="label">You</span>
+                <template l-for="f in m.files">
+                  <div data-part="file">
+                    <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file"></span></span>
+                    <span data-part="name" l-text="f.name"></span><span data-part="info" l-text="f.size"></span>
+                  </div>
+                </template>
+                <template l-if="m.text"><p data-part="text" l-text="m.text"></p></template>
+                <span data-part="meta"><time l-text="m.time"></time><span data-part="status" data-status="sent" role="img" aria-label="Sent"><span data-ui="icon" data-icon="check"></span></span></span>
+              </div>
+            </li>
+          </template>
+          <li data-ui="chat-message" data-variant="incoming" data-accent="blue" data-state="typing">
+            <span data-part="avatar" aria-hidden="true"><span data-ui="avatar" data-size="sm"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237dd3fc'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EJL%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>JL</span></span></span>
+            <div data-part="bubble">
+              <span data-part="label">Jonah Lee is typing</span>
+              <span data-part="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Priya Shah -->
+    <div data-part="conversation" hidden :hidden="active !== 'priya'">
+      <div data-part="header">
+        <button type="button" data-part="back" aria-label="Back to chats" @click="active = null"><span data-ui="icon" data-icon="arrow-left" aria-hidden="true"></span></button>
+        <span data-part="peer" aria-hidden="true"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23c4b5fd'/%3E%3Cstop offset='1' stop-color='%236d28d9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3EPS%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>PS</span></span></span>
+        <div data-part="peer-info">
+          <h3 data-part="peer-name" id="chat-priya-title">Priya Shah</h3>
+          <span data-part="presence">last seen today at 07:58</span>
+        </div>
+        <div data-part="actions">
+          <button type="button" data-part="action" aria-label="Video call"><span data-ui="icon" data-icon="video" aria-hidden="true"></span></button>
+          <button type="button" data-part="action" aria-label="Voice call"><span data-ui="icon" data-icon="phone" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <div data-ui="chat-thread" role="log" aria-labelledby="chat-priya-title" tabindex="0">
+        <ol data-part="messages">
+          <li data-part="day"><time datetime="2026-10-23">Yesterday</time></li>
+          <li data-ui="chat-message" data-variant="incoming">
+            <div data-part="bubble">
+              <span data-part="label">Priya Shah</span>
+              <p data-part="text">Could you send me the interview notes from Tuesday?</p>
+              <span data-part="meta"><time>16:10</time></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="outgoing">
+            <div data-part="bubble">
+              <span data-part="label">You</span>
+              <div data-part="file">
+                <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file-text"></span></span>
+                <span data-part="name">interview-notes.docx</span><span data-part="info">Document · 86 KB</span>
+              </div>
+              <span data-part="meta"><time>16:12</time><span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming">
+            <div data-part="bubble">
+              <span data-part="label">Priya Shah</span>
+              <p data-part="text">You are a star ⭐</p>
+              <span data-part="meta"><time>16:15</time></span>
+            </div>
+          </li>
+          <template l-for="(m, i) in sent.priya" l-key="m.id">
+            <li data-ui="chat-message" data-variant="outgoing" :data-continued="i > 0">
+              <div data-part="bubble">
+                <span data-part="label">You</span>
+                <template l-for="f in m.files">
+                  <div data-part="file">
+                    <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file"></span></span>
+                    <span data-part="name" l-text="f.name"></span><span data-part="info" l-text="f.size"></span>
+                  </div>
+                </template>
+                <template l-if="m.text"><p data-part="text" l-text="m.text"></p></template>
+                <span data-part="meta"><time l-text="m.time"></time><span data-part="status" data-status="sent" role="img" aria-label="Sent"><span data-ui="icon" data-icon="check"></span></span></span>
+              </div>
+            </li>
+          </template>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Sam Rivera -->
+    <div data-part="conversation" hidden :hidden="active !== 'sam'">
+      <div data-part="header">
+        <button type="button" data-part="back" aria-label="Back to chats" @click="active = null"><span data-ui="icon" data-icon="arrow-left" aria-hidden="true"></span></button>
+        <span data-part="peer" aria-hidden="true"><span data-ui="avatar"><img data-part="image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fcd34d'/%3E%3Cstop offset='1' stop-color='%23c2410c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' fill='url(%23g)'/%3E%3Ctext x='40' y='51' text-anchor='middle' font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif' font-size='29' font-weight='600' fill='%23fff'%3ESR%3C/text%3E%3C/svg%3E" alt=""><span data-part="fallback" hidden>SR</span></span></span>
+        <div data-part="peer-info">
+          <h3 data-part="peer-name" id="chat-sam-title">Sam Rivera</h3>
+          <span data-part="presence">online</span>
+        </div>
+        <div data-part="actions">
+          <button type="button" data-part="action" aria-label="Video call"><span data-ui="icon" data-icon="video" aria-hidden="true"></span></button>
+          <button type="button" data-part="action" aria-label="Voice call"><span data-ui="icon" data-icon="phone" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <div data-ui="chat-thread" role="log" aria-labelledby="chat-sam-title" tabindex="0">
+        <ol data-part="messages">
+          <li data-part="day"><time datetime="2026-10-21">Tue 21 Oct</time></li>
+          <li data-ui="chat-message" data-variant="outgoing">
+            <div data-part="bubble">
+              <span data-part="label">You</span>
+              <p data-part="text">Introduced you to Dara — she runs the fab lab on Rua das Flores.</p>
+              <span data-part="meta"><time>13:02</time><span data-part="status" data-status="read" role="img" aria-label="Read"><span data-ui="icon" data-icon="check-check"></span></span></span>
+            </div>
+          </li>
+          <li data-ui="chat-message" data-variant="incoming">
+            <div data-part="bubble">
+              <span data-part="label">Sam Rivera</span>
+              <p data-part="text">Thank you! Grabbing coffee with her Friday ☕</p>
+              <span data-part="meta"><time>13:40</time></span>
+            </div>
+          </li>
+          <template l-for="(m, i) in sent.sam" l-key="m.id">
+            <li data-ui="chat-message" data-variant="outgoing" :data-continued="i > 0">
+              <div data-part="bubble">
+                <span data-part="label">You</span>
+                <template l-for="f in m.files">
+                  <div data-part="file">
+                    <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="file"></span></span>
+                    <span data-part="name" l-text="f.name"></span><span data-part="info" l-text="f.size"></span>
+                  </div>
+                </template>
+                <template l-if="m.text"><p data-part="text" l-text="m.text"></p></template>
+                <span data-part="meta"><time l-text="m.time"></time><span data-part="status" data-status="sent" role="img" aria-label="Sent"><span data-ui="icon" data-icon="check"></span></span></span>
+              </div>
+            </li>
+          </template>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Nothing open (from md up, after Back) -->
+    <div data-part="empty" hidden :hidden="active !== null">
+      <svg width="96" height="96" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+        <rect x="8" y="14" width="56" height="40" rx="12" fill="currentColor" opacity=".14"/>
+        <path d="M18 54l-6 12 18-12" fill="currentColor" opacity=".14"/>
+        <rect x="32" y="40" width="56" height="36" rx="12" fill="currentColor" opacity=".28"/>
+        <path d="M78 76l6 10-16-10" fill="currentColor" opacity=".28"/>
+        <circle cx="48" cy="58" r="3.5" fill="currentColor"/><circle cx="60" cy="58" r="3.5" fill="currentColor"/><circle cx="72" cy="58" r="3.5" fill="currentColor"/>
+      </svg>
+      <h3>Pick a conversation</h3>
+      <p>Choose a chat from the list, or start a new one with the pencil.</p>
+      <small><span data-ui="icon" data-icon="lock" aria-hidden="true"></span> End-to-end encrypted</small>
+    </div>
+
+    <div data-ui="composer" data-state="empty" :hidden="!active" @faqir:send="send($event.detail)">
+      <div data-part="attachments" role="list" aria-label="Attachments" aria-live="polite" hidden></div>
+      <div data-part="bar">
+        <div data-part="field">
+          <button type="button" data-part="action" aria-label="Emoji">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+          </button>
+          <textarea data-part="input" rows="1" aria-label="Message Lisbon trip" :aria-label="'Message ' + (names[active] || '')" placeholder="Message"></textarea>
+          <button type="button" data-part="attach" aria-label="Attach files"><span data-ui="icon" data-icon="paperclip" aria-hidden="true"></span></button>
+          <input type="file" data-part="file" multiple hidden aria-label="Files to attach">
+        </div>
+        <button type="button" data-part="send" aria-label="Send" disabled><span data-ui="icon" data-icon="send" aria-hidden="true"></span></button>
+      </div>
+    </div>
+  </section>
+</div>

@@ -37,6 +37,9 @@ export const components = {
   "command-palette": [
    "command-palette.js"
   ],
+  "composer": [
+   "composer.js"
+  ],
   "context-menu": [
    "context-menu.js"
   ],
@@ -67,6 +70,9 @@ export const components = {
   ],
   "lightbox": [
    "lightbox.js"
+  ],
+  "list": [
+   "list.js"
   ],
   "menubar": [
    "menubar.js"
@@ -2348,6 +2354,446 @@ export const components = {
     ]
    }
   },
+  "chat-message": {
+   "defaultSlot": false,
+   "slots": {
+    "bubble": {
+     "required": false
+    },
+    "label": {
+     "required": false
+    },
+    "text": {
+     "required": false
+    },
+    "meta": {
+     "required": false
+    }
+   },
+   "variants": {
+    "variant": {
+     "attr": "data-variant",
+     "values": [
+      "incoming",
+      "outgoing"
+     ],
+     "default": "incoming"
+    }
+   },
+   "states": {
+    "typing": {
+     "attr": "data-state",
+     "value": "typing",
+     "kind": "value"
+    },
+    "continued": {
+     "attr": "data-continued",
+     "value": null,
+     "kind": "presence"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "li",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "chat-message"
+      ]
+     ],
+     [
+      "data-variant",
+      [
+       "incoming"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "bubble"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "span",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "label"
+          ]
+         ]
+        ],
+        "children": [],
+        "slot": "label",
+        "sample": true
+       },
+       {
+        "tag": "p",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "text"
+          ]
+         ]
+        ],
+        "children": [],
+        "slot": "text",
+        "sample": true
+       },
+       {
+        "tag": "span",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "meta"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "time",
+          "attrs": [],
+          "children": [],
+          "sample": true
+         }
+        ],
+        "slot": "meta"
+       }
+      ],
+      "slot": "bubble"
+     }
+    ],
+    "dyn": [
+     [
+      "variant",
+      "data-variant"
+     ]
+    ]
+   }
+  },
+  "chat-thread": {
+   "defaultSlot": false,
+   "slots": {
+    "messages": {
+     "required": false
+    },
+    "day": {
+     "required": false
+    }
+   },
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    },
+    "variant": {
+     "attr": "data-variant",
+     "values": [
+      "doodle",
+      "plain"
+     ],
+     "default": "doodle"
+    }
+   },
+   "states": {},
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "chat-thread"
+      ]
+     ],
+     [
+      "role",
+      [
+       "log"
+      ]
+     ],
+     [
+      "tabindex",
+      [
+       "0"
+      ]
+     ],
+     [
+      "style",
+      [
+       "--chat-thread-height: "
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "ol",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "messages"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "li",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "day"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "time",
+          "attrs": [],
+          "children": [],
+          "sample": true
+         }
+        ],
+        "slot": "day"
+       },
+       {
+        "tag": "li",
+        "attrs": [
+         [
+          "data-ui",
+          [
+           "chat-message"
+          ]
+         ],
+         [
+          "data-variant",
+          [
+           "incoming"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "div",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "bubble"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "label"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           },
+           {
+            "tag": "p",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "text"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           },
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "meta"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "time",
+              "attrs": [],
+              "children": [],
+              "sample": true
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "tag": "li",
+        "attrs": [
+         [
+          "data-ui",
+          [
+           "chat-message"
+          ]
+         ],
+         [
+          "data-variant",
+          [
+           "outgoing"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "div",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "bubble"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "label"
+              ]
+             ]
+            ],
+            "children": [
+             "You"
+            ]
+           },
+           {
+            "tag": "p",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "text"
+              ]
+             ]
+            ],
+            "children": [],
+            "sample": true
+           },
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "meta"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "time",
+              "attrs": [],
+              "children": [],
+              "sample": true
+             },
+             {
+              "tag": "span",
+              "attrs": [
+               [
+                "data-part",
+                [
+                 "status"
+                ]
+               ],
+               [
+                "data-status",
+                [
+                 "read"
+                ]
+               ],
+               [
+                "role",
+                [
+                 "img"
+                ]
+               ],
+               [
+                "aria-label",
+                [
+                 "Read"
+                ]
+               ]
+              ],
+              "children": [
+               {
+                "tag": "span",
+                "attrs": [
+                 [
+                  "data-ui",
+                  [
+                   "icon"
+                  ]
+                 ],
+                 [
+                  "data-icon",
+                  [
+                   "check-check"
+                  ]
+                 ]
+                ],
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "slot": "messages"
+     }
+    ],
+    "dyn": [
+     [
+      "variant",
+      "data-variant"
+     ],
+     [
+      "size",
+      "data-size"
+     ]
+    ]
+   }
+  },
   "checkbox": {
    "defaultSlot": false,
    "slots": {
@@ -3456,6 +3902,277 @@ export const components = {
         "data-size"
        ]
       ]
+     }
+    ]
+   }
+  },
+  "composer": {
+   "defaultSlot": false,
+   "slots": {
+    "attachments": {
+     "required": false
+    },
+    "bar": {
+     "required": false
+    },
+    "field": {
+     "required": false
+    },
+    "input": {
+     "required": false
+    },
+    "attach": {
+     "required": false
+    },
+    "send": {
+     "required": false
+    }
+   },
+   "variants": {},
+   "states": {
+    "ready": {
+     "attr": "data-state",
+     "value": "ready",
+     "kind": "value"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "composer"
+      ]
+     ],
+     [
+      "data-state",
+      [
+       "empty"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "attachments"
+        ]
+       ],
+       [
+        "role",
+        [
+         "list"
+        ]
+       ],
+       [
+        "aria-label",
+        [
+         "Attachments"
+        ]
+       ],
+       [
+        "aria-live",
+        [
+         "polite"
+        ]
+       ],
+       [
+        "hidden",
+        true
+       ]
+      ],
+      "children": [],
+      "slot": "attachments"
+     },
+     {
+      "tag": "div",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "bar"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "div",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "field"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "textarea",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "input"
+            ]
+           ],
+           [
+            "rows",
+            [
+             "1"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "input"
+         },
+         {
+          "tag": "button",
+          "attrs": [
+           [
+            "type",
+            [
+             "button"
+            ]
+           ],
+           [
+            "data-part",
+            [
+             "attach"
+            ]
+           ],
+           [
+            "aria-label",
+            [
+             "Attach files"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-ui",
+              [
+               "icon"
+              ]
+             ],
+             [
+              "data-icon",
+              [
+               "paperclip"
+              ]
+             ],
+             [
+              "aria-hidden",
+              [
+               "true"
+              ]
+             ]
+            ],
+            "children": []
+           }
+          ],
+          "slot": "attach"
+         },
+         {
+          "tag": "input",
+          "attrs": [
+           [
+            "type",
+            [
+             "file"
+            ]
+           ],
+           [
+            "data-part",
+            [
+             "file"
+            ]
+           ],
+           [
+            "multiple",
+            true
+           ],
+           [
+            "hidden",
+            true
+           ],
+           [
+            "aria-label",
+            [
+             "Files to attach"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "file"
+         }
+        ],
+        "slot": "field"
+       },
+       {
+        "tag": "button",
+        "attrs": [
+         [
+          "type",
+          [
+           "button"
+          ]
+         ],
+         [
+          "data-part",
+          [
+           "send"
+          ]
+         ],
+         [
+          "aria-label",
+          [
+           "Send"
+          ]
+         ],
+         [
+          "disabled",
+          true
+         ]
+        ],
+        "children": [
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-ui",
+            [
+             "icon"
+            ]
+           ],
+           [
+            "data-icon",
+            [
+             "send"
+            ]
+           ],
+           [
+            "aria-hidden",
+            [
+             "true"
+            ]
+           ]
+          ],
+          "children": []
+         }
+        ],
+        "slot": "send"
+       }
+      ],
+      "slot": "bar"
      }
     ]
    }
@@ -7962,6 +8679,237 @@ export const components = {
      [
       "variant",
       "data-variant"
+     ]
+    ]
+   }
+  },
+  "list": {
+   "defaultSlot": false,
+   "slots": {
+    "items": {
+     "required": false
+    },
+    "item": {
+     "required": false,
+     "states": {
+      "selected": {
+       "attr": "aria-selected",
+       "value": null,
+       "kind": "aria"
+      },
+      "disabled": {
+       "attr": "aria-disabled",
+       "value": null,
+       "kind": "aria"
+      }
+     }
+    },
+    "leading": {
+     "required": false
+    },
+    "content": {
+     "required": false
+    },
+    "title": {
+     "required": false
+    },
+    "subtitle": {
+     "required": false
+    },
+    "meta": {
+     "required": false
+    }
+   },
+   "variants": {
+    "size": {
+     "attr": "data-size",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    },
+    "variant": {
+     "attr": "data-variant",
+     "values": [
+      "plain",
+      "divided",
+      "inset"
+     ],
+     "default": "plain"
+    }
+   },
+   "states": {
+    "empty": {
+     "attr": "data-state",
+     "value": "empty",
+     "kind": "value"
+    },
+    "reorderable": {
+     "attr": "data-reorderable",
+     "value": null,
+     "kind": "presence"
+    }
+   },
+   "props": {},
+   "bools": [],
+   "tree": {
+    "tag": "div",
+    "attrs": [
+     [
+      "data-ui",
+      [
+       "list"
+      ]
+     ],
+     [
+      "data-variant",
+      [
+       "divided"
+      ]
+     ]
+    ],
+    "children": [
+     {
+      "tag": "ul",
+      "attrs": [
+       [
+        "data-part",
+        [
+         "items"
+        ]
+       ]
+      ],
+      "children": [
+       {
+        "tag": "li",
+        "attrs": [
+         [
+          "data-part",
+          [
+           "item"
+          ]
+         ]
+        ],
+        "children": [
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "leading"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-ui",
+              [
+               "avatar"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "span",
+              "attrs": [
+               [
+                "data-part",
+                [
+                 "fallback"
+                ]
+               ]
+              ],
+              "children": [],
+              "sample": true
+             }
+            ]
+           }
+          ],
+          "slot": "leading"
+         },
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "content"
+            ]
+           ]
+          ],
+          "children": [
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "title"
+              ]
+             ]
+            ],
+            "children": [
+             {
+              "tag": "a",
+              "attrs": [],
+              "children": [],
+              "sample": true
+             }
+            ],
+            "slot": "title"
+           },
+           {
+            "tag": "span",
+            "attrs": [
+             [
+              "data-part",
+              [
+               "subtitle"
+              ]
+             ]
+            ],
+            "children": [],
+            "slot": "subtitle",
+            "sample": true
+           }
+          ],
+          "slot": "content"
+         },
+         {
+          "tag": "span",
+          "attrs": [
+           [
+            "data-part",
+            [
+             "meta"
+            ]
+           ]
+          ],
+          "children": [],
+          "slot": "meta",
+          "sample": true
+         }
+        ],
+        "slot": "item"
+       }
+      ],
+      "slot": "items"
+     }
+    ],
+    "dyn": [
+     [
+      "variant",
+      "data-variant"
+     ],
+     [
+      "size",
+      "data-size"
      ]
     ]
    }

@@ -44,10 +44,10 @@ const KB = 1024;
 // feature and recorded here: 42 → 43 KB for the 29th recipe controller, and
 // 43 → 44 KB for `inspect`/devtools. Wave 2 took it 44 → 45 KB: the shared exit-transition helper the four overlay controllers now wait on (`whenExitDone` — see W2-1's drawer bug), the unscoped-directive sweep that makes `<form l-validate>` bind at all, applying a scope root's own directives, and `$ui('#id')` for reaching another component's controller. Wave 3 took it 45 → 46 KB: `aria-activedescendant` in the four widgets that declared the combobox contract and never implemented it, the dismiss-on-destroy path in twelve overlay controllers, cleanup ownership that survives a detached template (`l-if`/`l-for`/`l-teleport`), `l-model` listener teardown, and the missing-part guards that name the part instead of throwing. The forecraft notes (1.2.5 downstream) took it 46 → 47 KB: QR versions 11–40 — ISO/IEC 18004 Table 9 for every version and ECL, packed one character per value (about 220 B gzip of the move), the computed codeword count and Annex E alignment centres — the qr-code and barcode `data-state="error"` + `faqir:error` reporting, command-palette `<a href>` items and `data-value`, and toggle-group following a `:checked` binding. The binding constraint was `tests/build/core-package.test.ts` (the packaged `faqir-core.min.js`), about 40 B under its 46 KB at the start.
 //
-// The component expansion took it 47 → 61 KB, measured at 60.05 KB, and the owner decided the move in advance: every recipe controller is inlined, and the budget had about 0.5 KB left. It bought date ranges — calendar's hover preview, multi-month grids, presets and min/max range length, and date-picker's range mode, locale-parsed typing, clear button and inline mode (about 3.2 KB) — and tree-view's tri-state checkboxes, lazy loading with retry, type-ahead, filtering, multi-select and drag-and-drop that works from the keyboard (about 4.9 KB, its controller 2.25 → 7.11 KB on its own) — and four new controllers: the knob, the lightbox and image-compare the image primitive's interactive half needs, and the video player (about 6 KB together).
+// The component expansion took it 47 → 64 KB, measured at 63.66 KB, and the owner decided the move in advance: every recipe controller is inlined, and the budget had about 0.5 KB left. It bought date ranges — calendar's hover preview, multi-month grids, presets and min/max range length, and date-picker's range mode, locale-parsed typing, clear button and inline mode (about 3.2 KB) — and tree-view's tri-state checkboxes, lazy loading with retry, type-ahead, filtering, multi-select and drag-and-drop that works from the keyboard (about 4.9 KB, its controller 2.25 → 7.11 KB on its own) — and four new controllers: the knob, the lightbox and image-compare the image primitive's interactive half needs, and the video player (about 6 KB together); and the list (selection with listbox keys, keyboard reordering) and the chat composer (about 3.6 KB).
 export const BUDGETS = {
   engine: 14 * KB,
-  engineWithControllers: 61 * KB,
+  engineWithControllers: 64 * KB,
   plugin: 2 * KB,
   // @faqir-ui/template's core entry: the runtime that renders a compiled AST
   // (docs/template.md §15.1). The compiler is its own entry, run at save time.
@@ -55,9 +55,9 @@ export const BUDGETS = {
   // The strict-CSP engine (forecraft #50): engine + controllers with the
   // expression interpreter in place of `new Function` — measured at 51.01 KB,
   // about 4.7 KB of it the interpreter. Its own artifact, its own budget.
-  // The component expansion moved it with engineWithControllers, 52 → 65 KB,
-  // measured at 64.69 KB: the same controllers, carried by both engines.
-  engineCsp: 65 * KB,
+  // The component expansion moved it with engineWithControllers, 52 → 69 KB,
+  // measured at 68.22 KB: the same controllers, carried by both engines.
+  engineCsp: 69 * KB,
 };
 
 // Per-plugin exceptions to BUDGETS.plugin, by file name. Each is named for the

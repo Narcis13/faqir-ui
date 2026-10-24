@@ -22,6 +22,16 @@
     "bento": 2,
     "icon": 8
   },
+  "patterns/chat/chat.html": {
+    "avatar": 21,
+    "chat": 1,
+    "chat-message": 29,
+    "chat-thread": 5,
+    "composer": 1,
+    "icon": 45,
+    "list": 1,
+    "visually-hidden": 3
+  },
   "patterns/crud-table/crud-table.html": {
     "badge": 5,
     "button": 23,
@@ -226,6 +236,17 @@
   },
   "primitives/chart/chart.html": {
     "chart": 4
+  },
+  "primitives/chat-message/chat-message.html": {
+    "chat-message": 9,
+    "chat-thread": 1,
+    "icon": 6
+  },
+  "primitives/chat-thread/chat-thread.html": {
+    "avatar": 7,
+    "chat-message": 10,
+    "chat-thread": 1,
+    "icon": 7
   },
   "primitives/checkbox/checkbox.html": {
     "checkbox": 8,
@@ -433,6 +454,13 @@
   "recipes/command-palette/command-palette.html": {
     "command-palette": 3
   },
+  "recipes/composer/composer.html": {
+    "chip": 2,
+    "composer": 3,
+    "icon": 6,
+    "stack": 1,
+    "text": 1
+  },
   "recipes/context-menu/context-menu.html": {
     "context-menu": 1
   },
@@ -472,6 +500,16 @@
   "recipes/lightbox/lightbox.html": {
     "image": 6,
     "lightbox": 1
+  },
+  "recipes/list/list.html": {
+    "avatar": 11,
+    "badge": 1,
+    "button": 4,
+    "grid": 1,
+    "icon": 18,
+    "list": 6,
+    "surface": 6,
+    "visually-hidden": 1
   },
   "recipes/menubar/menubar.html": {
     "menubar": 1

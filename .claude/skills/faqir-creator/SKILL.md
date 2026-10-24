@@ -136,11 +136,11 @@ Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split 
 
 ## Component Inventory
 
-**55 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, chart, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, skip-link, spinner, spotlight, stack, stamp, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
+**57 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, chart, chat-message, chat-thread, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, skip-link, spinner, spotlight, stack, stamp, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
 
-**33 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, image-compare, input-otp, knob, lightbox, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view, video-player
+**35 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, composer, context-menu, date-picker, dialog, drawer, dropdown, file-upload, image-compare, input-otp, knob, lightbox, list, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view, video-player
 
-**23 Patterns (composition, no JS):** article, auth-form, bento, crud-table, cta, dashboard-shell, document, empty-state, faq, feature-grid, form-page, hero, inbox, logo-cloud, post-list, pricing, search-results, settings-page, site-footer, site-header, stats-dashboard, testimonials, wizard
+**24 Patterns (composition, no JS):** article, auth-form, bento, chat, crud-table, cta, dashboard-shell, document, empty-state, faq, feature-grid, form-page, hero, inbox, logo-cloud, post-list, pricing, search-results, settings-page, site-footer, site-header, stats-dashboard, testimonials, wizard
 
 ## Provenance of the component text below
 
@@ -461,9 +461,9 @@ Every command accepts `--json` for machine-readable output.
 
 Full anatomy trees, variant tables, and safe/unsafe transforms for every component:
 
-- [references/primitives.md](references/primitives.md) — 55 primitives
-- [references/recipes.md](references/recipes.md) — 33 recipes
-- [references/patterns.md](references/patterns.md) — 23 patterns
+- [references/primitives.md](references/primitives.md) — 57 primitives
+- [references/recipes.md](references/recipes.md) — 35 recipes
+- [references/patterns.md](references/patterns.md) — 24 patterns
 - [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`
 - [references/directives.md](references/directives.md) — every faqir-core directive, modifier and magic, plus the plugin vocabulary
 - [references/manifest.md](references/manifest.md) — the manifest contract, derived from `manifest.schema.json`: which fields are required, every closed enum, one shipped example

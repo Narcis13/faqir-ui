@@ -307,13 +307,13 @@ How far this theme sits from the nearest other shipped theme, written by the dis
 
 ## File Set Per Kind
 
-`files` requires `html`, `css` and `manifest` whatever the kind — `js` is declared by the components that ship a controller, and only those. Counted across the 111 manifests in `registry/`:
+`files` requires `html`, `css` and `manifest` whatever the kind — `js` is declared by the components that ship a controller, and only those. Counted across the 116 manifests in `registry/`:
 
 | `kind` | Components | Declare `files.js` |
 |---|---|---|
-| `pattern` | 23 | 0 |
-| `primitive` | 55 | 0 |
-| `recipe` | 33 | 33 |
+| `pattern` | 24 | 0 |
+| `primitive` | 57 | 0 |
+| `recipe` | 35 | 35 |
 
 ## Closed Enums
 

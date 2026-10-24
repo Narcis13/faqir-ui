@@ -1,0 +1,192 @@
+/* @ui:component composer */
+/* @ui:tokens space-2 space-3 space-1h space-0h space-1 space-8 color-bg-subtle color-fg color-border-strong color-fg-muted color-bg-muted color-primary color-primary-fg color-primary-hover font-ui font-body control-height-md input-border-width input-border input-fill radius-2xl radius-full corner-shape shadow-xs shadow-sm duration-fast ease-default ease-out focus-ring-width focus-ring-style focus-ring-color focus-ring-offset text-base text-lg text-sm leading-normal disabled-opacity */
+
+/* ── Root ──
+   A bar: the attachment chips above, then the field — a rounded well holding
+   the extra actions, the growing textarea and the attach button — beside the
+   round send button. The field, not the textarea, carries the focus ring, so
+   the ring wraps everything a keyboard user is typing into. */
+[data-ui="composer"] {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  background: var(--composer-bg, var(--color-bg-subtle));
+  color: var(--color-fg);
+  font-family: var(--font-ui);
+}
+
+[data-ui="composer"] > [data-part="attachments"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1h);
+  margin: 0;
+  padding: 0;
+}
+
+[data-ui="composer"] > [data-part="attachments"][hidden] {
+  display: none;
+}
+
+[data-ui="composer"] > [data-part="bar"] {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+/* ── Field ── */
+[data-ui="composer"] > :where([data-part="bar"]) > [data-part="field"] {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  gap: var(--space-0h);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  min-block-size: var(--control-height-md);
+  padding: var(--space-1);
+  border: var(--input-border-width) solid var(--input-border);
+  border-radius: var(--composer-radius, var(--radius-2xl));
+  corner-shape: var(--corner-shape);
+  background: var(--input-fill);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > [data-part="field"]:focus-within {
+  border-color: var(--color-border-strong);
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--input-border-width));
+}
+
+/* The textarea grows with its content — one line to --composer-max-lines —
+   then scrolls. `field-sizing` does it natively; the controller measures
+   scrollHeight where it is missing, and this max-block-size caps both. */
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="input"] {
+  flex: 1;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  min-block-size: calc(1lh + 2 * var(--space-1h));
+  max-block-size: calc(var(--composer-max-lines, 6) * 1lh + 2 * var(--space-1h));
+  margin: 0;
+  padding-block: var(--space-1h);
+  padding-inline: var(--space-2);
+  overflow-y: auto;
+  border: 0;
+  background: transparent;
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  field-sizing: content;
+  resize: none;
+  outline: none;
+  scrollbar-width: thin;
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="input"]::placeholder {
+  color: var(--color-fg-muted);
+}
+
+/* Icon buttons inside the field: the action slot (emoji, camera …) and attach. */
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="action"],
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="attach"] {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: var(--space-8);
+  block-size: var(--space-8);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-fg-muted);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-default),
+    background-color var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="action"]:hover,
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="attach"]:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-fg);
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="action"]:focus-visible,
+[data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="attach"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+/* ── Send ──
+   Round, in the accent, and dimmed — not hidden — while there is nothing to
+   send, so its place never jumps. */
+[data-ui="composer"] > :where([data-part="bar"]) > [data-part="send"] {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: var(--control-height-md);
+  block-size: var(--control-height-md);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--composer-send-radius, var(--radius-full));
+  corner-shape: var(--corner-shape);
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-default),
+    scale var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > [data-part="send"]:hover:enabled {
+  background: var(--color-primary-hover);
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > [data-part="send"]:active:enabled {
+  scale: 0.94;
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > [data-part="send"]:disabled {
+  opacity: var(--disabled-opacity);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+[data-ui="composer"] > :where([data-part="bar"]) > [data-part="send"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* A paper plane points the way the text runs. */
+[data-ui="composer"]:dir(rtl) > :where([data-part="bar"]) > :where([data-part="send"]) > [data-ui="icon"] {
+  scale: -1 1;
+}
+
+@media (min-width: 48rem) {
+  [data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="input"] {
+    font-size: var(--text-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="composer"] > :where([data-part="bar"]) > [data-part="field"],
+  [data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="action"],
+  [data-ui="composer"] > :where([data-part="bar"]) > :where([data-part="field"]) > [data-part="attach"],
+  [data-ui="composer"] > :where([data-part="bar"]) > [data-part="send"] {
+    transition: none;
+  }
+
+  [data-ui="composer"] > :where([data-part="bar"]) > [data-part="send"]:active:enabled {
+    scale: none;
+  }
+}

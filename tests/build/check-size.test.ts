@@ -158,9 +158,9 @@ describe("enforce", () => {
 describe("BUDGETS", () => {
   test("match the §10.4 numbers", () => {
     expect(mod.BUDGETS.engine).toBe(14 * KB);
-    // 45 → 46 in Wave 3, 46 → 47 for the forecraft notes, 47 → 61 for the
+    // 45 → 46 in Wave 3, 46 → 47 for the forecraft notes, 47 → 64 for the
     // component expansion; the ledger for every move is in scripts/check-size.mjs.
-    expect(mod.BUDGETS.engineWithControllers).toBe(61 * KB);
+    expect(mod.BUDGETS.engineWithControllers).toBe(64 * KB);
     expect(mod.BUDGETS.plugin).toBe(2 * KB);
   });
 

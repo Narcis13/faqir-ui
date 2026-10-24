@@ -328,8 +328,8 @@ primitive and no pattern ships a single `.js` file, and a page that loads only
 That is the answer for a CSP-restricted environment:
 
 - **Primitives** — pure markup and CSS. They work as-is under a strict policy.
-- **Patterns** — likewise, with three exceptions that are markup-level reactive
-  demos rather than styling: `dashboard-shell`, `inbox` and `wizard` carry `l-*`
+- **Patterns** — likewise, with four exceptions that are markup-level reactive
+  demos rather than styling: `chat`, `dashboard-shell`, `inbox` and `wizard` carry `l-*`
   attributes with expressions in them and need the evaluator. (`dashboard-shell`
   only for its phone drawer: without the evaluator the drawer stays closed and the
   docked desktop sidebar is unaffected.) Every other pattern does not —

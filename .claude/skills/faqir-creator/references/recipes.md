@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-33 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+35 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -415,6 +415,64 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Unsafe (never do):** `remove-dialog-role`, `remove-aria-modal`, `remove-focus-trap`, `remove-escape-handler`, `remove-keyboard-navigation`, `remove-global-shortcut`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · keys: Cmd+K / Ctrl+K, Escape, ArrowDown, ArrowUp, Enter, Home, End
 - **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-label on panel`; `role="combobox" on search input`; `role="listbox" on list`; `role="option" on each item`; `aria-activedescendant on the combobox, naming the active option while the list is open`
+
+## composer
+
+_kind: recipe · category: forms · controller: createComposer()_
+
+Message composer: a textarea that grows with its text to a maximum number of lines and then scrolls (CSS field-sizing with a measured fallback), Enter to send and Shift+Enter for a new line — never mid-IME-composition — a send button that is live only when there is something to send, an action slot (emoji, voice), and file attachments from a picker, a paste or a drop, shown as removable chips. Sending emits a cancelable faqir:send with the text and the files, then clears and refocuses.
+
+```html
+<div data-ui="composer" data-state="empty">
+  <div data-part="attachments" role="list" aria-label="Attachments" aria-live="polite" hidden></div>
+  <div data-part="bar">
+    <div data-part="field">
+      <textarea data-part="input" rows="1" aria-label="{label}" placeholder="{placeholder}"></textarea>
+      <button type="button" data-part="attach" aria-label="Attach files"><span data-ui="icon" data-icon="paperclip" aria-hidden="true"></span></button>
+      <input type="file" data-part="file" multiple hidden aria-label="Files to attach">
+    </div>
+    <button type="button" data-part="send" aria-label="Send" disabled><span data-ui="icon" data-icon="send" aria-hidden="true"></span></button>
+  </div>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='composer']  ·  <div> · content: slots
+├─ [data-part='attachments']  <div>  optional  — The tray of attached files, above the bar: role='list' with an aria-label and aria-live='polite', hidden while empty. The controller renders one chip primitive per file (role='listitem', the name and size as the label, a 'Remove {name}' dismiss button); removing one moves focus to the next chip, or to the attach button.
+├─ [data-part='bar']  <div>  required  — The row: the field, then the send button.
+├─ [data-part='field']  <div>  required  — The rounded well that holds the action buttons, the textarea and the attach button. It carries the focus ring for everything inside it.
+├─ [data-part='action']  <button>  optional  — Optional icon button(s) in the field — emoji picker, camera, voice note. Each a real button with an aria-label; what it opens is the page's.
+├─ [data-part='input']  <textarea>  required  — The message textarea, with an aria-label naming the conversation. Grows from one line to --composer-max-lines (default 6), then scrolls.
+├─ [data-part='attach']  <button>  optional  — Opens the hidden file picker. A button with an aria-label ('Attach files').
+├─ [data-part='file']  <input>  optional  — The hidden <input type='file'> the attach button opens; add multiple and accept as needed. Picked files are added (deduplicated) and the input is reset, so the same file can be picked again after removal.
+└─ [data-part='send']  <button>  required  — Round send button with an aria-label. Disabled while there is no text and no file; author it disabled when the composer starts empty.
+```
+
+**Variants**
+
+_No variants._
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createComposer(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `send()` | — |
+| `clear()` | — |
+| `focus()` | — |
+| `setValue(text)` | — |
+| `addFiles(list)` | — |
+| `removeFile(index)` | — |
+| `getFiles()` | — |
+| `destroy()` | — |
+
+- **Safe transforms:** `add-an-emoji-or-voice-action`, `remove-the-attachment-slot`, `accept-only-some-file-types`, `switch-enter-to-newline-for-long-form`, `change-the-maximum-lines`, `relabel-the-input-and-send-button`, `cancel-faqir-send-to-keep-the-draft`
+- **Unsafe (never do):** `remove-the-input-label`, `hide-the-send-button-instead-of-disabling-it`, `send-on-enter-during-ime-composition`, `make-the-field-a-contenteditable-div`
+- **A11y:** keys: Enter, Shift + Enter, Ctrl/Cmd + Enter, Enter during IME composition, Tab, Enter / Space on a chip's remove button
+- **Required ARIA:** `aria-label on input`; `aria-label on send`; `aria-label on attach`; `aria-label on action`
 
 ## context-menu
 
@@ -1004,6 +1062,75 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Unsafe (never do):** `remove-item-href`, `remove-role-dialog`, `remove-aria-modal`, `remove-close-button`, `remove-thumbnail-alt`, `remove-overlay`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · return-focus→the item that opened the viewer · keys: 0, Enter (on an item), Escape, ArrowLeft / ArrowRight, ArrowUp / ArrowDown, Home / End, + or =, -, Tab / Shift+Tab
 - **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-label on close`; `aria-label on prev`; `aria-label on next`
+
+## list
+
+_kind: recipe · category: data-display · controller: createList()_
+
+Rich list rows — leading avatar, icon tile or thumbnail; title, subtitle and right-aligned meta; trailing content — with grouped sections under sticky headers, dividers, inset cards and three densities. Plain list semantics by default; data-selection='single|multi' makes it a WAI-ARIA listbox with roving focus, type-ahead, Shift range selection and Ctrl/Cmd+A; data-reorderable adds pointer dragging by a handle with a drop indicator and keyboard reordering, every move announced and emitted as faqir:reorder.
+
+```html
+<div data-ui="list" data-variant="divided">
+  <ul data-part="items" aria-label="{label}">
+    <li data-part="item">
+      <span data-part="leading"><span data-ui="avatar"><span data-part="fallback">{initials}</span></span></span>
+      <span data-part="content">
+        <span data-part="title"><a href="{href}">{title}</a></span>
+        <span data-part="subtitle">{subtitle}</span>
+      </span>
+      <span data-part="meta">{meta}</span>
+    </li>
+  </ul>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='list']  ·  <div> · content: slots
+├─ [data-part='toolbar']  <div>  optional  — Row above the items — it stays put while a capped list scrolls its rows — for a count and the actions that apply to the selection ('3 selected · Archive'). It is the answer to per-row actions in a selectable list: an option may not contain controls, so act on getSelected() from here.
+├─ [data-part='items']  <ul>  required  — The list. A <ul> or <ol> holding items, or sections. Selectable: the controller gives it role='listbox' and aria-multiselectable; give it an aria-label (or aria-labelledby). Inside a section, the inner [data-part='items'] holds that section's items and gets role='none'. It is the scroller: a list capped with --list-max-height scrolls here, under its sticky section headers.
+├─ [data-part='section']  <li>  optional  — A group of items under a header. Selectable: role='group' with aria-labelledby pointing at its header (the controller wires both, giving the header an id when it has none).
+├─ [data-part='header']  <span>  optional  — The section's sticky header — it sticks inside its own section, so the next one pushes it off. In a plain list make it a heading (<h3>) so it is in the outline; in a selectable list it must be a role='presentation' <span> (a listbox may hold only groups and options), named to its group by aria-labelledby.
+├─ [data-part='item']  <li>  required  — One row, a direct child of [data-part='items']. Selectable: role='option' with aria-selected and a roving tabindex. aria-disabled='true' dims it and takes it out of focus and selection. data-value is its identity; data-accent colours its icon tile.
+├─ [data-part='handle']  <span>  optional  — Drag grip, shown only on a data-reorderable list. In a plain list a <button> (labelled 'Reorder {title}' when it has no label) that also offers a keyboard grab mode; in a selectable list a decorative aria-hidden <span> — the focused option moves with Alt+Up/Down instead.
+├─ [data-part='leading']  <span>  optional  — Leading media: an avatar primitive, an icon primitive (drawn as an accent tile) or an <img> thumbnail. Decorative when the title names the row.
+├─ [data-part='content']  <span>  required  — Stacks the title over the subtitle and takes the free width.
+├─ [data-part='title']  <span>  required  — The row's name, truncated to one line; used for type-ahead and reorder announcements. In a plain list a link or button inside it stretches over the whole row.
+├─ [data-part='subtitle']  <span>  optional  — Second line (a preview, an address, a status). Its presence puts the meta on the title line and lets a count or badge drop beneath it.
+├─ [data-part='meta']  <span>  optional  — Right-aligned short text — a time, a value, a count. Beside the trailing part on a one-line row; on the title line of a two-line row (centred when a control sits beside it). Takes the accent while the row shows a count.
+├─ [data-part='trailing']  <span>  optional  — Trailing content: a count, a badge, a chevron, a switch — and, in a plain list only, action buttons (they sit above a stretched title link). In a selectable list keep it non-interactive. On a two-line row a count or badge here drops beneath the meta.
+├─ [data-part='count']  <span>  optional  — Inside trailing: an unread count drawn as a solid accent pill. While it is shown the row's meta turns accent too, and on a two-line row it drops beneath the meta. Put the number in an aria-hidden span and a visually hidden ' unread' beside it, so the option's name says what the number is.
+├─ [data-part='empty']  <div>  optional  — Shown when the list has no items (data-state='empty', which the controller sets and clears as items come and go).
+└─ [data-part='live']  <span>  optional  — Visually hidden role='status' region the controller announces reorders in. Created on first use when absent; author one to control its placement.
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| style | `plain`, `divided`, `inset` | `plain` | `data-variant` | root |
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createList(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `select(target, extend = false)` | — |
+| `toggle(target)` | — |
+| `selectAll()` | — |
+| `clear()` | — |
+| `getSelected()` | — |
+| `move(target, index)` | Move an item to `index` among its siblings; returns its new index. |
+| `refresh()` | — |
+| `destroy()` | — |
+
+- **Safe transforms:** `add-item`, `remove-item`, `add-a-section-with-a-sticky-header`, `switch-style-between-plain-divided-and-inset`, `change-density`, `make-it-single-or-multi-select`, `make-it-reorderable`, `disable-an-item`, `render-items-with-a-keyed-l-for`, `add-a-selection-toolbar`, `cap-the-height-so-it-scrolls`
+- **Unsafe (never do):** `put-buttons-or-links-inside-a-selectable-option`, `remove-the-listbox-accessible-name`, `make-the-handle-a-focusable-button-in-a-selectable-list`, `nest-items-outside-an-items-container`, `signal-selection-with-colour-only`
+- **A11y:** keys: ArrowDown / ArrowUp, Home / End, Space / Enter, Shift + ArrowDown / ArrowUp, Shift + Home / End, Shift + Space, Ctrl/Cmd + A, Printable characters, Alt + ArrowUp / ArrowDown, Space / Enter on a handle, Escape during a pointer drag
+- **Required ARIA:** `an accessible name on the top-level items container (aria-label or aria-labelledby)`; `role="listbox" on items when data-selection is single or multi`; `role="option" and aria-selected on each item when selectable`; `aria-multiselectable on items when selectable`; `role="group" with aria-labelledby on each section when selectable`
 
 ## menubar
 
