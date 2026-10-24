@@ -35,7 +35,7 @@ const overlaps = (a: Box, b: Box) =>
 async function open(page: Page, html = livePage(REFERENCE, { plugins: ["chart"] })) {
   await page.setContent(html, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
-  await expect(page.locator('[data-ui="chart"][data-state="drawn"]')).toHaveCount(4);
+  await expect(page.locator('[data-ui="chart"][data-state="drawn"]')).toHaveCount(19);
 }
 
 /** Painted boxes, in page pixels, for every element `selector` matches inside chart `index`. */

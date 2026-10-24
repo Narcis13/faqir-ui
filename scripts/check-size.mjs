@@ -102,8 +102,13 @@ export const BUDGETS = {
 //   the legend they fall back to, the aria-label that reads every number, and
 //   the SVG writer. It ships as its own opt-in file precisely so that none of
 //   it lands in faqir-core.js, whose budget has no room.
+//   The component expansion took it 4 → 9 KB, measured at 8.18 KB: nine more
+//   kinds drawn from the same table — area, stacked column and bar with
+//   totals, pie and donut with shares, scatter with bubble sizes, sparkline,
+//   radar and gauge with thresholds — each with its share of the aria-label
+//   grammar, and the hover emphasis.
 export const PLUGIN_BUDGETS = {
-  "faqir-chart.js": 4 * KB,
+  "faqir-chart.js": 9 * KB,
   "faqir-tweak.js": 4 * KB,
   "faqir-validate.js": 4 * KB,
   "faqir-rules.js": 14 * KB,

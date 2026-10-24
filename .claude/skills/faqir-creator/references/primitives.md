@@ -249,7 +249,7 @@ Container surface with header, optional divider, body, and footer slots; direct 
 
 _kind: primitive · category: data-display_
 
-Bar, column or line chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin
+Column, bar, line, area, stacked column or bar, pie, donut, scatter, sparkline, radar or gauge chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin
 
 ```html
 <figure data-ui="chart" data-variant="{variant}">
@@ -276,22 +276,32 @@ Bar, column or line chart drawn from its own data table: the table is the source
 ├─ [data-part='grid']  <g>  optional  — Drawn by faqir-chart: the value-axis rules, one line per tick
 ├─ [data-part='axis']  <g>  optional  — Drawn by faqir-chart: the tick and category labels
 ├─ [data-part='marks']  <g>  optional  — Drawn by faqir-chart: one series group per table column, in table order
-├─ [data-part='series']  <g>  optional  — Drawn by faqir-chart: one series' marks, labels and name. Its position in marks picks its lightness band
-├─ [data-part='mark']  <rect>  optional  — Drawn by faqir-chart: a bar or column (rect), or a line's point (circle)
-├─ [data-part='line']  <path>  optional  — Drawn by faqir-chart: a line series' path, dashed per series (solid, dash, dot, dash-dot)
-├─ [data-part='label']  <text>  optional  — Drawn by faqir-chart: a value label on a mark, the cell's own text, where it fits
-├─ [data-part='name']  <text>  optional  — Drawn by faqir-chart: a series name written on its marks (bar, column) or after its end (line) instead of a legend, where every name fits
+├─ [data-part='series']  <g>  optional  — Drawn by faqir-chart: one series' marks, labels and name (for pie and donut, one category's slices across the rings). Its position in marks picks its lightness band
+├─ [data-part='mark']  <rect>  optional  — Drawn by faqir-chart: a bar, column or stacked segment (rect), a line's, radar's, scatter's or sparkline's point (circle), a slice (path) or a gauge's value arc (path). The new kinds' marks carry a <title> with their value, for a pointer
+├─ [data-part='line']  <path>  optional  — Drawn by faqir-chart: a line, area or sparkline series' path, or a radar series' closed polygon, dashed per series (solid, dash, dot, dash-dot)
+├─ [data-part='label']  <text>  optional  — Drawn by faqir-chart: a value label on a mark, the cell's own text, where it fits — a share on a slice, a value on a stacked segment, a name beside a scatter point
+├─ [data-part='name']  <text>  optional  — Drawn by faqir-chart: a series name written on its marks (bar, column, stacked) or after its end (line, area) instead of a legend, where every name fits; under a donut's total or a gauge's reading, what it counts
 ├─ [data-part='baseline']  <line>  optional  — Drawn by faqir-chart: the zero rule the bars and columns grow from
-├─ [data-part='legend']  <g>  optional  — Drawn by faqir-chart only when the series names do not fit on the marks
+├─ [data-part='legend']  <g>  optional  — Drawn by faqir-chart when the series names do not fit on the marks, and for radar, pie and donut (beside the circle where it fits, else under it)
 ├─ [data-part='key']  <g>  optional  — Drawn by faqir-chart: one legend entry, a swatch and the series name
-└─ [data-part='swatch']  <rect>  optional  — Drawn by faqir-chart: a legend key's sample of the series' band (and dash, for lines)
+├─ [data-part='swatch']  <rect>  optional  — Drawn by faqir-chart: a legend key's sample of the series' band (and dash, for lines)
+├─ [data-part='area']  <path>  optional  — Drawn by faqir-chart: an area series' fill (path) under its line, painted with the series' gradient
+├─ [data-part='stop']  <stop>  optional  — Drawn by faqir-chart: a stop of an area's gradient; its colour is the series' band from the stylesheet
+├─ [data-part='totals']  <g>  optional  — Drawn by faqir-chart: the group of totals — a stack's sum past its end, a donut's whole in its hole, a gauge's reading
+├─ [data-part='total']  <text>  optional  — Drawn by faqir-chart: one total (text)
+├─ [data-part='amount']  <text>  optional  — Drawn by faqir-chart: a pie or donut legend key's value, the cell's own text
+├─ [data-part='share']  <text>  optional  — Drawn by faqir-chart: a pie or donut legend key's share of the whole, as a percentage in the page language
+├─ [data-part='title']  <text>  optional  — Drawn by faqir-chart: a scatter's axis name, its column's heading
+├─ [data-part='track']  <path>  optional  — Drawn by faqir-chart: a gauge's full half ring, from data-min to data-max
+├─ [data-part='zone']  <path>  optional  — Drawn by faqir-chart: a gauge's outer scale between two thresholds, darker towards the maximum
+└─ [data-part='tick']  <line>  optional  — Drawn by faqir-chart: a notch across a gauge's ring at a threshold
 ```
 
 **Variants**
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| variant | `column`, `bar`, `line` | `column` | `data-variant` | root |
+| variant | `column`, `bar`, `line`, `area`, `stacked-column`, `stacked-bar`, `pie`, `donut`, `scatter`, `sparkline`, `radar`, `gauge` | `column` | `data-variant` | root |
 
 **Controller API**
 
@@ -302,8 +312,8 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 | `redraw()` | Read the data table again and redraw the chart; false when it holds no number. |
 | `destroy()` | Stop watching the table, remove the drawing and show the table again. |
 
-- **Safe transforms:** `Change data-variant to column, bar or line`, `Add, remove or reorder table rows (categories) and columns (series)`, `Edit a cell's text, or add a data-value with its number`, `Change data-table to auto, visible or hidden`, `Set --chart-accent to another colour token`
-- **Unsafe (never do):** `Remove the data table`, `Draw the chart without the table (an SVG alone has no accessible numbers and nothing to print without JavaScript)`, `Give the marks literal colours`
+- **Safe transforms:** `Change data-variant to any of column, bar, line, area, stacked-column, stacked-bar, pie, donut, scatter, sparkline, radar or gauge`, `Add, remove or reorder table rows (categories) and columns (series)`, `Edit a cell's text, or add a data-value with its number`, `Change data-table to auto, visible or hidden`, `Set --chart-accent to another colour token`, `Set data-min, data-max and data-thresholds on a gauge`, `Put a sparkline in a stat or a table cell, named by its data table's caption`
+- **Unsafe (never do):** `Remove the data table`, `Draw the chart without the table (an SVG alone has no accessible numbers and nothing to print without JavaScript)`, `Give the marks literal colours`, `Give a scatter fewer than two value columns, or a radar fewer than three rows (both then draw as a column chart)`
 - **Required ARIA:** `a <table data-part="data"> with th scope="col" headers and th scope="row" category labels`; `the drawn svg carries role="img" and an aria-label reading the caption, the kind and every value`
 
 ## chat-message

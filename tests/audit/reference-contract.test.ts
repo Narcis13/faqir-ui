@@ -127,6 +127,7 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "primitives/stepper/stepper.html": "2 → 6 steppers (all states, error, vertical, clickable, sizes); stack/cluster/button for the clickable demo",
   "recipes/tree-view/tree-view.html": "1 → 5 trees (explorer, checkbox, lazy, filter, multi-select + DnD) in surface panels; input, stack, text, kbd, icon",
   "primitives/image/image.html": "9 added images (focal point ×4, fit, overlay caption, placeholders ×3) in 2 clusters",
+  "primitives/chart/chart.html": "a demo per new chart kind: chart 4 → 19, plus grid ×1, stat ×3 and table ×1 hosting the sparklines",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

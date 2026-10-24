@@ -186,22 +186,22 @@
       "name": "chart",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "chart.css",
-          "sha256": "974bab5e577e8da5c76e90f818f4f700c9df1a2d4620facbb7bb5ae616bf23ce"
+          "sha256": "485e5fdddf504427415d1e25ec6a121bb3df2709a1fa3d4216ee438ac878f387"
         },
         {
           "path": "chart.html",
-          "sha256": "5d10d66c6b368a99637a242b67e294c6a3f6d0b8e6bb357b49cd7755d3467921"
+          "sha256": "2d3d1e56f253359e107e37976c65bdf21b8339ca3bdad41dfe29e607922541e2"
         },
         {
           "path": "chart.manifest.json",
-          "sha256": "03e67e1e038ea32223a3e3dc9673e9d03f0bd8604820ed1a58d501a645e7a355"
+          "sha256": "7351ba9b7742d632887599a4ac8176c9161ee07ab4fdb717aba0260792a03b05"
         }
       ],
-      "hash": "8b5bc7ca06c38020d9d9a37ba115ef54d20157cca27848a3fbf396dd1260dac3",
+      "hash": "fb89ee1ad408ae3c88b8ae4b5692af9eea84ec3fd7b4e646188b818cfec62bde",
       "deps": []
     },
     {

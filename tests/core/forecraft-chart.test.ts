@@ -346,7 +346,7 @@ describe("faqir-chart · reading the table", () => {
   });
 
   it("defaults the kind to column and answers null for a table with no number", () => {
-    const box = mount(`<figure data-ui="chart" data-variant="pie"><table data-part="data"><tbody><tr><th>a</th><td>—</td></tr></tbody></table></figure>`);
+    const box = mount(`<figure data-ui="chart" data-variant="pyramid"><table data-part="data"><tbody><tr><th>a</th><td>—</td></tr></tbody></table></figure>`);
     expect(chart.read(box.firstElementChild, "en")).toBeNull();
     box.querySelector("td")!.textContent = "3";
     expect(chart.read(box.firstElementChild, "en").kind).toBe("column");
@@ -438,7 +438,7 @@ describe("faqir-chart · manifest, stylesheet and header", () => {
   });
 
   it("expresses the kind as the variant, within the five-attribute protocol", () => {
-    expect(manifest.variants.variant).toMatchObject({ attr: "data-variant", values: ["column", "bar", "line"], default: "column" });
+    expect(manifest.variants.variant).toMatchObject({ attr: "data-variant", values: ["column", "bar", "line", "area", "stacked-column", "stacked-bar", "pie", "donut", "scatter", "sparkline", "radar", "gauge"], default: "column" });
     expect(JSON.stringify(manifest)).not.toContain("data-kind");
     expect(source).not.toContain("data-kind");
   });

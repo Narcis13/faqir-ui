@@ -1,5 +1,5 @@
 /* @ui:component chart */
-/* @ui:tokens color-primary color-fg color-bg color-border color-fg-muted space-2 space-1 doc-font font-body text-sm text-xs weight-semibold leading-snug border-width border-width-lg */
+/* @ui:tokens color-primary color-fg color-bg color-border color-fg-muted space-2 space-1 doc-font font-body text-sm text-xs text-2xl weight-semibold weight-bold weight-normal leading-snug border-width border-width-lg heading-tracking duration-fast ease-default */
 
 /* ── Base ──
    The series ramp is one hue (--chart-accent, else the primary) at four
@@ -113,6 +113,180 @@
   fill: var(--color-fg);
 }
 
+/* An area's line names, and a scatter's axis names, sit on the page too */
+[data-ui="chart"][data-variant="area"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="name"] {
+  fill: var(--color-fg);
+}
+
+/* Grid shapes (a radar's rings, an empty ring) are outlines */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > [data-part="grid"] {
+  fill: none;
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="axis"]) > [data-part="title"] {
+  fill: var(--color-fg);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Area (and a sparkline's fill): the series' band, fading to nothing ── */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="area"] {
+  stroke: none;
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > :where(linearGradient) > [data-part="stop"] {
+  stop-color: var(--faqir-chart-ink);
+  stop-opacity: 0.3;
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > :where(linearGradient) > [data-part="stop"]:last-child {
+  stop-opacity: 0.03;
+}
+
+/* ── Totals: a stack's sum, a donut's whole, a gauge's reading ── */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > [data-part="totals"] {
+  fill: var(--color-fg);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="chart"]:where([data-variant="donut"], [data-variant="gauge"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="totals"]) > [data-part="total"] {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--heading-tracking, normal);
+}
+
+[data-ui="chart"]:where([data-variant="donut"], [data-variant="gauge"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="totals"]) > [data-part="name"] {
+  fill: var(--color-fg-muted);
+  font-weight: var(--weight-normal);
+}
+
+/* ── Stacked: segments parted by a hairline, their values on them ── */
+[data-ui="chart"]:where([data-variant="stacked-column"], [data-variant="stacked-bar"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="mark"] {
+  stroke: var(--color-bg);
+  stroke-width: var(--border-width);
+}
+
+[data-ui="chart"]:where([data-variant="stacked-column"], [data-variant="stacked-bar"], [data-variant="pie"], [data-variant="donut"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="label"] {
+  fill: var(--faqir-chart-on);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Pie and donut: slices parted by the background ── */
+[data-ui="chart"]:where([data-variant="pie"], [data-variant="donut"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="mark"] {
+  stroke: var(--color-bg);
+  stroke-width: var(--border-width-lg);
+  stroke-linejoin: round;
+}
+
+/* A last slice that would meet the first in the same band takes another */
+[data-ui="chart"]:where([data-variant="pie"], [data-variant="donut"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"], [data-part="legend"]) > :nth-child(4n + 1):last-child:not(:first-child) {
+  --faqir-chart-ink: var(--faqir-chart-3);
+  --faqir-chart-on: var(--color-fg);
+}
+
+/* A pie's or donut's legend: the value, then its share, each a column */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="legend"]) > :where([data-part="key"]) > [data-part="amount"] {
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="legend"]) > :where([data-part="key"]) > [data-part="share"] {
+  fill: var(--color-fg-muted);
+}
+
+/* ── Scatter: bubbles that show what they overlap ── */
+[data-ui="chart"][data-variant="scatter"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="mark"] {
+  fill-opacity: 0.78;
+  stroke: var(--color-bg);
+  stroke-width: var(--border-width);
+}
+
+/* A point's name reads over the grid: a halo of the background behind it */
+[data-ui="chart"][data-variant="scatter"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="label"] {
+  fill: var(--color-fg-muted);
+  paint-order: stroke;
+  stroke: var(--color-bg);
+  stroke-width: var(--border-width-lg);
+  stroke-linejoin: round;
+}
+
+/* ── Radar: each series a tinted polygon; its tick values read over the rings ── */
+[data-ui="chart"][data-variant="radar"] > :where([data-part="plot"]) > :where(svg) > [data-part="axis"] {
+  paint-order: stroke;
+  stroke: var(--color-bg);
+  stroke-width: var(--border-width-lg);
+  stroke-linejoin: round;
+}
+
+[data-ui="chart"][data-variant="radar"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="line"] {
+  fill: var(--faqir-chart-ink);
+  fill-opacity: 0.14;
+}
+
+/* ── Sparkline: a quiet line and its last value ── */
+[data-ui="chart"][data-variant="sparkline"] {
+  gap: var(--space-1);
+}
+
+[data-ui="chart"]:where([data-variant="sparkline"], [data-variant="radar"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="mark"] {
+  stroke: var(--color-bg);
+  stroke-width: var(--border-width);
+}
+
+/* ── Gauge: a track, the value over it, zones outside, notches at the thresholds ── */
+[data-ui="chart"][data-variant="gauge"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > [data-part="series"] {
+  --faqir-chart-ink: var(--faqir-chart-1);
+}
+
+[data-ui="chart"][data-variant="gauge"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="mark"] {
+  fill: none;
+  stroke: var(--faqir-chart-ink);
+}
+
+[data-ui="chart"][data-variant="gauge"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="track"] {
+  fill: none;
+  stroke: var(--faqir-chart-4);
+}
+
+[data-ui="chart"][data-variant="gauge"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="zone"] {
+  fill: none;
+  stroke: var(--faqir-chart-3);
+}
+
+[data-ui="chart"][data-variant="gauge"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="zone"]:nth-child(3n + 3) {
+  stroke: var(--faqir-chart-2);
+}
+
+[data-ui="chart"][data-variant="gauge"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="zone"]:nth-child(3n + 4) {
+  stroke: var(--faqir-chart-1);
+}
+
+[data-ui="chart"][data-variant="gauge"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="tick"] {
+  stroke: var(--color-bg);
+  stroke-width: var(--border-width-lg);
+}
+
+/* ── Hover: the series under the pointer stays, the rest step back.
+   Presentational only — the aria-label is the accessible reading. ── */
+[data-ui="chart"]:where([data-variant="area"], [data-variant="stacked-column"], [data-variant="stacked-bar"], [data-variant="pie"], [data-variant="donut"], [data-variant="radar"]) > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > [data-part="series"] {
+  transition: opacity var(--duration-fast) var(--ease-default);
+}
+
+@media (hover: hover) {
+  [data-ui="chart"]:where([data-variant="area"], [data-variant="stacked-column"], [data-variant="stacked-bar"], [data-variant="pie"], [data-variant="donut"], [data-variant="radar"]) > :where([data-part="plot"]) > :where(svg) > [data-part="marks"]:hover > [data-part="series"]:not(:hover) {
+    opacity: 0.35;
+  }
+
+  [data-ui="chart"][data-variant="scatter"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="mark"]:hover {
+    fill-opacity: 1;
+    stroke: var(--color-fg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > [data-part="series"] {
+    transition: none;
+  }
+}
+
 /* ── Legend: only when the names do not fit on the marks ── */
 [data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > [data-part="legend"] {
   fill: var(--color-fg);
@@ -157,6 +331,17 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+  /* An auto-layout table cannot be narrower than its content: a wide one would
+     reach past a phone's edge and scroll the page sideways. Fixed layout lets
+     it be the one pixel it is told. */
+  table-layout: fixed;
+}
+
+/* A drawn sparkline sits in a stat or a cell: its table would overflow the
+   cell on screen and break the printed table under it, so it leaves both. The
+   SVG's aria-label reads every value; without the plugin the table still shows. */
+[data-ui="chart"][data-variant="sparkline"][data-state="drawn"]:not([data-table="visible"]) > [data-part="data"] {
+  display: none;
 }
 
 /* ── Print: the chart and, under it, the numbers it was drawn from ── */
@@ -177,5 +362,6 @@
     overflow: visible;
     clip-path: none;
     white-space: normal;
+    table-layout: auto;
   }
 }

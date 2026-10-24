@@ -184,7 +184,7 @@ Width is the one thing it sets for you: `max-inline-size: var(--measure-prose)`.
 
 Load a plugin after `faqir-core.js`, or combine core plus every plugin with `faqir bundle --js`:
 
-- `faqir-chart` (`redraw`, `destroy`): `registry/core/plugins/faqir-chart.js` — draws a chart's data table as an inline SVG bar, column or line chart.
+- `faqir-chart` (`redraw`, `destroy`): `registry/core/plugins/faqir-chart.js` — draws a chart's data table as an inline SVG chart.
 - `faqir-collapse` (`l-collapse`): `registry/core/plugins/faqir-collapse.js` — height auto-animation for a boolean expression.
 - `faqir-intersect` (`l-intersect`): `registry/core/plugins/faqir-intersect.js` — declarative IntersectionObserver hooks.
 - `faqir-mask` (`l-mask`): `registry/core/plugins/faqir-mask.js` — caret-safe input masking.

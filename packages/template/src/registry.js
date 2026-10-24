@@ -2203,7 +2203,16 @@ export const components = {
      "values": [
       "column",
       "bar",
-      "line"
+      "line",
+      "area",
+      "stacked-column",
+      "stacked-bar",
+      "pie",
+      "donut",
+      "scatter",
+      "sparkline",
+      "radar",
+      "gauge"
      ],
      "default": "column"
     }

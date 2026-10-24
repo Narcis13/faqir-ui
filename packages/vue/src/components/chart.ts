@@ -4,7 +4,7 @@
 import { defineFaqirPrimitive } from "../runtime.js";
 
 /** Allowed `variant` values (manifest variant group "variant", attr `data-variant`). */
-export type LChartVariant = "column" | "bar" | "line";
+export type LChartVariant = "column" | "bar" | "line" | "area" | "stacked-column" | "stacked-bar" | "pie" | "donut" | "scatter" | "sparkline" | "radar" | "gauge";
 
 export interface LChartProps {
   /** `data-variant`; omitted when unset (manifest default: "column"). */
@@ -13,12 +13,12 @@ export interface LChartProps {
   drawn?: boolean;
 }
 
-/** `chart` — Bar, column or line chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin */
+/** `chart` — Column, bar, line, area, stacked column or bar, pie, donut, scatter, sparkline, radar or gauge chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin */
 export const LChart = defineFaqirPrimitive<LChartProps>({
   name: "chart",
   tag: "figure",
   variants: [
-    { prop: "variant", attr: "data-variant", values: ["column", "bar", "line"] },
+    { prop: "variant", attr: "data-variant", values: ["column", "bar", "line", "area", "stacked-column", "stacked-bar", "pie", "donut", "scatter", "sparkline", "radar", "gauge"] },
   ],
   states: [
     { prop: "drawn", attr: "data-state", value: "drawn", kind: "value" },
@@ -39,6 +39,16 @@ export const LChart = defineFaqirPrimitive<LChartProps>({
     { name: "legend", tag: "g", required: false, isVoid: false },
     { name: "key", tag: "g", required: false, isVoid: false },
     { name: "swatch", tag: "rect", required: false, isVoid: false },
+    { name: "area", tag: "path", required: false, isVoid: false },
+    { name: "stop", tag: "stop", required: false, isVoid: false },
+    { name: "totals", tag: "g", required: false, isVoid: false },
+    { name: "total", tag: "text", required: false, isVoid: false },
+    { name: "amount", tag: "text", required: false, isVoid: false },
+    { name: "share", tag: "text", required: false, isVoid: false },
+    { name: "title", tag: "text", required: false, isVoid: false },
+    { name: "track", tag: "path", required: false, isVoid: false },
+    { name: "zone", tag: "path", required: false, isVoid: false },
+    { name: "tick", tag: "line", required: false, isVoid: false },
   ],
   defaultSlot: false,
 });

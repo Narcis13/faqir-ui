@@ -25,16 +25,16 @@ beforeAll(async () => {
 });
 
 describe("faqir-chart size budget", () => {
-  test("the plugin has a 4 KB budget of its own", () => {
-    expect(mod.PLUGIN_BUDGETS["faqir-chart.js"]).toBe(4 * KB);
+  test("the plugin has a 9 KB budget of its own", () => {
+    expect(mod.PLUGIN_BUDGETS["faqir-chart.js"]).toBe(9 * KB);
   });
 
-  test("faqir-chart is really inside its 4 KB, and really needs more than 3", () => {
+  test("faqir-chart is really inside its 9 KB, and really needs more than 8", () => {
     const measured = mod.measureGzip({
       label: "plugin: faqir-chart.js",
       entry: join(ROOT, "registry", "core", "plugins", "faqir-chart.js"),
     });
-    expect(measured).toBeLessThanOrEqual(4 * KB);
-    expect(measured).toBeGreaterThan(3 * KB);
+    expect(measured).toBeLessThanOrEqual(9 * KB);
+    expect(measured).toBeGreaterThan(8 * KB);
   });
 });
