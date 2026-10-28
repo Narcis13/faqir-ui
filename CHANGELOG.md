@@ -5,6 +5,66 @@ All eight packages (`faqir-ui-cli`, `@faqir-ui/core`, `@faqir-ui/react`,
 `@faqir-ui/mcp`) are versioned in lockstep. The protocol is frozen at [`SPEC-1.0.md`](SPEC-1.0.md);
 every release below is additive under its §8 unless it says otherwise.
 
+## 1.3.5
+
+The component expansion: conversations, media, controls, ranges and nine more
+chart kinds. Full notes: [`docs/release-1.3.5.md`](docs/release-1.3.5.md).
+
+All eight packages ship at 1.3.5. 1.3.1–1.3.4 were skipped on purpose, as
+1.2.1–1.2.4 were: they were never tagged or published. The protocol did not
+change — no new attribute, modifier or token; every addition is a new
+component, a new variant value or a new part, additive under SPEC-1.0 §8.
+
+**Upgrading:** no markup migrations; run `faqir upgrade`, and CDN users move
+`@faqir-ui/core@1.3.0` to `@1.3.5`. Three things change under existing markup:
+calendar day buttons carry `role="gridcell"` (live axe is clean on the grid),
+the `stepper` restyles (a halo on the active step, a tick or `!` drawn over a
+completed or failed step's indicator text, and vertical connectors that used to
+collapse to nothing), and a `chart` nested inside another table reads only its
+own rows. `faqir-core.js` grows from about 47 to
+64 KB gzip (strict CSP 69 KB), because every recipe controller is inlined;
+`faqir-chart.js` from 4 to 9 KB.
+
+- **Added** — nine components. Recipes: `list` (leading media,
+  title/subtitle/meta and trailing actions, sticky section headers,
+  none/single/multi selection with listbox keys and type-ahead, reordering by
+  handle or keyboard, announced); `composer` (grows with its text, sends on
+  Enter, IME-safe, takes attachments); `knob` (a rotary `role="slider"` over a
+  native range input — drag, wheel, Arrow/Page/Home/End, bipolar and angular
+  modes, form reset and `l-model`); `lightbox` (zoom, pan, gallery navigation,
+  focus returned, opens from `[data-open]` links outside its root);
+  `image-compare` (a keyboard slider divider); `video-player` (custom controls
+  over native `<video>` — scrubber with buffered range and hover time, volume,
+  rate, captions, picture-in-picture, fullscreen and shortcuts — keeping native
+  controls when scripting is off). Primitives: `chat-message` and
+  `chat-thread`, CSS-only bubbles with tails, grouping, ticks, quotes,
+  reactions, attachments, voice notes, date pills, system lines and a typing
+  indicator, in a `role="log"` pinned to the newest message. Pattern: `chat`,
+  a conversation list wired to its thread with one `l-data` scope.
+- **Added** — `faqir-chart.js` draws `area`, `stacked-column`, `stacked-bar`,
+  `pie`, `donut`, `scatter`, `sparkline`, `radar` and `gauge`, all SVG from the
+  data table in the page locale, each with an aria-label that reads every
+  value. Column, bar and line draw byte for byte as before.
+- **Added** — `calendar`: a hover/focus range preview, a 1–3 month view, preset
+  ranges and min/max range length. `date-picker`: a range mode with presets,
+  typed input parsed in the page locale, a clear button and an inline variant.
+- **Added** — `tree-view`: tri-state checkboxes, lazy children with loading,
+  failure and retry, type-ahead, a filter that keeps ancestors open, guide lines
+  and icons, multi-select, and drag-and-drop with a keyboard path (Alt+Enter,
+  arrows, Enter/Escape). `stepper`: an error state, optional and status parts
+  and clickable steps; the `wizard`'s steps are buttons bound to its step.
+- **Added** — `image`: ratio, fit, focal point, overlay captions and blur or
+  skeleton placeholders.
+- **Fixed** — `date-picker` reads back its own display text in locales whose
+  full date spells the month differently (ru, pl, cs, uk, fi); `knob` snaps onto
+  `min + k·step`, exponent steps included; no `calendar` range or preset spans a
+  disabled date, and an authored range that runs backwards keeps only its
+  start; a `lightbox` picture that fails to load ends the loading ring and says
+  so; the `tree-view` filter neither matches nor reveals an item the page hid.
+- **Docs** — a showcase page (`showcase/`) with every new and upgraded
+  component live and copyable, linked from the Foundations nav and from a new
+  release story on the home page; a live example per new component.
+
 ## 1.3.0
 
 What two applications built on 1.2.5 asked for: a server-rendered manual and

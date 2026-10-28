@@ -105,6 +105,25 @@ They wake up on their own if CI returns.
       `bun run build:core-package`, `bun run build:audit-browser` and
       `bun run build:rules-plugin`, and commit all of it together.
 
+## 1.3.5
+
+No package is new on npm: all eight move from 1.3.0 to 1.3.5. The versions
+already read 1.3.5 on the release branch, so after the merge the real run takes
+the version explicitly and only publishes: `node scripts/release.mjs 1.3.5`.
+Check by hand, because nothing on this machine gates them:
+
+- [ ] The docs site's `showcase/` page, served for real (any static server over
+      `site/dist`), in light and dark and at phone width: the charts draw, the
+      lightbox opens and returns focus, the chat sends, the video plays its
+      captions, and the console stays empty.
+- [ ] `bun run test:a11y` fails on no case it did not fail on at 1.3.0. The
+      expansion branch measured 404 failures, the identical set `main` fails on
+      (402 `label-content-name-mismatch` in pagination, crud-table,
+      search-results, dashboard-shell and the scaffolds; 2
+      `docs__template_hydration`), none in a new or upgraded component.
+- [ ] `npm view @faqir-ui/core@1.3.5 version` prints 1.3.5, and the jsdelivr
+      `faqir-core.min.js` for it matches the SRI hash in `cdn.json`.
+
 ## 1.3.0
 
 No package is new on npm: all eight move from 1.2.5 to 1.3.0. The versions
