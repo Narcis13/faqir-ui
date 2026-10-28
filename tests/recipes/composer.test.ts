@@ -157,6 +157,9 @@ describe("composer — sending", () => {
     expect(document.activeElement).toBe(input);
   });
 
+  // Needs happy-dom >= 20.14.6 (package.json's floor): before it, `closest()` from
+  // inside a parsed <form> returned an object that was not the form itself, so
+  // the composer owned none of its parts and the submit sent nothing.
   it("a <form> root: a submit sends once and never navigates", () => {
     host = document.createElement("div");
     host.innerHTML = MARKUP().replace('<div data-ui="composer"', '<form data-ui="composer"').replace(/<\/div>\s*$/, "</form>");

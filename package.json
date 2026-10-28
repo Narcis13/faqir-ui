@@ -110,12 +110,12 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
-    "@happy-dom/global-registrator": "^20.11.2",
+    "@happy-dom/global-registrator": "^20.14.6",
     "@playwright/test": "1.61.1",
     "@types/bun": "latest",
     "axe-core": "^4.12.1",
     "bun-types": "latest",
-    "happy-dom": "^20.11.2",
+    "happy-dom": "^20.14.6",
     "typescript": "^5.7.0"
   }
 }
